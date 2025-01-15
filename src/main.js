@@ -124,6 +124,7 @@ const VoiceAssistant = () => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [textInput, setTextInput] = useState('');
     const [hasSpeechPermission, setHasSpeechPermission] = useState(true);
+    const [generatedComponents, setGeneratedComponents] = useState([]);
 
     useEffect(() => {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -190,7 +191,15 @@ const VoiceAssistant = () => {
                 },
                 body: JSON.stringify({
                     model: 'anthropic/claude-3.5-sonnet',
-                    messages: [{ role: 'user', content: text }],
+                    messages: [{ 
+                        role: 'user', 
+                        content: `Generate a React component based on this request: "${text}".
+                                 Return ONLY a single JSX code block with an exported component.
+                                 The component must be exported with 'export default function Component() {}'.
+                                 Do not include any explanation, markdown, or other text - just the code block.
+                                 The component should be self-contained and styled with Tailwind CSS.
+                                 Start your response with \`\`\`jsx and end with \`\`\`.`
+                    }],
                     stream: true,
                 }),
             });
@@ -202,6 +211,8 @@ const VoiceAssistant = () => {
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
 
+            let fullResponse = '';
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -210,22 +221,62 @@ const VoiceAssistant = () => {
                 const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
                 for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.choices[0].delta.content) {
-                                setResponseStream(prev => prev + data.choices[0].delta.content);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing stream:', e);
+                    if (!line.startsWith('data: ')) continue;
+                    
+                    if (line === 'data: [DONE]') break;
+                    
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        const content = data.choices?.[0]?.delta?.content;
+                        if (content) {
+                            fullResponse += content;
+                            setResponseStream(fullResponse);
                         }
+                    } catch (e) {
+                        console.error('Error parsing stream:', e);
                     }
                 }
             }
+
+            // After receiving complete response, try to create component
+            try {
+                console.log('Full response:', fullResponse);
+                
+                // Extract code from markdown code block
+                const codeMatch = fullResponse.match(/```(?:jsx|javascript)?\n([\s\S]*?)```/);
+                if (!codeMatch) {
+                    throw new Error('No code block found in response');
+                }
+                const code = codeMatch[1].trim();
+                console.log('Extracted code:', code);
+                
+                // Transform the extracted JSX code
+                const transformedCode = Babel.transform(code, {
+                    presets: ['react']
+                }).code;
+                console.log('Transformed code:', transformedCode);
+                // Create a data URI containing the transformed code
+                const codeUri = `data:text/javascript;charset=utf-8,${encodeURIComponent(transformedCode)}`;
+
+                // Dynamically import the code
+                const module = await import(codeUri);
+                console.log('Module:', module);
+                const GeneratedComponent = module.default;
+
+                // Add the component to our list
+                setGeneratedComponents(prev => [...prev, {
+                    id: Date.now(),
+                    component: GeneratedComponent
+                }]);
+
+            } catch (error) {
+                console.error('Error creating component:', error);
+                setError(`Failed to create component: ${error.message}`);
+            } finally {
+                setIsProcessing(false);
+            }
         } catch (error) {
             setError(`Error: ${error.message}`);
-        } finally {
-            setIsProcessing(false);
         }
     };
 
@@ -363,6 +414,15 @@ const VoiceAssistant = () => {
                     localStorage.setItem('openrouter_api_key', newKey);
                 }}
             />
+
+            {/* Generated Components */}
+            <div className="space-y-4">
+                {generatedComponents.map(({ id, component: Component }) => (
+                    <div key={id} className="border rounded-lg p-4 shadow-sm">
+                        <Component />
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
