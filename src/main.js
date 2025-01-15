@@ -189,7 +189,7 @@ const VoiceAssistant = () => {
                     'X-Title': 'Voice Assistant Web App',
                 },
                 body: JSON.stringify({
-                    model: 'anthropic/claude-3-sonnet',
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [{ role: 'user', content: text }],
                     stream: true,
                 }),
