@@ -124,7 +124,8 @@ const VoiceAssistant = () => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [textInput, setTextInput] = useState('');
     const [hasSpeechPermission, setHasSpeechPermission] = useState(true);
-    const [generatedComponents, setGeneratedComponents] = useState([]);
+    const [currentComponent, setCurrentComponent] = useState(null);
+    const [currentComponentCode, setCurrentComponentCode] = useState('');
 
     useEffect(() => {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -191,14 +192,21 @@ const VoiceAssistant = () => {
                 },
                 body: JSON.stringify({
                     model: 'anthropic/claude-3.5-sonnet',
-                    messages: [{ 
-                        role: 'user', 
-                        content: `Generate a React component based on this request: "${text}".
-                                 Return ONLY a single JSX code block with an exported component.
-                                 The component must be exported with 'export default function Component() {}'.
-                                 Do not include any explanation, markdown, or other text - just the code block.
-                                 The component should be self-contained and styled with Tailwind CSS.
-                                 Start your response with \`\`\`jsx and end with \`\`\`.`
+                    messages: [
+                        ...(currentComponentCode ? [{
+                            role: 'system',
+                            content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if the new request is similar or builds upon it.`
+                        }] : []),
+                        { 
+                            role: 'user', 
+                            content: `Generate a React component based on this request: "${text}".
+                                     Return ONLY a single JSX code block with an exported component.
+                                     The component must be exported with 'export default function Component() {}'.
+                                     Do not include any explanation, markdown, or other text - just the code block.
+                                     The component should be self-contained and styled with Tailwind CSS.
+                                     Start your response with \`\`\`jsx and end with \`\`\`.`
+                        }
+                    ]
                     }],
                     stream: true,
                 }),
@@ -263,11 +271,9 @@ const VoiceAssistant = () => {
                 console.log('Module:', module);
                 const GeneratedComponent = module.default;
 
-                // Add the component to our list
-                setGeneratedComponents(prev => [...prev, {
-                    id: Date.now(),
-                    component: GeneratedComponent
-                }]);
+                // Store the current component and its source code
+                setCurrentComponent(() => GeneratedComponent);
+                setCurrentComponentCode(code);
 
             } catch (error) {
                 console.error('Error creating component:', error);
@@ -415,14 +421,12 @@ const VoiceAssistant = () => {
                 }}
             />
 
-            {/* Generated Components */}
-            <div className="space-y-4">
-                {generatedComponents.map(({ id, component: Component }) => (
-                    <div key={id} className="border rounded-lg p-4 shadow-sm">
-                        <Component />
-                    </div>
-                ))}
-            </div>
+            {/* Current Generated Component */}
+            {currentComponent && (
+                <div className="border rounded-lg p-4 shadow-sm">
+                    {React.createElement(currentComponent)}
+                </div>
+            )}
         </div>
     );
 };
