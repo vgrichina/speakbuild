@@ -176,7 +176,7 @@ const VoiceAssistant = () => {
     const processWithClaudeStream = async (text) => {
         const currentApiKey = localStorage.getItem('openrouter_api_key');
         if (!currentApiKey) {
-            setError('Please set your OpenRouter API key in settings');
+            setError(<>Please set your OpenRouter API key in <button onClick={() => setIsSettingsOpen(true)} className="text-blue-500 hover:text-blue-600 underline">settings</button></>);
             return;
         }
 
