@@ -206,9 +206,8 @@ const VoiceAssistant = () => {
                                      The component should be self-contained and styled with Tailwind CSS.
                                      Start your response with \`\`\`jsx and end with \`\`\`.`
                         }
-                    ]
-                    }],
-                    stream: true,
+                    ],
+                    stream: true
                 }),
             });
 
