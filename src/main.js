@@ -388,8 +388,8 @@ const VoiceAssistant = () => {
                 </div>
             )}
 
-            {/* Streaming Response - only show if processing or if no component generated yet */}
-            {(responseStream || isProcessing) && !currentComponent && (
+            {/* Streaming Response - show while processing */}
+            {(responseStream || isProcessing) && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
                         <h3 className="font-semibold">Response:</h3>
@@ -421,8 +421,8 @@ const VoiceAssistant = () => {
                 }}
             />
 
-            {/* Current Generated Component */}
-            {currentComponent && (
+            {/* Current Generated Component - hide while processing */}
+            {currentComponent && !isProcessing && (
                 <div className="space-y-2">
                     <div className="border rounded-lg p-4 shadow-sm">
                         {React.createElement(currentComponent)}
