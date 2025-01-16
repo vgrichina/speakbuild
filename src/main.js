@@ -388,8 +388,8 @@ const VoiceAssistant = () => {
                 </div>
             )}
 
-            {/* Streaming Response - show while processing */}
-            {(responseStream || isProcessing) && (
+            {/* Streaming Response - show while processing, hide when component is ready but not processing */}
+            {(responseStream || isProcessing) && (!currentComponent || isProcessing) && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
                         <h3 className="font-semibold">Response:</h3>
