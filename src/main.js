@@ -174,7 +174,8 @@ const VoiceAssistant = () => {
     }, [selectedLanguage]); // Recreate recognition instance when language changes
 
     const processWithClaudeStream = async (text) => {
-        if (!apiKey) {
+        const currentApiKey = localStorage.getItem('openrouter_api_key');
+        if (!currentApiKey) {
             setError('Please set your OpenRouter API key in settings');
             return;
         }
@@ -186,7 +187,7 @@ const VoiceAssistant = () => {
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${apiKey}`,
+                    'Authorization': `Bearer ${currentApiKey}`,
                     'Content-Type': 'application/json',
                     'HTTP-Referer': window.location.href,
                     'X-Title': 'Voice Assistant Web App',
@@ -427,6 +428,7 @@ const VoiceAssistant = () => {
                 onSave={(newKey) => {
                     setApiKey(newKey);
                     localStorage.setItem('openrouter_api_key', newKey);
+                    setError(''); // Clear any previous API key errors
                 }}
             />
 
