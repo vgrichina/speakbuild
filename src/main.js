@@ -126,6 +126,7 @@ const VoiceAssistant = () => {
     const [hasSpeechPermission, setHasSpeechPermission] = useState(true);
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
+    const [showSourceCode, setShowSourceCode] = useState(false);
 
     useEffect(() => {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -387,8 +388,8 @@ const VoiceAssistant = () => {
                 </div>
             )}
 
-            {/* Streaming Response */}
-            {(responseStream || isProcessing) && (
+            {/* Streaming Response - only show if processing or if no component generated yet */}
+            {(responseStream || isProcessing) && !currentComponent && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
                         <h3 className="font-semibold">Response:</h3>
@@ -422,8 +423,25 @@ const VoiceAssistant = () => {
 
             {/* Current Generated Component */}
             {currentComponent && (
-                <div className="border rounded-lg p-4 shadow-sm">
-                    {React.createElement(currentComponent)}
+                <div className="space-y-2">
+                    <div className="border rounded-lg p-4 shadow-sm">
+                        {React.createElement(currentComponent)}
+                    </div>
+                    <div className="text-center">
+                        <button 
+                            onClick={() => setShowSourceCode(!showSourceCode)}
+                            className="text-sm text-blue-500 hover:text-blue-600 underline"
+                        >
+                            {showSourceCode ? 'Hide source' : 'View source'}
+                        </button>
+                    </div>
+                    {showSourceCode && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <pre className="text-sm overflow-x-auto">
+                                <code>{currentComponentCode}</code>
+                            </pre>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
