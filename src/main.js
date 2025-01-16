@@ -399,7 +399,16 @@ const VoiceAssistant = () => {
                             </svg>
                         )}
                     </div>
-                    <p className="whitespace-pre-wrap">{responseStream}</p>
+                    <div 
+                        className="max-h-[300px] overflow-y-auto whitespace-pre-wrap" 
+                        ref={el => {
+                            if (el) {
+                                el.scrollTop = el.scrollHeight;
+                            }
+                        }}
+                    >
+                        {responseStream}
+                    </div>
                 </div>
             )}
 
