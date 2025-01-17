@@ -531,7 +531,9 @@ export const VoiceAssistant = () => {
                                 bottom: 0,
                                 opacity: 0,
                                 width: '100%',
-                                height: '100%'
+                                height: '100%',
+                                minHeight: 44,
+                                cursor: 'pointer'
                             }}
                         >
                             {LANGUAGES.map(lang => (
