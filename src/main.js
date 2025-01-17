@@ -341,11 +341,22 @@ export const VoiceAssistant = () => {
                             role: 'user',
                             content: `Generate a React component based on this request: "${text}".
                                      Return ONLY the component code using React.createElement (no JSX).
-                                     The component must be exported with 'export default function Component() {}'.
+                                     Define the component as 'function Component() {' (no export statement).
                                      Use only inline styles (no Tailwind/CSS).
                                      Use React.useState for any state management.
                                      Do not include any explanation or markdown - just the pure JavaScript code.
-                                     Start your response with \`\`\` and end with \`\`\`.`
+                                     The code should start directly with 'function Component() {'.
+                                     Start your response with \`\`\` and end with \`\`\`.
+                                     
+                                     Example format:
+                                     \`\`\`
+                                     function Component() {
+                                       const [state, setState] = React.useState(null);
+                                       return React.createElement('View', {
+                                         style: { padding: 10 }
+                                       }, 'Hello');
+                                     }
+                                     \`\`\``
                         }
                     ],
                     stream: true
