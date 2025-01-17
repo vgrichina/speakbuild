@@ -1,3 +1,4 @@
+import React from 'react';
 const { useState, useEffect, useCallback } = React;
 const { icons: { Mic, MicOff, Radio, Loader2, Settings, Key } } = lucide;
 
@@ -260,13 +261,16 @@ const VoiceAssistant = () => {
                 const code = codeMatch[1].trim();
                 console.log('Extracted code:', code);
                 
-                // Create a data URI containing the code (no transformation needed)
-                const codeUri = `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`;
-
-                // Dynamically import the code
-                const module = await import(codeUri);
-                console.log('Module:', module);
-                const GeneratedComponent = module.default;
+                // Create component function with proper scope access
+                const componentCode = `
+                    const React = arguments[0];  // Pass React as first argument
+                    ${code}
+                    return Component;  // Return the component function
+                `;
+                
+                // Create and execute the function with React in scope
+                const createComponent = new Function(componentCode);
+                const GeneratedComponent = createComponent(React);
 
                 // Store the current component and its source code
                 setCurrentComponent(() => GeneratedComponent);
