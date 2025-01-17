@@ -11,14 +11,22 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.voiceassistant.app"
+      "bundleIdentifier": "com.voiceassistant.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone for speech recognition",
+        "NSSpeechRecognitionUsageDescription": "Allow Voice Assistant to securely recognize your speech",
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
       "package": "com.voiceassistant.app",
-      "permissions": ["RECORD_AUDIO"]
+      "permissions": [
+        "RECORD_AUDIO",
+        "INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -28,8 +36,8 @@
       [
         "@react-native-voice/voice",
         {
-          "microphonePermission": "Allow Voice Assistant to access the microphone",
-          "speechRecognitionPermission": "Allow Voice Assistant to securely recognize user speech"
+          "microphonePermission": "Allow Voice Assistant to access the microphone for speech recognition",
+          "speechRecognitionPermission": "Allow Voice Assistant to securely recognize your speech"
         }
       ]
     ],
