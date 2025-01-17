@@ -10,21 +10,20 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.voiceassistant.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.voiceassistant.app"
     },
     "web": {
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
-      "expo-speech",
-      "@react-native-voice/voice",
-      "react-native-safe-area-context"
+      "expo-router"
     ],
     "experiments": {
       "tsconfigPaths": true,
