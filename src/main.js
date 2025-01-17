@@ -355,28 +355,28 @@ export const VoiceAssistant = () => {
     const [showLanguageModal, setShowLanguageModal] = useState(false);
 
     const {
-        isListening,
-        startListening,
-        stopListening,
-        partialResults,
-        finalResult,
+        isListening: isSpeechListening,
+        startListening: startSpeechListening,
+        stopListening: stopSpeechListening,
+        partialResults: speechPartialResults,
+        finalResult: speechFinalResult,
         error: speechError,
-        isAvailable
+        isAvailable: isSpeechAvailable
     } = useSpeechRecognition(selectedLanguage);
 
     useEffect(() => {
-        if (finalResult) {
-            setTranscribedText(finalResult);
-            processWithClaudeStream(finalResult);
+        if (speechFinalResult) {
+            setTranscribedText(speechFinalResult);
+            processWithClaudeStream(speechFinalResult);
         }
-    }, [finalResult]);
+    }, [speechFinalResult]);
 
     useEffect(() => {
-        setHasSpeechPermission(isAvailable);
-        if (!isAvailable) {
+        setHasSpeechPermission(isSpeechAvailable);
+        if (!isSpeechAvailable) {
             setError('Speech recognition is not supported on this device');
         }
-    }, [isAvailable]);
+    }, [isSpeechAvailable]);
 
     useEffect(() => {
         if (speechError) {
@@ -511,18 +511,18 @@ export const VoiceAssistant = () => {
 
     const toggleListening = useCallback(async () => {
         try {
-            if (isListening) {
-                await stopListening();
+            if (isSpeechListening) {
+                await stopSpeechListening();
             } else {
                 setPartialResults('');
                 setTranscribedText('');
                 setResponseStream('');
-                await startListening();
+                await startSpeechListening();
             }
         } catch (error) {
             setError(`Toggle error: ${error.message}`);
         }
-    }, [isListening, startListening, stopListening]);
+    }, [isSpeechListening, startSpeechListening, stopSpeechListening]);
 
     const handleTextSubmit = (e) => {
         e.preventDefault();
@@ -597,11 +597,11 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Live Transcription */}
-            {isListening && partialResults && (
+            {isSpeechListening && speechPartialResults && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                     <Radio size={16} color="#EF4444" />
                     <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
-                        {partialResults}
+                        {speechPartialResults}
                     </Text>
                 </View>
             )}
