@@ -1,3 +1,29 @@
 .aider*
 .env
 node_modules
+
+# Expo
+.expo/
+.expo-shared/
+android/
+ios/
+dist/
+web-build/
+
+# Native build files
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+*.log
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Local Netlify folder
+.netlify
