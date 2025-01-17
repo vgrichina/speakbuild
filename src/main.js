@@ -358,12 +358,6 @@ export const VoiceAssistant = () => {
         const initializeSpeech = async () => {
             try {
                 if (Platform.OS === 'web') {
-                    // Request microphone permission for web
-                    try {
-                        await navigator.mediaDevices.getUserMedia({ audio: true });
-                    } catch (error) {
-                        throw new Error('Microphone permission denied');
-                    }
                     // Web Speech API initialization
                     if (!('webkitSpeechRecognition' in window)) {
                         throw new Error('Web Speech API is not supported in this browser');
@@ -576,6 +570,13 @@ export const VoiceAssistant = () => {
                 if (isListening) {
                     recognition.stop();
                 } else {
+                    // Request microphone permission before starting
+                    try {
+                        await navigator.mediaDevices.getUserMedia({ audio: true });
+                    } catch (error) {
+                        setError('Microphone permission denied');
+                        return;
+                    }
                     setPartialResults('');
                     setTranscribedText('');
                     setResponseStream('');
