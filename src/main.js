@@ -9,6 +9,34 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  modalContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -95,52 +123,50 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Settings</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">×</button>
-                </div>
+        <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Settings</Text>
+                    <Pressable onPress={onClose}>
+                        <Text style={{ fontSize: 24 }}>×</Text>
+                    </Pressable>
+                </View>
                 
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            OpenRouter API Key
-                        </label>
-                        <input
-                            type="password"
+                <View style={{ gap: 16 }}>
+                    <View style={{ gap: 8 }}>
+                        <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
+                        <TextInput
+                            secureTextEntry
                             value={key}
-                            onChange={(e) => setKey(e.target.value)}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            onChangeText={setKey}
+                            style={styles.input}
                             placeholder="sk-or-..."
                         />
-                        <a 
-                            href="https://openrouter.ai/keys"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                        <Pressable 
+                            onPress={() => Linking.openURL('https://openrouter.ai/keys')}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                         >
-                            <Key size={12} color="currentColor" />
-                            Get your API key
-                        </a>
-                    </div>
+                            <Key size={12} color="#3B82F6" />
+                            <Text style={{ color: '#3B82F6' }}>Get your API key</Text>
+                        </Pressable>
+                    </View>
                     
-                    <div className="text-sm text-gray-500">
+                    <Text style={{ color: '#666' }}>
                         Using Claude as the default model for optimal results.
-                    </div>
+                    </Text>
 
-                    <button
-                        onClick={() => {
+                    <Pressable
+                        style={styles.button}
+                        onPress={() => {
                             onSave(key);
                             onClose();
                         }}
-                        className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
                     >
-                        Save Settings
-                    </button>
-                </div>
-            </div>
-        </div>
+                        <Text style={styles.buttonText}>Save Settings</Text>
+                    </Pressable>
+                </View>
+            </View>
+        </View>
     );
 };
 
@@ -399,104 +425,99 @@ export const VoiceAssistant = () => {
     };
 
     return (
-        <div className="p-4 max-w-2xl mx-auto space-y-4">
+        <View style={styles.container}>
             {/* Header with Settings and Language Controls */}
-            <div className="flex justify-between items-center gap-4 mb-4">
-                <button
-                    onClick={() => setIsSettingsOpen(true)}
-                    className="p-2 rounded-full hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
-                    title="Settings"
+            <View style={styles.header}>
+                <Pressable
+                    onPress={() => setIsSettingsOpen(true)}
+                    style={styles.button}
                 >
-                    <Settings size={20} color="currentColor" />
-                    <span className="text-sm">Settings</span>
-                </button>
-                <select 
+                    <Settings size={20} color="white" />
+                    <Text style={styles.buttonText}>Settings</Text>
+                </Pressable>
+                
+                {/* TODO: Replace select with a proper RN picker */}
+                <TextInput
+                    style={styles.input}
                     value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="block w-48 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                    {LANGUAGES.map(lang => (
-                        <option key={lang.code} value={lang.code}>
-                            {lang.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
+                    onChangeText={setSelectedLanguage}
+                />
+            </View>
 
-            {/* Show voice button only if speech is permitted */}
+            {/* Voice Button */}
             {hasSpeechPermission && (
-                <div className="flex justify-center">
-                    <VoiceButton
-                        isListening={isListening}
-                        onClick={toggleListening}
+                <View style={{ alignItems: 'center' }}>
+                    <Pressable
+                        style={[
+                            styles.voiceButton,
+                            isListening && styles.voiceButtonListening
+                        ]}
+                        onPress={toggleListening}
                         disabled={!recognition}
-                    />
-                </div>
+                    >
+                        {isListening ? 
+                            <MicOff size={32} color="white" /> : 
+                            <Mic size={32} color="white" />
+                        }
+                    </Pressable>
+                </View>
             )}
 
-            {/* Show text input only if speech is not permitted */}
+            {/* Text Input */}
             {!hasSpeechPermission && (
-                <form onSubmit={handleTextSubmit} className="flex gap-2">
-                    <input
-                        type="text"
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TextInput
+                        style={[styles.input, { flex: 1 }]}
                         value={textInput}
-                        onChange={(e) => setTextInput(e.target.value)}
+                        onChangeText={setTextInput}
                         placeholder="Type your message here..."
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
-                    <button
-                        type="submit"
+                    <Pressable
+                        style={styles.button}
+                        onPress={handleTextSubmit}
                         disabled={!textInput.trim() || isProcessing}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Send
-                    </button>
-                </form>
+                        <Text style={styles.buttonText}>Send</Text>
+                    </Pressable>
+                </View>
             )}
 
             {/* Live Transcription */}
             {isListening && partialResults && (
-                <div className="flex items-center space-x-2 text-gray-600">
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                     <Radio size={16} color="#EF4444" />
-                    <p className="italic">{partialResults}</p>
-                </div>
+                    <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
+                        {partialResults}
+                    </Text>
+                </View>
             )}
 
             {/* Final Transcription */}
             {transcribedText && (
-                <div className="bg-gray-100 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">Transcribed:</h3>
-                    <p>{transcribedText}</p>
-                </div>
+                <View style={styles.transcriptionBox}>
+                    <Text style={styles.heading}>Transcribed:</Text>
+                    <Text>{transcribedText}</Text>
+                </View>
             )}
 
-            {/* Streaming Response - show while processing, hide when component is ready but not processing */}
+            {/* Response Stream */}
             {(responseStream || isProcessing) && (!currentComponent || isProcessing) && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-semibold">Response:</h3>
-                        {isProcessing && (
-                            <Loader2 size={16} color="currentColor" />
-                        )}
-                    </div>
-                    <div 
-                        className="max-h-[300px] overflow-y-auto whitespace-pre-wrap" 
-                        ref={el => {
-                            if (el) {
-                                el.scrollTop = el.scrollHeight;
-                            }
-                        }}
-                    >
-                        {responseStream}
-                    </div>
-                </div>
+                <View style={[styles.transcriptionBox, { backgroundColor: '#EBF8FF' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                        <Text style={styles.heading}>Response:</Text>
+                        {isProcessing && <Loader2 size={16} color="currentColor" />}
+                    </View>
+                    <ScrollView style={{ maxHeight: 300 }}>
+                        <Text>{responseStream}</Text>
+                    </ScrollView>
+                </View>
             )}
 
             {/* Error Display */}
             {error && (
-                <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <View style={[styles.transcriptionBox, { backgroundColor: '#FEE2E2' }]}>
+                    <Text style={{ color: '#DC2626' }}>{error}</Text>
+                </View>
             )}
 
             {/* Settings Modal */}
@@ -511,30 +532,30 @@ export const VoiceAssistant = () => {
                 }}
             />
 
-            {/* Current Generated Component - hide while processing */}
+            {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
-                <div className="space-y-2">
-                    <div className="border rounded-lg p-4 shadow-sm">
+                <View style={{ marginTop: 16 }}>
+                    <View style={[styles.transcriptionBox, { backgroundColor: 'white' }]}>
                         {React.createElement(currentComponent)}
-                    </div>
-                    <div className="text-center">
-                        <button 
-                            onClick={() => setShowSourceCode(!showSourceCode)}
-                            className="text-sm text-blue-500 hover:text-blue-600 underline"
-                        >
+                    </View>
+                    <Pressable
+                        onPress={() => setShowSourceCode(!showSourceCode)}
+                        style={{ alignItems: 'center', marginTop: 8 }}
+                    >
+                        <Text style={{ color: '#3B82F6', textDecorationLine: 'underline' }}>
                             {showSourceCode ? 'Hide source' : 'View source'}
-                        </button>
-                    </div>
+                        </Text>
+                    </Pressable>
                     {showSourceCode && (
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                            <pre className="text-sm overflow-x-auto">
-                                <code>{currentComponentCode}</code>
-                            </pre>
-                        </div>
+                        <View style={[styles.transcriptionBox, { backgroundColor: '#F9FAFB' }]}>
+                            <ScrollView horizontal>
+                                <Text style={{ fontFamily: 'monospace' }}>{currentComponentCode}</Text>
+                            </ScrollView>
+                        </View>
                     )}
-                </div>
+                </View>
             )}
-        </div>
+        </View>
     );
 };
 
