@@ -2,6 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking } from 'react-native';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 
+const LANGUAGES = [
+    { code: 'en-US', name: 'English (US)' },
+    { code: 'en-GB', name: 'English (UK)' },
+    { code: 'es-ES', name: 'Spanish' },
+    { code: 'fr-FR', name: 'French' },
+    { code: 'de-DE', name: 'German' },
+    { code: 'it-IT', name: 'Italian' },
+    { code: 'ja-JP', name: 'Japanese' },
+    { code: 'ko-KR', name: 'Korean' },
+    { code: 'zh-CN', name: 'Chinese (Simplified)' },
+    { code: 'ru-RU', name: 'Russian' }
+];
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -124,6 +137,33 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#EF4444',
+  },
+  selectContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  selectLabel: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  select: {
+    position: 'relative',
+    minWidth: 150,
+  },
+  selectButton: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  selectButtonText: {
+    fontSize: 16,
+    color: '#374151',
   }
 });
 
@@ -473,12 +513,48 @@ export const VoiceAssistant = () => {
                     <Text style={styles.buttonText}>Settings</Text>
                 </Pressable>
                 
-                {/* TODO: Replace select with a proper RN picker */}
-                <TextInput
-                    style={styles.input}
-                    value={selectedLanguage}
-                    onChangeText={setSelectedLanguage}
-                />
+                <View style={styles.selectContainer}>
+                    <Text style={styles.selectLabel}>Language:</Text>
+                    <View style={styles.select}>
+                        <Pressable
+                            onPress={() => {
+                                // For web platform, trigger native select
+                                const event = new MouseEvent('click', {
+                                    view: window,
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+                                document.getElementById('language-select').dispatchEvent(event);
+                            }}
+                            style={styles.selectButton}
+                        >
+                            <Text style={styles.selectButtonText}>
+                                {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
+                            </Text>
+                        </Pressable>
+                        <select
+                            id="language-select"
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                opacity: 0,
+                                width: '100%',
+                                height: '100%'
+                            }}
+                        >
+                            {LANGUAGES.map(lang => (
+                                <option key={lang.code} value={lang.code}>
+                                    {lang.name}
+                                </option>
+                            ))}
+                        </select>
+                    </View>
+                </View>
             </View>
 
             {/* Voice Button */}
