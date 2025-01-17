@@ -199,14 +199,15 @@ const VoiceAssistant = () => {
                             role: 'system',
                             content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if the new request is similar or builds upon it.`
                         }] : []),
-                        { 
-                            role: 'user', 
+                        {
+                            role: 'user',
                             content: `Generate a React component based on this request: "${text}".
-                                     Return ONLY a single JSX code block with an exported component.
+                                     Return ONLY the component code using React.createElement (no JSX).
                                      The component must be exported with 'export default function Component() {}'.
-                                     Do not include any explanation, markdown, or other text - just the code block.
-                                     The component should be self-contained and styled with Tailwind CSS.
-                                     Start your response with \`\`\`jsx and end with \`\`\`.`
+                                     Use only inline styles (no Tailwind/CSS).
+                                     Use React.useState for any state management.
+                                     Do not include any explanation or markdown - just the pure JavaScript code.
+                                     Start your response with \`\`\` and end with \`\`\`.`
                         }
                     ],
                     stream: true
@@ -259,13 +260,8 @@ const VoiceAssistant = () => {
                 const code = codeMatch[1].trim();
                 console.log('Extracted code:', code);
                 
-                // Transform the extracted JSX code
-                const transformedCode = Babel.transform(code, {
-                    presets: ['react']
-                }).code;
-                console.log('Transformed code:', transformedCode);
-                // Create a data URI containing the transformed code
-                const codeUri = `data:text/javascript;charset=utf-8,${encodeURIComponent(transformedCode)}`;
+                // Create a data URI containing the code (no transformation needed)
+                const codeUri = `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`;
 
                 // Dynamically import the code
                 const module = await import(codeUri);
