@@ -288,31 +288,45 @@ const PulsatingCircle = ({ isActive }) => {
     );
 };
 
-const VoiceButton = ({ isListening, onClick, disabled }) => (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <PulsatingCircle isActive={isListening} />
-        <Pressable
-            onPress={onClick}
-            disabled={disabled}
-            style={[
-                {
-                    width: 64,
-                    height: 64,
-                    borderRadius: 32,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isListening ? '#EF4444' : '#3B82F6',
-                },
-                disabled && { opacity: 0.5 }
-            ]}
-        >
-            {isListening ? 
-                <MicOff size={32} color="white" /> : 
-                <Mic size={32} color="white" />
-            }
-        </Pressable>
-    </View>
-);
+const VoiceButton = ({ isListening, onClick, disabled }) => {
+    const [isPressed, setIsPressed] = useState(false);
+    
+    return (
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <PulsatingCircle isActive={isListening} />
+            <Pressable
+                onPress={onClick}
+                onPressIn={() => setIsPressed(true)}
+                onPressOut={() => setIsPressed(false)}
+                disabled={disabled}
+                style={[
+                    {
+                        width: 64,
+                        height: 64,
+                        borderRadius: 32,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isListening ? '#EF4444' : '#3B82F6',
+                        transform: [{ scale: isPressed ? 0.95 : 1 }],
+                    },
+                    disabled && { opacity: 0.5 }
+                ]}
+            >
+                {isListening ? 
+                    <MicOff size={32} color="white" /> : 
+                    <Mic size={32} color="white" />
+                }
+            </Pressable>
+            <Text style={{ 
+                marginTop: 8, 
+                color: isListening ? '#EF4444' : '#666',
+                fontSize: 12 
+            }}>
+                {isListening ? 'Tap to stop' : 'Tap to speak'}
+            </Text>
+        </View>
+    );
+};
 
 export const VoiceAssistant = () => {
     const [isListening, setIsListening] = useState(false);
@@ -566,20 +580,12 @@ export const VoiceAssistant = () => {
 
             {/* Voice Button */}
             {hasSpeechPermission && (
-                <View style={{ alignItems: 'center' }}>
-                    <Pressable
-                        style={[
-                            styles.voiceButton,
-                            isListening && styles.voiceButtonListening
-                        ]}
-                        onPress={toggleListening}
+                <View style={{ alignItems: 'center', marginVertical: 16 }}>
+                    <VoiceButton
+                        isListening={isSpeechListening}
+                        onClick={toggleListening}
                         disabled={!hasSpeechPermission}
-                    >
-                        {isListening ? 
-                            <MicOff size={32} color="white" /> : 
-                            <Mic size={32} color="white" />
-                        }
-                    </Pressable>
+                    />
                 </View>
             )}
 
