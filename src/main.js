@@ -398,17 +398,21 @@ export const VoiceAssistant = () => {
 
                     setRecognition(recognition);
                 } else {
+                    console.log('[Voice] Initializing native voice recognition');
                     // Native voice recognition initialization
                     Voice.onSpeechStart = () => {
+                        console.log('[Voice] Speech started');
                         setIsListening(true);
                         setError('');
                     };
                     
                     Voice.onSpeechEnd = () => {
+                        console.log('[Voice] Speech ended');
                         setIsListening(false);
                     };
                     
                     Voice.onSpeechResults = (e) => {
+                        console.log('[Voice] Speech results:', e);
                         if (e.value && e.value[0]) {
                             const transcript = e.value[0];
                             setTranscribedText(transcript);
@@ -417,6 +421,7 @@ export const VoiceAssistant = () => {
                     };
 
                     Voice.onSpeechError = (e) => {
+                        console.log('[Voice] Speech error:', e);
                         setError(`Speech recognition error: ${e.error?.message || 'Unknown error'}`);
                         setIsListening(false);
                     };
@@ -584,12 +589,25 @@ export const VoiceAssistant = () => {
                 }
             } else {
                 if (isListening) {
+                    console.log('[Voice] Stopping voice recognition');
                     await Voice.stop();
                 } else {
+                    console.log('[Voice] Starting voice recognition with language:', selectedLanguage);
                     setPartialResults('');
                     setTranscribedText('');
                     setResponseStream('');
-                    await Voice.start(selectedLanguage);
+                    try {
+                        const isAvailable = await Voice.isAvailable();
+                        console.log('[Voice] Voice recognition available:', isAvailable);
+                        if (!isAvailable) {
+                            throw new Error('Voice recognition not available');
+                        }
+                        await Voice.start(selectedLanguage);
+                        console.log('[Voice] Voice recognition started successfully');
+                    } catch (error) {
+                        console.error('[Voice] Error starting voice recognition:', error);
+                        setError(`Failed to start voice recognition: ${error.message}`);
+                    }
                 }
             }
         } catch (error) {
