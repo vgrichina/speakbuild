@@ -331,7 +331,6 @@ export const VoiceAssistant = () => {
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
     const [error, setError] = useState('');
-    const [recognition, setRecognition] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState('en-US');
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [apiKey, setApiKey] = useState('');
@@ -446,29 +445,36 @@ export const VoiceAssistant = () => {
 
             let fullResponse = '';
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n').filter(line => line.trim() !== '');
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-                for (const line of lines) {
-                    if (!line.startsWith('data: ')) continue;
-                    
-                    if (line === 'data: [DONE]') break;
-                    
-                    try {
-                        const data = JSON.parse(line.slice(6));
-                        const content = data.choices?.[0]?.delta?.content;
-                        if (content) {
-                            fullResponse += content;
-                            setResponseStream(fullResponse);
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        
+                        if (line === 'data: [DONE]') break;
+                        
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            const content = data.choices?.[0]?.delta?.content;
+                            if (content) {
+                                fullResponse += content;
+                                setResponseStream(fullResponse);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing stream:', e);
                         }
-                    } catch (e) {
-                        console.error('Error parsing stream:', e);
                     }
                 }
+            } catch (error) {
+                console.error('Error reading stream:', error);
+                throw new Error('Failed to read response stream');
+            } finally {
+                reader.releaseLock();
             }
 
             // After receiving complete response, try to create component
@@ -567,7 +573,7 @@ export const VoiceAssistant = () => {
                             isListening && styles.voiceButtonListening
                         ]}
                         onPress={toggleListening}
-                        disabled={!recognition}
+                        disabled={!hasSpeechPermission}
                     >
                         {isListening ? 
                             <MicOff size={32} color="white" /> : 
