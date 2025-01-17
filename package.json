@@ -3,7 +3,7 @@
     "@expo/webpack-config": "^19.0.0",
     "expo": "^52.0.0",
     "expo-av": "~15.0.2",
-    "expo-speech": "~13.0.1",
+    "@react-native-voice/voice": "^3.2.4",
     "expo-status-bar": "~2.0.1",
     "lucide-react-native": "^0.359.0",
     "react": "18.3.1",
