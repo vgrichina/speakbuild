@@ -368,7 +368,8 @@ export const VoiceAssistant = () => {
         partialResults: speechPartialResults,
         finalResult: speechFinalResult,
         error: speechError,
-        isAvailable: isSpeechAvailable
+        isAvailable: isSpeechAvailable,
+        volume: speechVolume
     } = useSpeechRecognition(selectedLanguage);
 
     useEffect(() => {
@@ -579,7 +580,7 @@ export const VoiceAssistant = () => {
                         isListening={isSpeechListening}
                         onClick={toggleListening}
                         disabled={!hasSpeechPermission}
-                        volume={volume}
+                        volume={speechVolume}
                     />
                 </View>
             )}
