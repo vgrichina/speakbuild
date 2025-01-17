@@ -9,6 +9,8 @@
     "react-dom": "18.2.0",
     "react-native": "0.73.2",
     "react-native-safe-area-context": "4.8.2",
+    "react-native-svg": "14.1.0",
+    "lucide-react-native": "^0.359.0",
     "react-native-web": "~0.19.6"
   },
   "devDependencies": {

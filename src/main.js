@@ -1,6 +1,6 @@
 import React from 'react';
 const { useState, useEffect, useCallback } = React;
-const { icons: { Mic, MicOff, Radio, Loader2, Settings, Key } } = lucide;
+import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 
 // Settings modal component
 const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
@@ -34,9 +34,7 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
                             rel="noopener noreferrer"
                             className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
                         >
-                            <svg width="12" height="12" className="text-current">
-                                {Key.path}
-                            </svg>
+                            <Key size={12} color="currentColor" />
                             Get your API key
                         </a>
                     </div>
@@ -104,9 +102,10 @@ const VoiceButton = ({ isListening, onClick, disabled }) => (
                     : 'bg-blue-500 hover:bg-blue-600'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-            <svg width="32" height="32" className="text-white">
-                {isListening ? MicOff.path : Mic.path}
-            </svg>
+            {isListening ? 
+                <MicOff size={32} color="white" /> : 
+                <Mic size={32} color="white" />
+            }
         </button>
     </div>
 );
@@ -322,9 +321,7 @@ export const VoiceAssistant = () => {
                     className="p-2 rounded-full hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
                     title="Settings"
                 >
-                    <svg width="20" height="20" className="text-current">
-                        {Settings.path}
-                    </svg>
+                    <Settings size={20} color="currentColor" />
                     <span className="text-sm">Settings</span>
                 </button>
                 <select 
@@ -374,9 +371,7 @@ export const VoiceAssistant = () => {
             {/* Live Transcription */}
             {isListening && partialResults && (
                 <div className="flex items-center space-x-2 text-gray-600">
-                    <svg width="16" height="16" className="animate-pulse text-red-500">
-                        {Radio.path}
-                    </svg>
+                    <Radio size={16} color="#EF4444" />
                     <p className="italic">{partialResults}</p>
                 </div>
             )}
@@ -395,9 +390,7 @@ export const VoiceAssistant = () => {
                     <div className="flex items-center space-x-2 mb-2">
                         <h3 className="font-semibold">Response:</h3>
                         {isProcessing && (
-                            <svg width="16" height="16" className="animate-spin">
-                                {Loader2.path}
-                            </svg>
+                            <Loader2 size={16} color="currentColor" />
                         )}
                     </div>
                     <div 
