@@ -425,6 +425,23 @@ export const VoiceAssistant = () => {
                         setError(`Speech recognition error: ${e.error?.message || 'Unknown error'}`);
                         setIsListening(false);
                     };
+
+                    // Check if voice recognition is available
+                    try {
+                        const isAvailable = await Voice.isAvailable();
+                        console.log('[Voice] Voice recognition available:', isAvailable);
+                        if (!isAvailable) {
+                            throw new Error('Voice recognition not available on this device');
+                        }
+                        
+                        // Try to start voice recognition
+                        await Voice.start(selectedLanguage);
+                        console.log('[Voice] Voice recognition started with language:', selectedLanguage);
+                    } catch (error) {
+                        console.error('[Voice] Error initializing voice recognition:', error);
+                        setError(`Voice recognition error: ${error.message}`);
+                        setHasSpeechPermission(false);
+                    }
                 }
                 setHasSpeechPermission(true);
             } catch (error) {
