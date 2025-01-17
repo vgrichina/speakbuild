@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@expo/webpack-config": "^19.0.0",
-    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-voice/voice": "^3.2.4",
     "expo": "^52.0.0",
     "expo-av": "~15.0.2",

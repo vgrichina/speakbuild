@@ -301,13 +301,8 @@ export const VoiceAssistant = () => {
     useEffect(() => {
         const initializeSpeech = async () => {
             try {
-                const available = await Speech.isAvailableAsync();
-                if (available) {
-                    setHasSpeechPermission(true);
-                } else {
-                    setError('Speech recognition is not available on this device');
-                    setHasSpeechPermission(false);
-                }
+                // expo-speech is always available on supported platforms
+                setHasSpeechPermission(true);
             } catch (error) {
                 setError(`Speech initialization error: ${error.message}`);
                 setHasSpeechPermission(false);
