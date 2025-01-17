@@ -298,6 +298,7 @@ export const VoiceAssistant = () => {
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
+    const [showLanguageModal, setShowLanguageModal] = useState(false);
 
     useEffect(() => {
         const initializeSpeech = async () => {
@@ -478,36 +479,14 @@ export const VoiceAssistant = () => {
                 
                 <View style={styles.selectContainer}>
                     <Text style={styles.selectLabel}>Language:</Text>
-                    <View style={styles.select}>
-                        <Pressable
-                            onPress={() => {
-                                // For web platform, trigger native select
-                                const event = new MouseEvent('click', {
-                                    view: window,
-                                    bubbles: true,
-                                    cancelable: true
-                                });
-                                document.getElementById('language-select').dispatchEvent(event);
-                            }}
-                            style={styles.selectButton}
-                        >
-                            <Text style={styles.selectButtonText}>
-                                {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
-                            </Text>
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                // Show modal or picker for language selection
-                                // This would need a proper implementation for native platforms
-                                setSelectedLanguage(selectedLanguage);
-                            }}
-                            style={styles.selectButton}
-                        >
-                            <Text style={styles.selectButtonText}>
-                                {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
-                            </Text>
-                        </Pressable>
-                    </View>
+                    <Pressable
+                        onPress={() => setShowLanguageModal(true)}
+                        style={styles.selectButton}
+                    >
+                        <Text style={styles.selectButtonText}>
+                            {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
+                        </Text>
+                    </Pressable>
                 </View>
             </View>
 
@@ -598,6 +577,45 @@ export const VoiceAssistant = () => {
                     setError(''); // Clear any previous API key errors
                 }}
             />
+
+            {/* Language Selection Modal */}
+            <Modal
+                visible={showLanguageModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowLanguageModal(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select Language</Text>
+                            <Pressable onPress={() => setShowLanguageModal(false)}>
+                                <Text style={{ fontSize: 24 }}>×</Text>
+                            </Pressable>
+                        </View>
+                        <ScrollView style={{ maxHeight: 300 }}>
+                            {LANGUAGES.map(lang => (
+                                <Pressable
+                                    key={lang.code}
+                                    style={[
+                                        styles.button,
+                                        { 
+                                            marginVertical: 4,
+                                            backgroundColor: selectedLanguage === lang.code ? '#1D4ED8' : '#3B82F6'
+                                        }
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedLanguage(lang.code);
+                                        setShowLanguageModal(false);
+                                    }}
+                                >
+                                    <Text style={styles.buttonText}>{lang.name}</Text>
+                                </Pressable>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
