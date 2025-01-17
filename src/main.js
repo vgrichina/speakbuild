@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform } from 'react-native';
+import Voice from '@react-native-voice/voice';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
@@ -354,6 +355,29 @@ export const VoiceAssistant = () => {
                     };
 
                     setRecognition(recognition);
+                } else {
+                    // Native voice recognition initialization
+                    Voice.onSpeechStart = () => {
+                        setIsListening(true);
+                        setError('');
+                    };
+                    
+                    Voice.onSpeechEnd = () => {
+                        setIsListening(false);
+                    };
+                    
+                    Voice.onSpeechResults = (e) => {
+                        if (e.value && e.value[0]) {
+                            const transcript = e.value[0];
+                            setTranscribedText(transcript);
+                            processWithClaudeStream(transcript);
+                        }
+                    };
+
+                    Voice.onSpeechError = (e) => {
+                        setError(`Speech recognition error: ${e.error?.message || 'Unknown error'}`);
+                        setIsListening(false);
+                    };
                 }
                 setHasSpeechPermission(true);
             } catch (error) {
@@ -363,6 +387,13 @@ export const VoiceAssistant = () => {
         };
         
         initializeSpeech();
+        
+        // Cleanup
+        return () => {
+            if (Platform.OS !== 'web') {
+                Voice.destroy().then(Voice.removeAllListeners);
+            }
+        };
     }, [selectedLanguage]);
 
     const processWithClaudeStream = async (text) => {
@@ -490,22 +521,32 @@ export const VoiceAssistant = () => {
         }
     };
 
-    const toggleListening = useCallback(() => {
-        if (!recognition) return;
-        
+    const toggleListening = useCallback(async () => {
         try {
-            if (isListening) {
-                recognition.stop();
+            if (Platform.OS === 'web') {
+                if (!recognition) return;
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    setPartialResults('');
+                    setTranscribedText('');
+                    setResponseStream('');
+                    recognition.start();
+                }
             } else {
-                setPartialResults('');
-                setTranscribedText('');
-                setResponseStream('');
-                recognition.start();
+                if (isListening) {
+                    await Voice.stop();
+                } else {
+                    setPartialResults('');
+                    setTranscribedText('');
+                    setResponseStream('');
+                    await Voice.start(selectedLanguage);
+                }
             }
         } catch (error) {
             setError(`Toggle error: ${error.message}`);
         }
-    }, [recognition, isListening]);
+    }, [recognition, isListening, selectedLanguage]);
 
     const handleTextSubmit = (e) => {
         e.preventDefault();
