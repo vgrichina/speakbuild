@@ -229,19 +229,6 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
     );
 };
 
-// Language options - common ones, can be expanded
-const LANGUAGES = [
-    { code: 'en-US', name: 'English (US)' },
-    { code: 'en-GB', name: 'English (UK)' },
-    { code: 'es-ES', name: 'Spanish' },
-    { code: 'fr-FR', name: 'French' },
-    { code: 'de-DE', name: 'German' },
-    { code: 'it-IT', name: 'Italian' },
-    { code: 'ja-JP', name: 'Japanese' },
-    { code: 'ko-KR', name: 'Korean' },
-    { code: 'zh-CN', name: 'Chinese (Simplified)' },
-    { code: 'ru-RU', name: 'Russian' }
-];
 
 const Alert = ({ children, variant }) => (
     <div className={`p-4 rounded-lg ${
