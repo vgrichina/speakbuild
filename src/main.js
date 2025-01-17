@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated } from 'react-native';
-import Voice from '@react-native-voice/voice';
+import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
@@ -354,111 +354,35 @@ export const VoiceAssistant = () => {
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
 
+    const {
+        isListening,
+        startListening,
+        stopListening,
+        partialResults,
+        finalResult,
+        error: speechError,
+        isAvailable
+    } = useSpeechRecognition(selectedLanguage);
+
     useEffect(() => {
-        const initializeSpeech = async () => {
-            try {
-                if (Platform.OS === 'web') {
-                    // Web Speech API initialization
-                    if (!('webkitSpeechRecognition' in window)) {
-                        throw new Error('Web Speech API is not supported in this browser');
-                    }
-                    const WebSpeechRecognition = window.webkitSpeechRecognition;
-                    const recognition = new WebSpeechRecognition();
-                    
-                    recognition.continuous = false;
-                    recognition.interimResults = true;
-                    recognition.lang = selectedLanguage;
+        if (finalResult) {
+            setTranscribedText(finalResult);
+            processWithClaudeStream(finalResult);
+        }
+    }, [finalResult]);
 
-                    recognition.onstart = () => {
-                        setIsListening(true);
-                        setError('');
-                    };
+    useEffect(() => {
+        setHasSpeechPermission(isAvailable);
+        if (!isAvailable) {
+            setError('Speech recognition is not supported on this device');
+        }
+    }, [isAvailable]);
 
-                    recognition.onend = () => {
-                        setIsListening(false);
-                    };
-
-                    recognition.onresult = (event) => {
-                        const transcript = Array.from(event.results)
-                            .map(result => result[0].transcript)
-                            .join('');
-                        
-                        if (event.results[0].isFinal) {
-                            setTranscribedText(transcript);
-                            processWithClaudeStream(transcript);
-                        } else {
-                            setPartialResults(transcript);
-                        }
-                    };
-
-                    recognition.onerror = (event) => {
-                        setError(`Speech recognition error: ${event.error}`);
-                        setIsListening(false);
-                    };
-
-                    setRecognition(recognition);
-                } else {
-                    console.log('[Voice] Initializing native voice recognition');
-                    // Native voice recognition initialization
-                    Voice.onSpeechStart = () => {
-                        console.log('[Voice] Speech started');
-                        setIsListening(true);
-                        setError('');
-                    };
-                    
-                    Voice.onSpeechEnd = () => {
-                        console.log('[Voice] Speech ended');
-                        setIsListening(false);
-                    };
-                    
-                    Voice.onSpeechResults = (e) => {
-                        console.log('[Voice] Speech results:', e);
-                        if (e.value && e.value[0]) {
-                            const transcript = e.value[0];
-                            setTranscribedText(transcript);
-                            processWithClaudeStream(transcript);
-                        }
-                    };
-
-                    Voice.onSpeechError = (e) => {
-                        console.log('[Voice] Speech error:', e);
-                        setError(`Speech recognition error: ${e.error?.message || 'Unknown error'}`);
-                        setIsListening(false);
-                    };
-
-                    // Check if voice recognition is available
-                    try {
-                        const isAvailable = await Voice.isAvailable();
-                        console.log('[Voice] Voice recognition available:', isAvailable);
-                        if (!isAvailable) {
-                            throw new Error('Voice recognition not available on this device');
-                        }
-                        
-                        // Try to start voice recognition
-                        await Voice.start(selectedLanguage);
-                        console.log('[Voice] Voice recognition started with language:', selectedLanguage);
-                    } catch (error) {
-                        console.error('[Voice] Error initializing voice recognition:', error);
-                        setError(`Voice recognition error: ${error.message}`);
-                        setHasSpeechPermission(false);
-                    }
-                }
-                setHasSpeechPermission(true);
-            } catch (error) {
-                setError(`Speech initialization error: ${error.message}`);
-                setHasSpeechPermission(false);
-            }
-        };
-        
-        initializeSpeech();
-        
-        // Cleanup
-        return () => {
-            if (Platform.OS !== 'web') {
-                Voice.destroy().then(Voice.removeAllListeners);
-            }
-        };
-    }, [selectedLanguage]);
+    useEffect(() => {
+        if (speechError) {
+            setError(speechError);
+        }
+    }, [speechError]);
 
     const processWithClaudeStream = async (text) => {
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
@@ -587,50 +511,18 @@ export const VoiceAssistant = () => {
 
     const toggleListening = useCallback(async () => {
         try {
-            if (Platform.OS === 'web') {
-                if (!recognition) return;
-                if (isListening) {
-                    recognition.stop();
-                } else {
-                    // Request microphone permission before starting
-                    try {
-                        await navigator.mediaDevices.getUserMedia({ audio: true });
-                    } catch (error) {
-                        setError('Microphone permission denied');
-                        return;
-                    }
-                    setPartialResults('');
-                    setTranscribedText('');
-                    setResponseStream('');
-                    recognition.start();
-                }
+            if (isListening) {
+                await stopListening();
             } else {
-                if (isListening) {
-                    console.log('[Voice] Stopping voice recognition');
-                    await Voice.stop();
-                } else {
-                    console.log('[Voice] Starting voice recognition with language:', selectedLanguage);
-                    setPartialResults('');
-                    setTranscribedText('');
-                    setResponseStream('');
-                    try {
-                        const isAvailable = await Voice.isAvailable();
-                        console.log('[Voice] Voice recognition available:', isAvailable);
-                        if (!isAvailable) {
-                            throw new Error('Voice recognition not available');
-                        }
-                        await Voice.start(selectedLanguage);
-                        console.log('[Voice] Voice recognition started successfully');
-                    } catch (error) {
-                        console.error('[Voice] Error starting voice recognition:', error);
-                        setError(`Failed to start voice recognition: ${error.message}`);
-                    }
-                }
+                setPartialResults('');
+                setTranscribedText('');
+                setResponseStream('');
+                await startListening();
             }
         } catch (error) {
             setError(`Toggle error: ${error.message}`);
         }
-    }, [recognition, isListening, selectedLanguage]);
+    }, [isListening, startListening, stopListening]);
 
     const handleTextSubmit = (e) => {
         e.preventDefault();

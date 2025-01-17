@@ -35,13 +35,7 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "@react-native-voice/voice",
-        {
-          "microphonePermission": "Allow Voice Assistant to access the microphone for speech recognition",
-          "speechRecognitionPermission": "Allow Voice Assistant to securely recognize your speech"
-        }
-      ]
+      "expo-speech-recognition"
     ],
     "experiments": {
       "tsconfigPaths": true,
