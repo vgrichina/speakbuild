@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking } from 'react-native';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 
 const styles = StyleSheet.create({
@@ -10,12 +10,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modalContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -26,6 +22,21 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 0,
+        height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  linkText: {
+    color: '#3B82F6',
+    textDecorationLine: 'underline',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -120,11 +131,15 @@ const styles = StyleSheet.create({
 const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
     const [key, setKey] = useState(apiKey);
 
-    if (!isOpen) return null;
-
     return (
-        <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+        <Modal
+            visible={isOpen}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>Settings</Text>
                     <Pressable onPress={onClose}>
@@ -156,17 +171,21 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
                     </Text>
 
                     <Pressable
-                        style={styles.button}
+                        style={[styles.button, !key && styles.buttonDisabled]}
                         onPress={() => {
-                            onSave(key);
-                            onClose();
+                            if (key) {
+                                onSave(key);
+                                onClose();
+                            }
                         }}
+                        disabled={!key}
                     >
                         <Text style={styles.buttonText}>Save Settings</Text>
                     </Pressable>
                 </View>
+                </View>
             </View>
-        </View>
+        </Modal>
     );
 };
 
@@ -225,6 +244,13 @@ const VoiceButton = ({ isListening, onClick, disabled }) => (
 export const VoiceAssistant = () => {
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    useEffect(() => {
+        const currentApiKey = localStorage.getItem('openrouter_api_key');
+        if (!currentApiKey) {
+            setIsSettingsOpen(true);
+        }
+    }, []);
     const [partialResults, setPartialResults] = useState('');
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
