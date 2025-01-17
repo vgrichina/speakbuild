@@ -111,7 +111,7 @@ const VoiceButton = ({ isListening, onClick, disabled }) => (
     </div>
 );
 
-const VoiceAssistant = () => {
+export const VoiceAssistant = () => {
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [partialResults, setPartialResults] = useState('');
@@ -459,6 +459,3 @@ const VoiceAssistant = () => {
     );
 };
 
-// Render the app
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<VoiceAssistant />);
