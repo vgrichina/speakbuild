@@ -4,7 +4,8 @@
     "slug": "voice-assistant",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "scheme": "voiceassistant",
+    "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -17,7 +18,10 @@
       }
     },
     "web": {
-      "bundler": "webpack"
-    }
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
