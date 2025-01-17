@@ -7,6 +7,7 @@ export const useSpeechRecognition = (language = 'en-US') => {
     const [partialResults, setPartialResults] = useState('');
     const [finalResult, setFinalResult] = useState('');
     const [isAvailable, setIsAvailable] = useState(false);
+    const [volume, setVolume] = useState(0);
 
     useEffect(() => {
         const checkAvailability = async () => {
@@ -31,10 +32,17 @@ export const useSpeechRecognition = (language = 'en-US') => {
         if (event.results && event.results[0]) {
             if (event.isFinal) {
                 setFinalResult(event.results[0].transcript);
+                setVolume(0);
             } else {
                 setPartialResults(event.results[0].transcript);
             }
         }
+    });
+
+    useSpeechRecognitionEvent("volumechange", (event) => {
+        // Convert from -2...10 range to 0...1 range
+        const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
+        setVolume(normalizedVolume);
     });
 
     useSpeechRecognitionEvent("error", (event) => {
@@ -51,7 +59,11 @@ export const useSpeechRecognition = (language = 'en-US') => {
             await ExpoSpeechRecognitionModule.start({
                 lang: language,
                 interimResults: true,
-                maxAlternatives: 1
+                maxAlternatives: 1,
+                volumeChangeEventOptions: {
+                    enabled: true,
+                    intervalMillis: 100
+                }
             });
         } catch (e) {
             setError(`Failed to start listening: ${e.message}`);
@@ -73,6 +85,7 @@ export const useSpeechRecognition = (language = 'en-US') => {
         partialResults,
         finalResult,
         error,
-        isAvailable
+        isAvailable,
+        volume
     };
 };

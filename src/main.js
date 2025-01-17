@@ -247,29 +247,23 @@ const AlertDescription = ({ children }) => (
     <Text style={{ fontSize: 14 }}>{children}</Text>
 );
 
-const PulsatingCircle = ({ isActive }) => {
+const PulsatingCircle = ({ isActive, volume }) => {
     const animation = React.useRef(new Animated.Value(1)).current;
-
+    
     React.useEffect(() => {
         if (isActive) {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(animation, {
-                        toValue: 1.3,
-                        duration: 1000,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(animation, {
-                        toValue: 1,
-                        duration: 1000,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
+            // Scale based on volume (1.0 to 1.5)
+            const targetScale = 1 + (volume * 0.5);
+            Animated.spring(animation, {
+                toValue: targetScale,
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true,
+            }).start();
         } else {
             animation.setValue(1);
         }
-    }, [isActive]);
+    }, [isActive, volume]);
 
     if (!isActive) return null;
 
@@ -288,12 +282,12 @@ const PulsatingCircle = ({ isActive }) => {
     );
 };
 
-const VoiceButton = ({ isListening, onClick, disabled }) => {
+const VoiceButton = ({ isListening, onClick, disabled, volume }) => {
     const [isPressed, setIsPressed] = useState(false);
     
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <PulsatingCircle isActive={isListening} />
+            <PulsatingCircle isActive={isListening} volume={volume} />
             <Pressable
                 onPress={onClick}
                 onPressIn={() => setIsPressed(true)}
@@ -585,6 +579,7 @@ export const VoiceAssistant = () => {
                         isListening={isSpeechListening}
                         onClick={toggleListening}
                         disabled={!hasSpeechPermission}
+                        volume={volume}
                     />
                 </View>
             )}
