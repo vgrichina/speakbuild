@@ -303,7 +303,47 @@ export const VoiceAssistant = () => {
     useEffect(() => {
         const initializeSpeech = async () => {
             try {
-                // expo-speech is always available on supported platforms
+                if (Platform.OS === 'web') {
+                    // Web Speech API initialization
+                    if (!('webkitSpeechRecognition' in window)) {
+                        throw new Error('Web Speech API is not supported in this browser');
+                    }
+                    const WebSpeechRecognition = window.webkitSpeechRecognition;
+                    const recognition = new WebSpeechRecognition();
+                    
+                    recognition.continuous = false;
+                    recognition.interimResults = true;
+                    recognition.lang = selectedLanguage;
+
+                    recognition.onstart = () => {
+                        setIsListening(true);
+                        setError('');
+                    };
+
+                    recognition.onend = () => {
+                        setIsListening(false);
+                    };
+
+                    recognition.onresult = (event) => {
+                        const transcript = Array.from(event.results)
+                            .map(result => result[0].transcript)
+                            .join('');
+                        
+                        if (event.results[0].isFinal) {
+                            setTranscribedText(transcript);
+                            processWithClaudeStream(transcript);
+                        } else {
+                            setPartialResults(transcript);
+                        }
+                    };
+
+                    recognition.onerror = (event) => {
+                        setError(`Speech recognition error: ${event.error}`);
+                        setIsListening(false);
+                    };
+
+                    setRecognition(recognition);
+                }
                 setHasSpeechPermission(true);
             } catch (error) {
                 setError(`Speech initialization error: ${error.message}`);
@@ -312,7 +352,7 @@ export const VoiceAssistant = () => {
         };
         
         initializeSpeech();
-    }, []);
+    }, [selectedLanguage]);
 
     const processWithClaudeStream = async (text) => {
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
