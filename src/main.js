@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform } from 'react-native';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Speech from 'expo-speech';
 
 const LANGUAGES = [
     { code: 'en-US', name: 'English (US)' },
@@ -273,10 +275,13 @@ export const VoiceAssistant = () => {
     const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
-        const currentApiKey = localStorage.getItem('openrouter_api_key');
-        if (!currentApiKey) {
-            setIsSettingsOpen(true);
-        }
+        const checkApiKey = async () => {
+            const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
+            if (!currentApiKey) {
+                setIsSettingsOpen(true);
+            }
+        };
+        checkApiKey();
     }, []);
     const [partialResults, setPartialResults] = useState('');
     const [transcribedText, setTranscribedText] = useState('');
@@ -294,52 +299,26 @@ export const VoiceAssistant = () => {
     const [showSourceCode, setShowSourceCode] = useState(false);
 
     useEffect(() => {
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognitionInstance = new SpeechRecognition();
-            
-            recognitionInstance.continuous = false;
-            recognitionInstance.interimResults = true;
-            recognitionInstance.lang = selectedLanguage;
-            
-            recognitionInstance.onstart = () => {
-                setIsListening(true);
-                setError('');
-            };
-
-            recognitionInstance.onend = () => {
-                setIsListening(false);
-            };
-
-            recognitionInstance.onresult = (event) => {
-                const last = event.results.length - 1;
-                const transcript = event.results[last][0].transcript;
-                
-                if (event.results[last].isFinal) {
-                    setTranscribedText(transcript);
-                    processWithClaudeStream(transcript);
+        const initializeSpeech = async () => {
+            try {
+                const available = await Speech.isAvailableAsync();
+                if (available) {
+                    setHasSpeechPermission(true);
                 } else {
-                    setPartialResults(transcript);
-                }
-            };
-
-            recognitionInstance.onerror = (event) => {
-                setError(`Speech recognition error: ${event.error}`);
-                setIsListening(false);
-                if (event.error === 'not-allowed') {
+                    setError('Speech recognition is not available on this device');
                     setHasSpeechPermission(false);
                 }
-            };
-
-            setRecognition(recognitionInstance);
-        } else {
-            setError('Speech recognition is not supported in this browser.');
-            setHasSpeechPermission(false);
-        }
-    }, [selectedLanguage]); // Recreate recognition instance when language changes
+            } catch (error) {
+                setError(`Speech initialization error: ${error.message}`);
+                setHasSpeechPermission(false);
+            }
+        };
+        
+        initializeSpeech();
+    }, []);
 
     const processWithClaudeStream = async (text) => {
-        const currentApiKey = localStorage.getItem('openrouter_api_key');
+        const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
         if (!currentApiKey) {
             setError(<>Please set your OpenRouter API key in <button onClick={() => setIsSettingsOpen(true)} className="text-blue-500 hover:text-blue-600 underline">settings</button></>);
             return;
@@ -627,9 +606,9 @@ export const VoiceAssistant = () => {
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
                 apiKey={apiKey}
-                onSave={(newKey) => {
+                onSave={async (newKey) => {
                     setApiKey(newKey);
-                    localStorage.setItem('openrouter_api_key', newKey);
+                    await AsyncStorage.setItem('openrouter_api_key', newKey);
                     setError(''); // Clear any previous API key errors
                 }}
             />

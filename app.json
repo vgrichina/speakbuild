@@ -18,6 +18,14 @@
     },
     "web": {
       "bundler": "webpack"
-    }
+    },
+    "plugins": [
+      [
+        "expo-speech",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+        }
+      ]
+    ]
   }
 }
