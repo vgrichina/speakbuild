@@ -21,7 +21,14 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-speech",
+      "@react-native-voice/voice",
+      "react-native-safe-area-context"
+    ],
+    "experiments": {
+      "tsconfigPaths": true,
+      "typedRoutes": true
+    }
   }
 }
