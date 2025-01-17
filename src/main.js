@@ -233,41 +233,42 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
 
 
 const Alert = ({ children, variant }) => (
-    <div className={`p-4 rounded-lg ${
-        variant === 'destructive' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-    }`}>
+    <View style={{
+        padding: 16,
+        borderRadius: 8,
+        backgroundColor: variant === 'destructive' ? '#FEE2E2' : '#DBEAFE',
+    }}>
         {children}
-    </div>
+    </View>
 );
 
 const AlertDescription = ({ children }) => (
-    <p className="text-sm">{children}</p>
+    <Text style={{ fontSize: 14 }}>{children}</Text>
 );
 
 const VoiceButton = ({ isListening, onClick, disabled }) => (
-    <div className="relative">
-        {isListening && (
-            <>
-                <div className="ripple ripple-1 w-16 h-16 text-red-500 opacity-50"></div>
-                <div className="ripple ripple-2 w-16 h-16 text-red-500 opacity-50"></div>
-                <div className="ripple ripple-3 w-16 h-16 text-red-500 opacity-50"></div>
-            </>
-        )}
-        <button
-            onClick={onClick}
+    <View>
+        <Pressable
+            onPress={onClick}
             disabled={disabled}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all relative z-10 ${
-                isListening 
-                    ? 'bg-red-500 hover:bg-red-600 pulsate' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            style={[
+                {
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: isListening ? '#EF4444' : '#3B82F6',
+                },
+                disabled && { opacity: 0.5 }
+            ]}
         >
             {isListening ? 
                 <MicOff size={32} color="white" /> : 
                 <Mic size={32} color="white" />
             }
-        </button>
-    </div>
+        </Pressable>
+    </View>
 );
 
 export const VoiceAssistant = () => {
@@ -315,7 +316,8 @@ export const VoiceAssistant = () => {
     const processWithClaudeStream = async (text) => {
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
         if (!currentApiKey) {
-            setError(<>Please set your OpenRouter API key in <button onClick={() => setIsSettingsOpen(true)} className="text-blue-500 hover:text-blue-600 underline">settings</button></>);
+            setError('Please set your OpenRouter API key in settings');
+            setIsSettingsOpen(true);
             return;
         }
 
@@ -493,29 +495,18 @@ export const VoiceAssistant = () => {
                                 {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
                             </Text>
                         </Pressable>
-                        <select
-                            id="language-select"
-                            value={selectedLanguage}
-                            onChange={(e) => setSelectedLanguage(e.target.value)}
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                opacity: 0,
-                                width: '100%',
-                                height: '100%',
-                                minHeight: 44,
-                                cursor: 'pointer'
+                        <Pressable
+                            onPress={() => {
+                                // Show modal or picker for language selection
+                                // This would need a proper implementation for native platforms
+                                setSelectedLanguage(selectedLanguage);
                             }}
+                            style={styles.selectButton}
                         >
-                            {LANGUAGES.map(lang => (
-                                <option key={lang.code} value={lang.code}>
-                                    {lang.name}
-                                </option>
-                            ))}
-                        </select>
+                            <Text style={styles.selectButtonText}>
+                                {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
+                            </Text>
+                        </Pressable>
                     </View>
                 </View>
             </View>
