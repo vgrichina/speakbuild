@@ -35,7 +35,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-speech-recognition"
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Voice Assistant to use the microphone.",
+          "speechRecognitionPermission": "Allow Voice Assistant to use speech recognition."
+        }
+      ]
     ],
     "experiments": {
       "tsconfigPaths": true,
