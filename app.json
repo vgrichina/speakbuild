@@ -24,7 +24,14 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow Voice Assistant to access the microphone",
+          "speechRecognitionPermission": "Allow Voice Assistant to securely recognize user speech"
+        }
+      ]
     ],
     "experiments": {
       "tsconfigPaths": true,
