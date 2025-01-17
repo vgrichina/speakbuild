@@ -291,7 +291,18 @@ export const VoiceAssistant = () => {
     const [recognition, setRecognition] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState('en-US');
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
+    const [apiKey, setApiKey] = useState('');
+
+    // Load API key from AsyncStorage on mount
+    useEffect(() => {
+        const loadApiKey = async () => {
+            const savedKey = await AsyncStorage.getItem('openrouter_api_key');
+            if (savedKey) {
+                setApiKey(savedKey);
+            }
+        };
+        loadApiKey();
+    }, []);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [textInput, setTextInput] = useState('');
     const [hasSpeechPermission, setHasSpeechPermission] = useState(true);
