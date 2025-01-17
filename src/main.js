@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated } from 'react-native';
 import Voice from '@react-native-voice/voice';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -247,8 +247,50 @@ const AlertDescription = ({ children }) => (
     <Text style={{ fontSize: 14 }}>{children}</Text>
 );
 
+const PulsatingCircle = ({ isActive }) => {
+    const animation = React.useRef(new Animated.Value(1)).current;
+
+    React.useEffect(() => {
+        if (isActive) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(animation, {
+                        toValue: 1.3,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(animation, {
+                        toValue: 1,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                ])
+            ).start();
+        } else {
+            animation.setValue(1);
+        }
+    }, [isActive]);
+
+    if (!isActive) return null;
+
+    return (
+        <Animated.View
+            style={{
+                position: 'absolute',
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: '#EF4444',
+                opacity: 0.3,
+                transform: [{ scale: animation }],
+            }}
+        />
+    );
+};
+
 const VoiceButton = ({ isListening, onClick, disabled }) => (
-    <View>
+    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <PulsatingCircle isActive={isListening} />
         <Pressable
             onPress={onClick}
             disabled={disabled}
@@ -316,6 +358,12 @@ export const VoiceAssistant = () => {
         const initializeSpeech = async () => {
             try {
                 if (Platform.OS === 'web') {
+                    // Request microphone permission for web
+                    try {
+                        await navigator.mediaDevices.getUserMedia({ audio: true });
+                    } catch (error) {
+                        throw new Error('Microphone permission denied');
+                    }
                     // Web Speech API initialization
                     if (!('webkitSpeechRecognition' in window)) {
                         throw new Error('Web Speech API is not supported in this browser');

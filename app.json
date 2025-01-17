@@ -17,7 +17,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.voiceassistant.app"
+      "package": "com.voiceassistant.app",
+      "permissions": ["RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro"
