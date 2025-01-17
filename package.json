@@ -1,9 +1,9 @@
 {
   "dependencies": {
     "@expo/webpack-config": "^19.0.0",
+    "@react-native-voice/voice": "^3.2.4",
     "expo": "^52.0.0",
     "expo-av": "~15.0.2",
-    "@react-native-voice/voice": "^3.2.4",
     "expo-status-bar": "~2.0.1",
     "lucide-react-native": "^0.359.0",
     "react": "18.3.1",
