@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { VoiceAssistant } from '../src/main';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function Layout() {
@@ -11,7 +10,6 @@ export default function Layout() {
                     options={{ headerShown: false }}
                 />
             </Stack>
-            <VoiceAssistant />
         </SafeAreaProvider>
     );
 }
