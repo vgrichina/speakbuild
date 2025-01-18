@@ -355,7 +355,6 @@ export const VoiceAssistant = () => {
     }, []);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [textInput, setTextInput] = useState('');
-    const [hasSpeechPermission, setHasSpeechPermission] = useState(true);
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
