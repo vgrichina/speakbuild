@@ -398,10 +398,8 @@ export const VoiceAssistant = () => {
     });
 
     useSpeechRecognitionEvent("volumechange", (event) => {
-        console.log("Raw volume event:", event);
         if (typeof event.value === 'number') {
             const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
-            console.log("Normalized volume:", normalizedVolume);
             setSpeechVolume(normalizedVolume);
         }
     });
