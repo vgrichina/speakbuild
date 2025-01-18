@@ -46,6 +46,17 @@
           "microphonePermission": "Allow Voice Assistant to use the microphone.",
           "speechRecognitionPermission": "Allow Voice Assistant to use speech recognition."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.8.10",
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0"
+          }
+        }
       ]
     ],
     "experiments": {
