@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated } from 'react-native';
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent, useSpeechRecognitionPermissions } from 'expo-speech-recognition';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
@@ -363,7 +363,20 @@ export const VoiceAssistant = () => {
     const [isSpeechListening, setIsSpeechListening] = useState(false);
     const [speechVolume, setSpeechVolume] = useState(0);
     const [speechPartialResults, setSpeechPartialResults] = useState('');
-    const { granted: hasSpeechPermission } = useSpeechRecognitionPermissions();
+    const [hasSpeechPermission, setHasSpeechPermission] = useState(false);
+
+    useEffect(() => {
+        const checkPermissions = async () => {
+            const result = await ExpoSpeechRecognitionModule.getPermissionsAsync();
+            if (result.granted) {
+                setHasSpeechPermission(true);
+            } else if (result.canAskAgain) {
+                const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+                setHasSpeechPermission(granted);
+            }
+        };
+        checkPermissions();
+    }, []);
 
     // Speech recognition event handlers
     useSpeechRecognitionEvent("start", () => setIsSpeechListening(true));
