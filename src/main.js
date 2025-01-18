@@ -398,11 +398,6 @@ export const VoiceAssistant = () => {
         setIsSpeechListening(false);
     });
 
-    useEffect(() => {
-        if (!hasSpeechPermission) {
-            setError('Speech recognition permission not granted');
-        }
-    }, [hasSpeechPermission]);
 
     const processWithClaudeStream = async (text) => {
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
