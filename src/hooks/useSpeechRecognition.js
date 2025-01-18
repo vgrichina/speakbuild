@@ -40,9 +40,13 @@ export const useSpeechRecognition = (language = 'en-US') => {
     });
 
     useSpeechRecognitionEvent("volumechange", (event) => {
-        // Convert from -2...10 range to 0...1 range
-        const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
-        setVolume(normalizedVolume);
+        console.log("Raw volume event:", event);
+        if (typeof event.value === 'number') {
+            // Convert from -2...10 range to 0...1 range
+            const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
+            console.log("Normalized volume:", normalizedVolume);
+            setVolume(normalizedVolume);
+        }
     });
 
     useSpeechRecognitionEvent("error", (event) => {
@@ -56,15 +60,17 @@ export const useSpeechRecognition = (language = 'en-US') => {
             setFinalResult('');
             setError('');
 
+            console.log("Starting speech recognition with volume monitoring...");
             await ExpoSpeechRecognitionModule.start({
                 lang: language,
                 interimResults: true,
                 maxAlternatives: 1,
                 volumeChangeEventOptions: {
                     enabled: true,
-                    intervalMillis: 100
+                    intervalMillis: 300  // Increased interval to match example
                 }
             });
+            console.log("Speech recognition started successfully");
         } catch (e) {
             setError(`Failed to start listening: ${e.message}`);
         }
