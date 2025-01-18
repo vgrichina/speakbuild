@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Platform } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -427,7 +427,10 @@ export const VoiceAssistant = () => {
                 headers: {
                     'Authorization': `Bearer ${currentApiKey}`,
                     'Content-Type': 'application/json',
-                    'HTTP-Referer': window.location.href,
+                    'HTTP-Referer': Platform.select({
+                        web: typeof window !== 'undefined' ? window.location.href : 'https://voiceassistant.app',
+                        default: 'https://voiceassistant.app'
+                    }),
                     'X-Title': 'Voice Assistant Web App',
                 },
                 body: JSON.stringify({
