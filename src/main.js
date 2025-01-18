@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated } from 'react-native';
-import { useSpeechRecognition } from './hooks/useSpeechRecognition';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent, useSpeechRecognitionPermissions } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
@@ -361,36 +361,49 @@ export const VoiceAssistant = () => {
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-    const {
-        isListening: isSpeechListening,
-        startListening: startSpeechListening,
-        stopListening: stopSpeechListening,
-        partialResults: speechPartialResults,
-        finalResult: speechFinalResult,
-        error: speechError,
-        isAvailable: isSpeechAvailable,
-        volume: speechVolume
-    } = useSpeechRecognition(selectedLanguage);
+    const [isSpeechListening, setIsSpeechListening] = useState(false);
+    const [speechVolume, setSpeechVolume] = useState(0);
+    const [speechPartialResults, setSpeechPartialResults] = useState('');
+    const { granted: hasSpeechPermission } = useSpeechRecognitionPermissions();
+
+    // Speech recognition event handlers
+    useSpeechRecognitionEvent("start", () => setIsSpeechListening(true));
+    useSpeechRecognitionEvent("end", () => {
+        setIsSpeechListening(false);
+        setSpeechVolume(0);
+    });
+
+    useSpeechRecognitionEvent("result", (event) => {
+        if (event.results?.[0]) {
+            if (event.isFinal) {
+                setTranscribedText(event.results[0].transcript);
+                processWithClaudeStream(event.results[0].transcript);
+                setSpeechVolume(0);
+            } else {
+                setSpeechPartialResults(event.results[0].transcript);
+            }
+        }
+    });
+
+    useSpeechRecognitionEvent("volumechange", (event) => {
+        console.log("Raw volume event:", event);
+        if (typeof event.value === 'number') {
+            const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
+            console.log("Normalized volume:", normalizedVolume);
+            setSpeechVolume(normalizedVolume);
+        }
+    });
+
+    useSpeechRecognitionEvent("error", (event) => {
+        setError(`Recognition error: ${event.error}`);
+        setIsSpeechListening(false);
+    });
 
     useEffect(() => {
-        if (speechFinalResult) {
-            setTranscribedText(speechFinalResult);
-            processWithClaudeStream(speechFinalResult);
+        if (!hasSpeechPermission) {
+            setError('Speech recognition permission not granted');
         }
-    }, [speechFinalResult]);
-
-    useEffect(() => {
-        setHasSpeechPermission(isSpeechAvailable);
-        if (!isSpeechAvailable) {
-            setError('Speech recognition is not supported on this device');
-        }
-    }, [isSpeechAvailable]);
-
-    useEffect(() => {
-        if (speechError) {
-            setError(speechError);
-        }
-    }, [speechError]);
+    }, [hasSpeechPermission]);
 
     const processWithClaudeStream = async (text) => {
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
@@ -527,17 +540,25 @@ export const VoiceAssistant = () => {
     const toggleListening = useCallback(async () => {
         try {
             if (isSpeechListening) {
-                await stopSpeechListening();
+                await ExpoSpeechRecognitionModule.stop();
             } else {
-                setPartialResults('');
+                setSpeechPartialResults('');
                 setTranscribedText('');
                 setResponseStream('');
-                await startSpeechListening();
+                await ExpoSpeechRecognitionModule.start({
+                    lang: selectedLanguage,
+                    interimResults: true,
+                    maxAlternatives: 1,
+                    volumeChangeEventOptions: {
+                        enabled: true,
+                        intervalMillis: 300
+                    }
+                });
             }
         } catch (error) {
             setError(`Toggle error: ${error.message}`);
         }
-    }, [isSpeechListening, startSpeechListening, stopSpeechListening]);
+    }, [isSpeechListening, selectedLanguage]);
 
     const handleTextSubmit = (e) => {
         e.preventDefault();
