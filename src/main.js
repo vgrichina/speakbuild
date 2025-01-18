@@ -427,10 +427,6 @@ export const VoiceAssistant = () => {
                 headers: {
                     'Authorization': `Bearer ${currentApiKey}`,
                     'Content-Type': 'application/json',
-                    'HTTP-Referer': Platform.select({
-                        web: typeof window !== 'undefined' ? window.location.href : 'https://voiceassistant.app',
-                        default: 'https://voiceassistant.app'
-                    }),
                     'X-Title': 'Voice Assistant Web App',
                 },
                 body: JSON.stringify({
