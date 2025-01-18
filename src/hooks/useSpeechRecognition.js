@@ -9,50 +9,70 @@ export const useSpeechRecognition = (language = 'en-US') => {
     const [isAvailable, setIsAvailable] = useState(false);
     const [volume, setVolume] = useState(0);
 
+    // Initial setup and permissions
     useEffect(() => {
         const checkAvailability = async () => {
-            const available = await ExpoSpeechRecognitionModule.isRecognitionAvailable();
-            setIsAvailable(available);
-            
-            if (available) {
-                const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-                if (!result.granted) {
-                    setError('Microphone permission not granted');
+            try {
+                const available = await ExpoSpeechRecognitionModule.isRecognitionAvailable();
+                setIsAvailable(available);
+                
+                if (available) {
+                    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+                    if (!result.granted) {
+                        setError('Microphone permission not granted');
+                    }
                 }
+            } catch (e) {
+                setError(`Availability check failed: ${e.message}`);
+                setIsAvailable(false);
             }
         };
         
         checkAvailability();
     }, []);
 
-    useSpeechRecognitionEvent("start", () => setIsListening(true));
-    useSpeechRecognitionEvent("end", () => setIsListening(false));
-    
-    useSpeechRecognitionEvent("result", (event) => {
-        if (event.results && event.results[0]) {
-            if (event.isFinal) {
-                setFinalResult(event.results[0].transcript);
+    // Event listeners setup and cleanup
+    useEffect(() => {
+        const handlers = {
+            start: () => setIsListening(true),
+            end: () => {
+                setIsListening(false);
                 setVolume(0);
-            } else {
-                setPartialResults(event.results[0].transcript);
+            },
+            result: (event) => {
+                if (event.results?.[0]) {
+                    if (event.isFinal) {
+                        setFinalResult(event.results[0].transcript);
+                        setVolume(0);
+                    } else {
+                        setPartialResults(event.results[0].transcript);
+                    }
+                }
+            },
+            volumechange: (event) => {
+                console.log("Raw volume event:", event);
+                if (typeof event.value === 'number') {
+                    const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
+                    console.log("Normalized volume:", normalizedVolume);
+                    setVolume(normalizedVolume);
+                }
+            },
+            error: (event) => {
+                setError(`Recognition error: ${event.error}`);
+                setIsListening(false);
             }
-        }
-    });
+        };
 
-    useSpeechRecognitionEvent("volumechange", (event) => {
-        console.log("Raw volume event:", event);
-        if (typeof event.value === 'number') {
-            // Convert from -2...10 range to 0...1 range
-            const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
-            console.log("Normalized volume:", normalizedVolume);
-            setVolume(normalizedVolume);
-        }
-    });
+        // Register all event listeners
+        const unsubscribers = Object.entries(handlers).map(([event, handler]) => 
+            useSpeechRecognitionEvent(event, handler)
+        );
 
-    useSpeechRecognitionEvent("error", (event) => {
-        setError(`Recognition error: ${event.error}`);
-        setIsListening(false);
-    });
+        // Cleanup function to remove all listeners
+        return () => {
+            unsubscribers.forEach(unsubscribe => unsubscribe?.());
+        };
+    }, []); // Empty dependency array since handlers only use setState functions
 
     const startListening = useCallback(async () => {
         try {
@@ -67,7 +87,7 @@ export const useSpeechRecognition = (language = 'en-US') => {
                 maxAlternatives: 1,
                 volumeChangeEventOptions: {
                     enabled: true,
-                    intervalMillis: 300  // Increased interval to match example
+                    intervalMillis: 300
                 }
             });
             console.log("Speech recognition started successfully");
