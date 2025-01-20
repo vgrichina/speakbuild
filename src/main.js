@@ -439,10 +439,11 @@ export const VoiceAssistant = () => {
                         }] : []),
                         {
                             role: 'user',
-                            content: `Generate a React component based on this request: "${text}".
+                            content: `Generate a React Native component based on this request: "${text}".
                                      Return ONLY the component code using React.createElement (no JSX).
                                      Define the component as 'function Component() {' (no export statement).
-                                     Use only inline styles (no Tailwind/CSS).
+                                     Use only React Native components: View, Text, Image, ScrollView, etc.
+                                     Use only React Native compatible styles (no web-specific CSS).
                                      Use React.useState for any state management.
                                      Do not include any explanation or markdown - just the pure JavaScript code.
                                      The code should start directly with 'function Component() {'.
@@ -452,9 +453,9 @@ export const VoiceAssistant = () => {
                                      \`\`\`
                                      function Component() {
                                        const [state, setState] = React.useState(null);
-                                       return React.createElement('View', {
+                                       return React.createElement(View, {
                                          style: { padding: 10 }
-                                       }, 'Hello');
+                                       }, React.createElement(Text, null, 'Hello'));
                                      }
                                      \`\`\``
                         }
