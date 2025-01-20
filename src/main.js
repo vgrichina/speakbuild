@@ -457,9 +457,54 @@ export const VoiceAssistant = () => {
 
             let fullResponse = '';
 
+            const processCompleteResponse = (response) => {
+                try {
+                    console.log('Full response:', response);
+                    
+                    // Extract code from markdown code block with more flexible pattern
+                    const codeMatch = response.match(/```(?:jsx|javascript|)?\s*([\s\S]*?)```/);
+                    if (!codeMatch) {
+                        console.error('Response content:', response);
+                        throw new Error('No code block found in response');
+                    }
+                    const code = codeMatch[1].trim();
+                    console.log('Extracted code:', code);
+                    
+                    if (!code.includes('function Component()')) {
+                        throw new Error('Invalid component code format');
+                    }
+                    
+                    // Create component function with proper scope access
+                    const componentCode = `
+                        const React = arguments[0];
+                        const { View, Text, Image, ScrollView } = arguments[1];
+                        ${code}
+                        return Component;
+                    `;
+                    
+                    // Create and execute the function with React and RN components in scope
+                    const createComponent = new Function(componentCode);
+                    const GeneratedComponent = createComponent(React, { 
+                        View, Text, Image, ScrollView 
+                    });
+
+                    // Store the current component and its source code
+                    setCurrentComponent(() => GeneratedComponent);
+                    setCurrentComponentCode(code);
+
+                } catch (error) {
+                    console.error('Error creating component:', error);
+                    setError(`Failed to create component: ${error.message}`);
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+
             es.addEventListener('message', (event) => {
                 if (event.data === '[DONE]') {
                     es.close();
+                    // Process the complete response after stream ends
+                    processCompleteResponse(fullResponse);
                     return;
                 }
 
@@ -482,43 +527,6 @@ export const VoiceAssistant = () => {
                 es.close();
                 setIsProcessing(false);
             });
-
-            // After receiving complete response, try to create component
-            try {
-                console.log('Full response:', fullResponse);
-                
-                // Extract code from markdown code block
-                const codeMatch = fullResponse.match(/```(?:jsx|javascript)?\n([\s\S]*?)```/);
-                if (!codeMatch) {
-                    throw new Error('No code block found in response');
-                }
-                const code = codeMatch[1].trim();
-                console.log('Extracted code:', code);
-                
-                // Create component function with proper scope access
-                const componentCode = `
-                    const React = arguments[0];
-                    const { View, Text, Image, ScrollView } = arguments[1];
-                    ${code}
-                    return Component;
-                `;
-                
-                // Create and execute the function with React and RN components in scope
-                const createComponent = new Function(componentCode);
-                const GeneratedComponent = createComponent(React, { 
-                    View, Text, Image, ScrollView 
-                });
-
-                // Store the current component and its source code
-                setCurrentComponent(() => GeneratedComponent);
-                setCurrentComponentCode(code);
-
-            } catch (error) {
-                console.error('Error creating component:', error);
-                setError(`Failed to create component: ${error.message}`);
-            } finally {
-                setIsProcessing(false);
-            }
         } catch (error) {
             console.error('API call error:', error);
             if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
