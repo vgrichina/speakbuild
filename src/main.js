@@ -422,6 +422,7 @@ export const VoiceAssistant = () => {
         setResponseStream('');
         
         try {
+            console.log('Making OpenRouter API request...');
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -462,8 +463,12 @@ export const VoiceAssistant = () => {
                 }),
             });
 
+            console.log('Response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+                const errorText = await response.text();
+                console.error('API error response:', errorText);
+                throw new Error(`API error: ${response.status} - ${errorText}`);
             }
 
             const reader = response.body.getReader();
@@ -537,7 +542,13 @@ export const VoiceAssistant = () => {
                 setIsProcessing(false);
             }
         } catch (error) {
-            setError(`Error: ${error.message}`);
+            console.error('API call error:', error);
+            if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
+                setError('Network error: Please check your internet connection');
+            } else {
+                setError(`Error: ${error.message}`);
+            }
+            setIsProcessing(false);
         }
     };
 
