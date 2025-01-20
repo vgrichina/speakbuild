@@ -422,13 +422,14 @@ export const VoiceAssistant = () => {
         
         try {
             console.log('Making OpenRouter API request...');
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
+            const es = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
                 headers: {
                     'Authorization': `Bearer ${currentApiKey}`,
                     'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream',
                     'X-Title': 'Voice Assistant Web App',
                 },
+                method: 'POST',
                 body: JSON.stringify({
                     model: 'anthropic/claude-3.5-sonnet',
                     messages: [
@@ -446,58 +447,40 @@ export const VoiceAssistant = () => {
                                      Use React.useState for any state management.
                                      Do not include any explanation or markdown - just the pure JavaScript code.
                                      The code should start directly with 'function Component() {'.
-                                     Start your response with \`\`\` and end with \`\`\`.
-                                     
-                                     Example format:
-                                     \`\`\`
-                                     function Component() {
-                                       const [state, setState] = React.useState(null);
-                                       return React.createElement(View, {
-                                         style: { padding: 10 }
-                                       }, React.createElement(Text, null, 'Hello'));
-                                     }
-                                     \`\`\``
+                                     Start your response with \`\`\` and end with \`\`\`.`
                         }
                     ],
                     stream: true
-                }),
+                })
             });
 
-            console.log('Response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API error response:', errorText);
-                throw new Error(`API error: ${response.status} - ${errorText}`);
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
             let fullResponse = '';
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (!line.trim() || !line.startsWith('data: ')) continue;
-                    if (line === 'data: [DONE]') break;
-
-                    try {
-                        const data = JSON.parse(line.slice(6));
-                        const content = data.choices?.[0]?.delta?.content;
-                        if (content) {
-                            fullResponse += content;
-                            setResponseStream(fullResponse);
-                        }
-                    } catch (e) {
-                        console.error('Error parsing stream:', e);
-                    }
+            es.addEventListener('message', (event) => {
+                if (event.data === '[DONE]') {
+                    es.close();
+                    return;
                 }
-            }
+
+                try {
+                    const data = JSON.parse(event.data);
+                    const content = data.choices?.[0]?.delta?.content;
+                    if (content) {
+                        fullResponse += content;
+                        setResponseStream(prev => prev + content);
+                    }
+                } catch (e) {
+                    console.error('Error parsing SSE message:', e);
+                    setError(`Failed to parse response: ${e.message}`);
+                }
+            });
+
+            es.addEventListener('error', (error) => {
+                console.error('SSE error:', error);
+                setError(`Stream error: ${error.message}`);
+                es.close();
+                setIsProcessing(false);
+            });
 
             // After receiving complete response, try to create component
             try {
