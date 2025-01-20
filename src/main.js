@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import EventSource from 'react-native-sse';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -477,7 +477,7 @@ export const VoiceAssistant = () => {
                     // Create component function with proper scope access
                     const componentCode = `
                         const React = arguments[0];
-                        const { View, Text, Image, ScrollView } = arguments[1];
+                        const { View, Text, Image, ScrollView, TouchableOpacity, Pressable, Button } = arguments[1];
                         const { useState } = React;
                         ${code}
                         return Component;
@@ -486,7 +486,7 @@ export const VoiceAssistant = () => {
                     // Create and execute the function with React and RN components in scope
                     const createComponent = new Function(componentCode);
                     const GeneratedComponent = createComponent(React, { 
-                        View, Text, Image, ScrollView 
+                        View, Text, Image, ScrollView, TouchableOpacity, Pressable, Button
                     });
 
                     // Store the current component and its source code
