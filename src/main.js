@@ -471,24 +471,31 @@ export const VoiceAssistant = () => {
                 throw new Error(`API error: ${response.status} - ${errorText}`);
             }
 
-            const responseText = await response.text();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
             let fullResponse = '';
-            
-            // Process the response text line by line
-            const lines = responseText.split('\n');
-            for (const line of lines) {
-                if (!line.trim() || !line.startsWith('data: ')) continue;
-                if (line === 'data: [DONE]') break;
-                
-                try {
-                    const data = JSON.parse(line.slice(6));
-                    const content = data.choices?.[0]?.delta?.content;
-                    if (content) {
-                        fullResponse += content;
-                        setResponseStream(fullResponse);
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (!line.trim() || !line.startsWith('data: ')) continue;
+                    if (line === 'data: [DONE]') break;
+
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        const content = data.choices?.[0]?.delta?.content;
+                        if (content) {
+                            fullResponse += content;
+                            setResponseStream(fullResponse);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing stream:', e);
                     }
-                } catch (e) {
-                    console.error('Error parsing stream:', e);
                 }
             }
 
