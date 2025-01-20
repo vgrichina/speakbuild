@@ -471,41 +471,25 @@ export const VoiceAssistant = () => {
                 throw new Error(`API error: ${response.status} - ${errorText}`);
             }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
+            const responseText = await response.text();
             let fullResponse = '';
-
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-                    for (const line of lines) {
-                        if (!line.startsWith('data: ')) continue;
-                        
-                        if (line === 'data: [DONE]') break;
-                        
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            const content = data.choices?.[0]?.delta?.content;
-                            if (content) {
-                                fullResponse += content;
-                                setResponseStream(fullResponse);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing stream:', e);
-                        }
+            
+            // Process the response text line by line
+            const lines = responseText.split('\n');
+            for (const line of lines) {
+                if (!line.trim() || !line.startsWith('data: ')) continue;
+                if (line === 'data: [DONE]') break;
+                
+                try {
+                    const data = JSON.parse(line.slice(6));
+                    const content = data.choices?.[0]?.delta?.content;
+                    if (content) {
+                        fullResponse += content;
+                        setResponseStream(fullResponse);
                     }
+                } catch (e) {
+                    console.error('Error parsing stream:', e);
                 }
-            } catch (error) {
-                console.error('Error reading stream:', error);
-                throw new Error('Failed to read response stream');
-            } finally {
-                reader.releaseLock();
             }
 
             // After receiving complete response, try to create component
