@@ -491,6 +491,9 @@ export const VoiceAssistant = () => {
                     // Store the current component and its source code
                     setCurrentComponent(() => GeneratedComponent);
                     setCurrentComponentCode(code);
+                    // Clear error and transcribed text after successful generation
+                    setError('');
+                    setTranscribedText('');
 
                 } catch (error) {
                     console.error('Error creating component:', error);
