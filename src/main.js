@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import EventSource from 'react-native-sse';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
