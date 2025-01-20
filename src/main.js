@@ -21,8 +21,7 @@ const LANGUAGES = [
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    maxWidth: 600,
-    alignSelf: 'center',
+    flex: 1,
     width: '100%',
   },
   modalContainer: {
@@ -719,9 +718,14 @@ export const VoiceAssistant = () => {
 
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
-                <View style={{ marginTop: 16 }}>
-                    <View style={[styles.transcriptionBox, { backgroundColor: 'white' }]}>
-                        {React.createElement(currentComponent)}
+                <View style={{ marginTop: 16, flex: 1, minHeight: 200 }}>
+                    <View style={[styles.transcriptionBox, { 
+                        backgroundColor: 'white',
+                        flex: 1
+                    }]}>
+                        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                            {React.createElement(currentComponent)}
+                        </ScrollView>
                     </View>
                     <Pressable
                         onPress={() => setShowSourceCode(!showSourceCode)}
