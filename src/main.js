@@ -478,6 +478,7 @@ export const VoiceAssistant = () => {
                     const componentCode = `
                         const React = arguments[0];
                         const { View, Text, Image, ScrollView } = arguments[1];
+                        const { useState } = React;
                         ${code}
                         return Component;
                     `;
