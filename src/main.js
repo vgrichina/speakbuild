@@ -128,9 +128,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    height: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    height: 56,
   },
   debugMenu: {
     position: 'absolute',
@@ -765,18 +765,28 @@ export const VoiceAssistant = () => {
             <View style={styles.compactHeader}>
                 <Pressable
                     onPress={() => setIsSettingsOpen(true)}
-                    style={styles.iconButton}
+                    style={{
+                        padding: 12,
+                        marginLeft: -8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                    }}
                 >
-                    <Settings size={20} color="#666" />
+                    <Settings size={24} color="#666" />
                 </Pressable>
                 
                 {currentComponent && (
                     <View>
                         <Pressable
                             onPress={() => setShowDebugMenu(!showDebugMenu)}
-                            style={styles.iconButton}
+                            style={{
+                                padding: 12,
+                                marginRight: -8,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}
                         >
-                            <Text style={{ color: '#666', fontSize: 20 }}>⋮</Text>
+                            <Text style={{ color: '#666', fontSize: 24 }}>⋮</Text>
                         </Pressable>
                         {showDebugMenu && (
                             <View style={styles.debugMenu}>
