@@ -4,6 +4,7 @@ import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key, Square } from 'lucide-react-native';
+import * as ExpoSensors from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
 
@@ -583,7 +584,9 @@ export const VoiceAssistant = () => {
                                      Return ONLY the component code using React.createElement (no JSX).
                                      Define the component as 'function Component() {' (no export statement).
 
-                                     Available React Native APIs through RN namespace:
+                                     Available APIs:
+
+                                     React Native (RN namespace):
                                      - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
                                      - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
                                      - Device Features: RN.Vibration, RN.Share, RN.Platform
@@ -591,6 +594,20 @@ export const VoiceAssistant = () => {
                                      - Animation: RN.Animated for smooth animations
                                      - System: RN.Platform.OS, RN.Platform.Version
                                      - Appearance: RN.Appearance for dark/light mode
+
+                                     Expo Sensors (Sensors namespace):
+                                     - Sensors.Accelerometer - device motion data
+                                     - Sensors.Gyroscope - rotation data
+                                     - Sensors.Magnetometer - compass data
+                                     - Sensors.Barometer - atmospheric pressure
+                                     - Sensors.DeviceMotion - combined motion data
+                                     - Sensors.Pedometer - step counting
+
+                                     Example sensor usage:
+                                     - await Sensors.Accelerometer.isAvailableAsync()
+                                     - Sensors.Accelerometer.addListener(data => console.log(data))
+                                     - Sensors.Accelerometer.setUpdateInterval(1000)
+                                     - Sensors.Accelerometer.removeSubscription(subscription)
 
                                      Example usage:
                                      - RN.Vibration.vibrate() for haptic feedback
@@ -724,6 +741,7 @@ export const VoiceAssistant = () => {
                     const componentCode = `
                         const React = arguments[0];
                         const RN = arguments[1];
+                        const Sensors = arguments[2];
                         const { useState } = React;
                         ${code}
                         return Component;
@@ -731,7 +749,7 @@ export const VoiceAssistant = () => {
 
                     // Create and execute the function with React and RN components in scope
                     const createComponent = new Function(componentCode);
-                    const GeneratedComponent = createComponent(React, RN);
+                    const GeneratedComponent = createComponent(React, RN, ExpoSensors);
 
                     // Store the current component and its source code
                     setCurrentComponent(() => GeneratedComponent);
