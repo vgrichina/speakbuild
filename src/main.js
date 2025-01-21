@@ -3,7 +3,7 @@ import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
-import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
+import { Mic, MicOff, Radio, Loader2, Settings, Key, Square } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
 
@@ -400,14 +400,14 @@ const PulsatingCircle = ({ isActive, volume }) => {
     );
 };
 
-const VoiceButton = ({ isListening, onClick, disabled, volume }) => {
+const VoiceButton = ({ isListening, onClick, disabled, volume, isGenerating, onStopGeneration }) => {
     const [isPressed, setIsPressed] = useState(false);
 
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <PulsatingCircle isActive={isListening} volume={volume} />
+            {!isGenerating && <PulsatingCircle isActive={isListening} volume={volume} />}
             <Pressable
-                onPress={onClick}
+                onPress={isGenerating ? onStopGeneration : onClick}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
                 disabled={disabled}
@@ -418,23 +418,26 @@ const VoiceButton = ({ isListening, onClick, disabled, volume }) => {
                         borderRadius: 32,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: isListening ? '#EF4444' : '#3B82F6',
+                        backgroundColor: isGenerating ? '#EF4444' : (isListening ? '#EF4444' : '#3B82F6'),
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
                     disabled && { opacity: 0.5 }
                 ]}
             >
-                {isListening ? 
-                    <MicOff size={32} color="white" /> : 
-                    <Mic size={32} color="white" />
+                {isGenerating ? 
+                    <Square size={24} color="white" /> :
+                    (isListening ? 
+                        <MicOff size={32} color="white" /> : 
+                        <Mic size={32} color="white" />
+                    )
                 }
             </Pressable>
             <Text style={{ 
-                marginTop: 8, 
-                color: isListening ? '#EF4444' : '#666',
+                marginTop: 8,
+                color: (isGenerating || isListening) ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isListening ? 'Tap to stop' : 'Tap to speak'}
+                {isGenerating ? 'Stop generating' : (isListening ? 'Tap to stop' : 'Tap to speak')}
             </Text>
         </View>
     );
@@ -559,7 +562,7 @@ export const VoiceAssistant = () => {
 
         try {
             console.log('Making OpenRouter API request...');
-            const es = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
+            window.currentEventSource = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
                 headers: {
                     'Authorization': `Bearer ${currentApiKey}`,
                     'Content-Type': 'application/json',
@@ -728,9 +731,10 @@ export const VoiceAssistant = () => {
                 }
             };
 
-            es.addEventListener('message', (event) => {
+            window.currentEventSource.addEventListener('message', (event) => {
                 if (event.data === '[DONE]') {
-                    es.close();
+                    window.currentEventSource.close();
+                    window.currentEventSource = null;
                     // Process the complete response after stream ends
                     processCompleteResponse(fullResponse);
                     return;
@@ -749,10 +753,11 @@ export const VoiceAssistant = () => {
                 }
             });
 
-            es.addEventListener('error', (error) => {
+            window.currentEventSource.addEventListener('error', (error) => {
                 console.error('SSE error:', error);
                 setError(`Stream error: ${error.message}`);
-                es.close();
+                window.currentEventSource.close();
+                window.currentEventSource = null;
                 setIsProcessing(false);
             });
         } catch (error) {
@@ -846,17 +851,22 @@ export const VoiceAssistant = () => {
                 )}
             </View>
 
-            {/* Floating Voice Button */}
-            {hasSpeechPermission && (
-                <View style={styles.floatingButtonContainer}>
-                    <VoiceButton
-                        isListening={isSpeechListening}
-                        onClick={toggleListening}
-                        disabled={!hasSpeechPermission}
-                        volume={speechVolume}
-                    />
-                </View>
-            )}
+            {/* Floating Voice/Stop Button */}
+            <View style={styles.floatingButtonContainer}>
+                <VoiceButton
+                    isListening={isSpeechListening}
+                    onClick={toggleListening}
+                    disabled={!hasSpeechPermission && !isProcessing}
+                    volume={speechVolume}
+                    isGenerating={isProcessing}
+                    onStopGeneration={() => {
+                        if (window.currentEventSource) {
+                            window.currentEventSource.close();
+                            setIsProcessing(false);
+                        }
+                    }}
+                />
+            </View>
 
             {/* Text Input */}
             {!hasSpeechPermission && (
