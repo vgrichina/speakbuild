@@ -582,12 +582,29 @@ export const VoiceAssistant = () => {
                             content: `Generate a React Native component based on this request: "${text}".
                                      Return ONLY the component code using React.createElement (no JSX).
                                      Define the component as 'function Component() {' (no export statement).
-                                     Use only React Native components with RN prefix: RN.View, RN.Text, RN.Image, RN.ScrollView, etc.
+
+                                     Available React Native APIs through RN namespace:
+                                     - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
+                                     - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
+                                     - Device Features: RN.Vibration, RN.Share, RN.Platform
+                                     - Layout: RN.Dimensions.get('window') for screen size
+                                     - Animation: RN.Animated for smooth animations
+                                     - System: RN.Platform.OS, RN.Platform.Version
+                                     - Appearance: RN.Appearance for dark/light mode
+
+                                     Example usage:
+                                     - RN.Vibration.vibrate() for haptic feedback
+                                     - RN.Share.share({ message: "Hello!" })
+                                     - RN.Alert.alert("Title", "Message")
+                                     - const { width, height } = RN.Dimensions.get('window')
+                                     - RN.Platform.OS === 'ios' for platform checks
+
+                                     Use React.useState for state management.
                                      Use only React Native compatible styles (no web-specific CSS).
-                                     Use React.useState for any state management.
                                      Do not include any explanation or markdown - just the pure JavaScript code.
                                      The code should start directly with 'function Component() {'.
                                      Start your response with \`\`\` and end with \`\`\`.
+
                                      Example format:
                                      \`\`\`
                                      function Component() {
