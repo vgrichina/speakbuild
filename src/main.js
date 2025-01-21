@@ -436,6 +436,7 @@ export const VoiceAssistant = () => {
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
+    const [showDebugMenu, setShowDebugMenu] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
     const spinValue = React.useRef(new RN.Animated.Value(0)).current;
 
@@ -770,18 +771,23 @@ export const VoiceAssistant = () => {
                 {currentComponent && (
                     <View>
                         <Pressable
-                            onPress={() => setShowSourceCode(!showSourceCode)}
+                            onPress={() => setShowDebugMenu(!showDebugMenu)}
                             style={styles.iconButton}
                         >
                             <Text style={{ color: '#666', fontSize: 20 }}>⋮</Text>
                         </Pressable>
-                        {showSourceCode && (
+                        {showDebugMenu && (
                             <View style={styles.debugMenu}>
                                 <Pressable
                                     style={styles.menuItem}
-                                    onPress={() => setShowSourceCode(false)}
+                                    onPress={() => {
+                                        setShowSourceCode(!showSourceCode);
+                                        setShowDebugMenu(false);
+                                    }}
                                 >
-                                    <Text style={styles.menuItemText}>Hide source</Text>
+                                    <Text style={styles.menuItemText}>
+                                        {showSourceCode ? 'Hide source' : 'View source'}
+                                    </Text>
                                 </Pressable>
                             </View>
                         )}
