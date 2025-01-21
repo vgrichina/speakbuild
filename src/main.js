@@ -604,10 +604,18 @@ export const VoiceAssistant = () => {
                                      - Sensors.Pedometer - step counting
 
                                      Example sensor usage:
-                                     - await Sensors.Accelerometer.isAvailableAsync()
-                                     - Sensors.Accelerometer.addListener(data => console.log(data))
+                                     - Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
+                                     - const subscription = Sensors.Accelerometer.addListener(data => { ... })
                                      - Sensors.Accelerometer.setUpdateInterval(1000)
-                                     - Sensors.Accelerometer.removeSubscription(subscription)
+                                     - subscription.remove()  // cleanup in useEffect
+
+                                     Use React.useEffect for subscriptions and cleanup:
+                                     React.useEffect(() => {
+                                       const subscription = Sensors.Accelerometer.addListener(data => {
+                                         // handle sensor data
+                                       });
+                                       return () => subscription.remove();
+                                     }, []);
 
                                      Example usage:
                                      - RN.Vibration.vibrate() for haptic feedback
