@@ -728,32 +728,19 @@ export const VoiceAssistant = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header with Settings and Language Controls */}
-            <View style={styles.header}>
+            {/* Simple Header */}
+            <View style={styles.compactHeader}>
                 <Pressable
                     onPress={() => setIsSettingsOpen(true)}
-                    style={styles.button}
+                    style={styles.iconButton}
                 >
-                    <Settings size={20} color="white" />
-                    <Text style={styles.buttonText}>Settings</Text>
+                    <Settings size={20} color="#666" />
                 </Pressable>
-                
-                <View style={styles.selectContainer}>
-                    <Text style={styles.selectLabel}>Language:</Text>
-                    <Pressable
-                        onPress={() => setShowLanguageModal(true)}
-                        style={styles.selectButton}
-                    >
-                        <Text style={styles.selectButtonText}>
-                            {LANGUAGES.find(lang => lang.code === selectedLanguage)?.name || selectedLanguage}
-                        </Text>
-                    </Pressable>
-                </View>
             </View>
 
-            {/* Voice Button */}
+            {/* Floating Voice Button */}
             {hasSpeechPermission && (
-                <View style={{ alignItems: 'center', marginVertical: 16 }}>
+                <View style={styles.floatingButtonContainer}>
                     <VoiceButton
                         isListening={isSpeechListening}
                         onClick={toggleListening}
