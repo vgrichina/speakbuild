@@ -978,10 +978,10 @@ export const VoiceAssistant = () => {
                     {showSourceCode && (
                         <View style={{
                             position: 'absolute',
-                            top: 0,
+                            top: -56, // Position above normal header to cover it
                             left: 0,
                             right: 0,
-                            bottom: 0,
+                            bottom: -56, // Extend past bottom to compensate for top offset
                             backgroundColor: '#F9FAFB',
                             zIndex: 1000,
                         }}>
