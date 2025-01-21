@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     height: 56,
+   overflow: 'visible',
   },
   debugMenu: {
     position: 'absolute',
@@ -814,7 +815,7 @@ export const VoiceAssistant = () => {
                 </Pressable>
 
                 {currentComponent && (
-                    <View>
+                    <View style={{ overflow: 'visible' }}>
                         <Pressable
                             onPress={() => setShowDebugMenu(!showDebugMenu)}
                             style={{
