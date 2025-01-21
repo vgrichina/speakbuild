@@ -526,7 +526,7 @@ export const VoiceAssistant = () => {
                                              React.createElement(
                                                RN.View,
                                                {
-                                                 key: note.id || `note-${index}`,
+                                                 key: note.id || \`note-\${index}\`,
                                                  style: styles.noteContainer
                                                },
                                                React.createElement(
