@@ -125,6 +125,36 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
   },
+  compactHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  debugMenu: {
+    position: 'absolute',
+    right: 8,
+    top: 40,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minWidth: 140,
+  },
+  menuItem: {
+    padding: 12,
+    borderRadius: 4,
+  },
+  menuItemText: {
+    color: '#666',
+    fontSize: 14,
+  },
   floatingButtonContainer: {
     position: 'absolute',
     bottom: 24,
@@ -728,7 +758,7 @@ export const VoiceAssistant = () => {
 
     return (
         <View style={styles.container}>
-            {/* Simple Header */}
+            {/* Header with Settings and Debug Menu */}
             <View style={styles.compactHeader}>
                 <Pressable
                     onPress={() => setIsSettingsOpen(true)}
@@ -736,6 +766,27 @@ export const VoiceAssistant = () => {
                 >
                     <Settings size={20} color="#666" />
                 </Pressable>
+                
+                {currentComponent && (
+                    <View>
+                        <Pressable
+                            onPress={() => setShowSourceCode(!showSourceCode)}
+                            style={styles.iconButton}
+                        >
+                            <Text style={{ color: '#666', fontSize: 20 }}>⋮</Text>
+                        </Pressable>
+                        {showSourceCode && (
+                            <View style={styles.debugMenu}>
+                                <Pressable
+                                    style={styles.menuItem}
+                                    onPress={() => setShowSourceCode(false)}
+                                >
+                                    <Text style={styles.menuItemText}>Hide source</Text>
+                                </Pressable>
+                            </View>
+                        )}
+                    </View>
+                )}
             </View>
 
             {/* Floating Voice Button */}
@@ -847,14 +898,6 @@ export const VoiceAssistant = () => {
                             {React.createElement(currentComponent)}
                         </ScrollView>
                     </View>
-                    <Pressable
-                        onPress={() => setShowSourceCode(!showSourceCode)}
-                        style={{ alignItems: 'center', marginTop: 8 }}
-                    >
-                        <Text style={{ color: '#3B82F6', textDecorationLine: 'underline' }}>
-                            {showSourceCode ? 'Hide source' : 'View source'}
-                        </Text>
-                    </Pressable>
                     {showSourceCode && (
                         <View style={[styles.transcriptionBox, { backgroundColor: '#F9FAFB' }]}>
                             <ScrollView horizontal>
