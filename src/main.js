@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import EventSource from 'react-native-sse';
+import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key } from 'lucide-react-native';
@@ -575,9 +576,7 @@ export const VoiceAssistant = () => {
                     
                     // Create and execute the function with React and RN components in scope
                     const createComponent = new Function(componentCode);
-                    const GeneratedComponent = createComponent(React, { 
-                        View, Text, Image, ScrollView, TouchableOpacity, Pressable, Button
-                    });
+                    const GeneratedComponent = createComponent(React, RN);
 
                     // Store the current component and its source code
                     setCurrentComponent(() => GeneratedComponent);
