@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
 });
 
 // Settings modal component
-const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
+const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setSelectedLanguage }) => {
     const [key, setKey] = useState(apiKey);
 
     return (
@@ -826,6 +826,8 @@ export const VoiceAssistant = () => {
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
                 apiKey={apiKey}
+                selectedLanguage={selectedLanguage}
+                setSelectedLanguage={setSelectedLanguage}
                 onSave={async (newKey) => {
                     setApiKey(newKey);
                     await AsyncStorage.setItem('openrouter_api_key', newKey);
