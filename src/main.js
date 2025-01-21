@@ -360,6 +360,22 @@ export const VoiceAssistant = () => {
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
+    const spinValue = React.useRef(new RN.Animated.Value(0)).current;
+
+    React.useEffect(() => {
+        if (isProcessing) {
+            Animated.loop(
+                Animated.timing(spinValue, {
+                    toValue: 1,
+                    duration: 1000,
+                    easing: RN.Animated.easing.linear,
+                    useNativeDriver: true,
+                })
+            ).start();
+        } else {
+            spinValue.setValue(0);
+        }
+    }, [isProcessing]);
 
     const [isSpeechListening, setIsSpeechListening] = useState(false);
     const [speechVolume, setSpeechVolume] = useState(0);
@@ -742,7 +758,21 @@ export const VoiceAssistant = () => {
                 <View style={[styles.transcriptionBox, { backgroundColor: '#EBF8FF' }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                         <Text style={styles.heading}>Response:</Text>
-                        {isProcessing && <Loader2 size={16} color="currentColor" />}
+                        {isProcessing && (
+                            <Animated.View
+                                style={{
+                                    marginLeft: 8,
+                                    transform: [{
+                                        rotate: spinValue.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: ['0deg', '360deg']
+                                        })
+                                    }]
+                                }}
+                            >
+                                <Loader2 size={16} color="#666" />
+                            </Animated.View>
+                        )}
                     </View>
                     <ScrollView style={{ maxHeight: 300 }}>
                         <Text>{responseStream}</Text>
