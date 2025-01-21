@@ -240,7 +240,15 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
                 <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>Settings</Text>
-                    <Pressable onPress={onClose}>
+                    <Pressable 
+                        onPress={onClose}
+                        style={{
+                            padding: 12,
+                            margin: -8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                        }}
+                    >
                         <Text style={{ fontSize: 24 }}>×</Text>
                     </Pressable>
                 </View>
