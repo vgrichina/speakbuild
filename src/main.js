@@ -508,7 +508,7 @@ export const VoiceAssistant = () => {
                                              style: styles.button,
                                              onPress: () => {
                                                if (inputText.trim()) {
-                                                 setSavedNotes([...savedNotes, inputText]);
+                                                 setSavedNotes([...savedNotes, { id: Date.now().toString(), text: inputText }]);
                                                  setInputText('');
                                                }
                                              }
@@ -526,13 +526,13 @@ export const VoiceAssistant = () => {
                                              React.createElement(
                                                RN.View,
                                                {
-                                                 key: index,
+                                                 key: note.id || `note-${index}`,
                                                  style: styles.noteContainer
                                                },
                                                React.createElement(
                                                  RN.Text,
                                                  { style: styles.noteText },
-                                                 note
+                                                 note.text
                                                )
                                              )
                                            )
