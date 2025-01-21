@@ -230,23 +230,20 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
     const [key, setKey] = useState(apiKey);
 
      const modalContentRef = React.useRef(null);
+    const [modalLayout, setModalLayout] = React.useState(null);
 
      const handleOutsideClick = (event) => {
-         // Get the event location
-         const { locationX, locationY } = event.nativeEvent;
+         const { pageX, pageY } = event.nativeEvent;
 
-         // If we have a ref to the modal content
-         if (modalContentRef.current) {
-             // Measure the modal content position and dimensions
-             modalContentRef.current.measure((fx, fy, width, height, px, py) => {
-                 // Check if the touch is outside the modal bounds
-                 if (locationX < px || locationX > px + width ||
-                     locationY < py || locationY > py + height) {
-                     onClose();
-                 }
-             });
-         } else {
-             // If no ref, assume outside click
+         if (!modalLayout) return;
+
+         // Check if touch is outside modal bounds
+         if (
+             pageX < modalLayout.x ||
+             pageX > modalLayout.x + modalLayout.width ||
+             pageY < modalLayout.y ||
+             pageY > modalLayout.y + modalLayout.height
+         ) {
              onClose();
          }
      };
@@ -262,7 +259,14 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
                 style={styles.modalContainer} 
                 onTouchStart={handleOutsideClick}
             >
-                <View style={styles.modalContent} ref={modalContentRef}>
+                <View 
+                    style={styles.modalContent} 
+                    ref={modalContentRef}
+                    onLayout={(event) => {
+                        const { x, y, width, height } = event.nativeEvent.layout;
+                        setModalLayout({ x, y, width, height });
+                    }}
+                >
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>Settings</Text>
                     <Pressable 
