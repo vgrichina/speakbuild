@@ -786,7 +786,7 @@ export const VoiceAssistant = () => {
                                 alignItems: 'center',
                             }}
                         >
-                            <Text style={{ color: '#666', fontSize: 24 }}>⋮</Text>
+                            <Text style={{ color: '#666', fontSize: 24, lineHeight: 24, height: 32, textAlignVertical: 'center' }}>⋮</Text>
                         </Pressable>
                         {showDebugMenu && (
                             <View style={styles.debugMenu}>
