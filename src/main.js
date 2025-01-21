@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   debugMenu: {
     position: 'absolute',
     right: 8,
-    top: 40,
+    top: 48,
     backgroundColor: 'white',
     borderRadius: 8,
     shadowColor: '#000',
@@ -147,8 +147,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    minWidth: 140,
-    zIndex: 1000,
+    minWidth: 150,
+    zIndex: 1002,
   },
   menuItem: {
     padding: 12,
