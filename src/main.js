@@ -125,6 +125,28 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
   },
+  floatingButtonContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: '50%',
+    transform: [{ translateX: -24 }],
+    zIndex: 1000,
+  },
+  languageOption: {
+    padding: 12,
+    borderRadius: 4,
+    marginVertical: 2,
+  },
+  languageOptionSelected: {
+    backgroundColor: '#EBF8FF',
+  },
+  languageOptionText: {
+    color: '#666',
+  },
+  languageOptionTextSelected: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+  },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -191,8 +213,8 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
                     </Pressable>
                 </View>
                 
-                <View style={{ gap: 16 }}>
-                    <View style={{ gap: 8 }}>
+                <View style={{ gap: 24 }}>
+                    <View style={{ gap: 16 }}>
                         <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
                         <TextInput
                             secureTextEntry
@@ -208,6 +230,31 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave }) => {
                             <Key size={12} color="#3B82F6" />
                             <Text style={{ color: '#3B82F6' }}>Get your API key</Text>
                         </Pressable>
+                    </View>
+
+                    <View style={{ gap: 8 }}>
+                        <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
+                        <View style={{ maxHeight: 150 }}>
+                            <ScrollView>
+                                {LANGUAGES.map(lang => (
+                                    <Pressable
+                                        key={lang.code}
+                                        style={[
+                                            styles.languageOption,
+                                            selectedLanguage === lang.code && styles.languageOptionSelected
+                                        ]}
+                                        onPress={() => setSelectedLanguage(lang.code)}
+                                    >
+                                        <Text style={[
+                                            styles.languageOptionText,
+                                            selectedLanguage === lang.code && styles.languageOptionTextSelected
+                                        ]}>
+                                            {lang.name}
+                                        </Text>
+                                    </Pressable>
+                                ))}
+                            </ScrollView>
+                        </View>
                     </View>
                     
                     <Text style={{ color: '#666' }}>
@@ -799,44 +846,6 @@ export const VoiceAssistant = () => {
                 }}
             />
 
-            {/* Language Selection Modal */}
-            <Modal
-                visible={showLanguageModal}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setShowLanguageModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Language</Text>
-                            <Pressable onPress={() => setShowLanguageModal(false)}>
-                                <Text style={{ fontSize: 24 }}>×</Text>
-                            </Pressable>
-                        </View>
-                        <ScrollView style={{ maxHeight: 300 }}>
-                            {LANGUAGES.map(lang => (
-                                <Pressable
-                                    key={lang.code}
-                                    style={[
-                                        styles.button,
-                                        { 
-                                            marginVertical: 4,
-                                            backgroundColor: selectedLanguage === lang.code ? '#1D4ED8' : '#3B82F6'
-                                        }
-                                    ]}
-                                    onPress={() => {
-                                        setSelectedLanguage(lang.code);
-                                        setShowLanguageModal(false);
-                                    }}
-                                >
-                                    <Text style={styles.buttonText}>{lang.name}</Text>
-                                </Pressable>
-                            ))}
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
 
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
