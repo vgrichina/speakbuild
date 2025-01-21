@@ -148,6 +148,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     minWidth: 140,
+    zIndex: 1000,
   },
   menuItem: {
     padding: 12,
