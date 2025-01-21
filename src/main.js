@@ -443,7 +443,7 @@ export const VoiceAssistant = () => {
                             content: `Generate a React Native component based on this request: "${text}".
                                      Return ONLY the component code using React.createElement (no JSX).
                                      Define the component as 'function Component() {' (no export statement).
-                                     Use only React Native components: View, Text, Image, ScrollView, etc.
+                                     Use only React Native components with RN prefix: RN.View, RN.Text, RN.Image, RN.ScrollView, etc.
                                      Use only React Native compatible styles (no web-specific CSS).
                                      Use React.useState for any state management.
                                      Do not include any explanation or markdown - just the pure JavaScript code.
