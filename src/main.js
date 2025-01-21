@@ -567,7 +567,7 @@ export const VoiceAssistant = () => {
                     // Create component function with proper scope access
                     const componentCode = `
                         const React = arguments[0];
-                        const { View, Text, Image, ScrollView, TouchableOpacity, Pressable, Button } = arguments[1];
+                        const RN = arguments[1];
                         const { useState } = React;
                         ${code}
                         return Component;
