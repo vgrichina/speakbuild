@@ -899,10 +899,10 @@ export const VoiceAssistant = () => {
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
                 <View style={{ marginTop: 16, flex: 1, minHeight: 200 }}>
-                    <View style={[styles.transcriptionBox, { 
+                    <View style={{ 
                         backgroundColor: 'white',
                         flex: 1
-                    }]}>
+                    }}>
                         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                             {React.createElement(currentComponent)}
                         </ScrollView>
