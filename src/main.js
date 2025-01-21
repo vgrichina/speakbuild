@@ -440,6 +440,7 @@ const VoiceButton = ({ isListening, onClick, disabled, volume }) => {
 };
 
 export const VoiceAssistant = () => {
+    const scrollViewRef = React.useRef(null);
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -895,28 +896,49 @@ export const VoiceAssistant = () => {
 
             {/* Response Stream */}
             {(responseStream || isProcessing) && (!currentComponent || isProcessing) && (
-                <View style={[styles.transcriptionBox, { backgroundColor: '#EBF8FF' }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                        <Text style={styles.heading}>Response:</Text>
-                        {isProcessing && (
-                            <Animated.View
-                                style={{
-                                    marginLeft: 8,
-                                    transform: [{
-                                        rotate: spinValue.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: ['0deg', '360deg']
-                                        })
-                                    }]
-                                }}
-                            >
-                                <Loader2 size={16} color="#666" />
-                            </Animated.View>
-                        )}
+                <View style={[
+                    styles.transcriptionBox, 
+                    { 
+                        backgroundColor: '#EBF8FF',
+                        flex: 1,
+                        marginBottom: 16
+                    }
+                ]}>
+                    <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                            <Text style={styles.heading}>Response:</Text>
+                            {isProcessing && (
+                                <Animated.View
+                                    style={{
+                                        marginLeft: 8,
+                                        transform: [{
+                                            rotate: spinValue.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: ['0deg', '360deg']
+                                            })
+                                        }]
+                                    }}
+                                >
+                                    <Loader2 size={16} color="#666" />
+                                </Animated.View>
+                            )}
+                        </View>
+                        <ScrollView 
+                            style={{ flex: 1 }}
+                            ref={scrollViewRef => {
+                                if (scrollViewRef) {
+                                    scrollViewRef.scrollToEnd({ animated: true });
+                                }
+                            }}
+                            onContentSizeChange={() => {
+                                if (scrollViewRef.current) {
+                                    scrollViewRef.current.scrollToEnd({ animated: true });
+                                }
+                            }}
+                        >
+                            <Text>{responseStream}</Text>
+                        </ScrollView>
                     </View>
-                    <ScrollView style={{ maxHeight: 300 }}>
-                        <Text>{responseStream}</Text>
-                    </ScrollView>
                 </View>
             )}
 
