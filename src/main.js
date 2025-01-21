@@ -368,7 +368,7 @@ export const VoiceAssistant = () => {
                 Animated.timing(spinValue, {
                     toValue: 1,
                     duration: 1000,
-                    easing: RN.Animated.easing.linear,
+                    easing: RN.Easing.linear,
                     useNativeDriver: true,
                 })
             ).start();
