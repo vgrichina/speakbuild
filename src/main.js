@@ -22,7 +22,6 @@ const LANGUAGES = [
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
     flex: 1,
     width: '100%',
   },
@@ -898,7 +897,7 @@ export const VoiceAssistant = () => {
 
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
-                <View style={{ marginTop: 16, flex: 1, minHeight: 200 }}>
+                <View style={{ flex: 1, minHeight: 200, width: '100%' }}>
                     <View style={{ 
                         backgroundColor: 'white',
                         flex: 1
