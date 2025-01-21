@@ -229,6 +229,28 @@ const styles = StyleSheet.create({
 const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setSelectedLanguage }) => {
     const [key, setKey] = useState(apiKey);
 
+     const modalContentRef = React.useRef(null);
+
+     const handleOutsideClick = (event) => {
+         // Get the event location
+         const { locationX, locationY } = event.nativeEvent;
+
+         // If we have a ref to the modal content
+         if (modalContentRef.current) {
+             // Measure the modal content position and dimensions
+             modalContentRef.current.measure((fx, fy, width, height, px, py) => {
+                 // Check if the touch is outside the modal bounds
+                 if (locationX < px || locationX > px + width ||
+                     locationY < py || locationY > py + height) {
+                     onClose();
+                 }
+             });
+         } else {
+             // If no ref, assume outside click
+             onClose();
+         }
+     };
+
     return (
         <Modal
             visible={isOpen}
@@ -236,8 +258,11 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
+            <Pressable 
+                style={styles.modalContainer} 
+                onTouchStart={handleOutsideClick}
+            >
+                <View style={styles.modalContent} ref={modalContentRef}>
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>Settings</Text>
                     <Pressable 
@@ -252,7 +277,7 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
                         <Text style={{ fontSize: 24 }}>×</Text>
                     </Pressable>
                 </View>
-                
+
                 <View style={{ gap: 24 }}>
                     <View style={{ gap: 16 }}>
                         <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
@@ -296,7 +321,7 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
                             </ScrollView>
                         </View>
                     </View>
-                    
+
                     <Text style={{ color: '#666' }}>
                         Using Claude as the default model for optimal results.
                     </Text>
@@ -315,7 +340,7 @@ const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setS
                     </Pressable>
                 </View>
                 </View>
-            </View>
+            </Pressable>
         </Modal>
     );
 };
@@ -337,7 +362,7 @@ const AlertDescription = ({ children }) => (
 
 const PulsatingCircle = ({ isActive, volume }) => {
     const animation = React.useRef(new Animated.Value(1)).current;
-    
+
     React.useEffect(() => {
         if (isActive) {
             // Scale based on volume (1.0 to 1.5)
@@ -372,7 +397,7 @@ const PulsatingCircle = ({ isActive, volume }) => {
 
 const VoiceButton = ({ isListening, onClick, disabled, volume }) => {
     const [isPressed, setIsPressed] = useState(false);
-    
+
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
             <PulsatingCircle isActive={isListening} volume={volume} />
@@ -525,7 +550,7 @@ export const VoiceAssistant = () => {
 
         setIsProcessing(true);
         setResponseStream('');
-        
+
         try {
             console.log('Making OpenRouter API request...');
             const es = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
@@ -559,7 +584,7 @@ export const VoiceAssistant = () => {
                                      function Component() {
                                        const [inputText, setInputText] = React.useState('');
                                        const [savedNotes, setSavedNotes] = React.useState([]);
-                                       
+
                                        const styles = {
                                          container: {
                                            flex: 1,
@@ -596,7 +621,7 @@ export const VoiceAssistant = () => {
                                            fontSize: 16
                                          }
                                        };
-                                       
+
                                        return React.createElement(
                                          RN.View,
                                          { style: styles.container },
@@ -655,7 +680,7 @@ export const VoiceAssistant = () => {
             const processCompleteResponse = (response) => {
                 try {
                     console.log('Full response:', response);
-                    
+
                     // Extract code from markdown code block with more flexible pattern
                     const codeMatch = response.match(/```(?:jsx|javascript|)?\s*([\s\S]*?)```/);
                     if (!codeMatch) {
@@ -664,11 +689,11 @@ export const VoiceAssistant = () => {
                     }
                     const code = codeMatch[1].trim();
                     console.log('Extracted code:', code);
-                    
+
                     if (!code.includes('function Component()')) {
                         throw new Error('Invalid component code format');
                     }
-                    
+
                     // Create component function with proper scope access
                     const componentCode = `
                         const React = arguments[0];
@@ -677,7 +702,7 @@ export const VoiceAssistant = () => {
                         ${code}
                         return Component;
                     `;
-                    
+
                     // Create and execute the function with React and RN components in scope
                     const createComponent = new Function(componentCode);
                     const GeneratedComponent = createComponent(React, RN);
@@ -761,7 +786,7 @@ export const VoiceAssistant = () => {
     const handleTextSubmit = (e) => {
         e.preventDefault();
         if (!textInput.trim()) return;
-        
+
         setTranscribedText(textInput);
         processWithClaudeStream(textInput);
         setTextInput('');
@@ -782,7 +807,7 @@ export const VoiceAssistant = () => {
                 >
                     <Settings size={24} color="#666" />
                 </Pressable>
-                
+
                 {currentComponent && (
                     <View>
                         <Pressable
@@ -936,4 +961,3 @@ export const VoiceAssistant = () => {
         </View>
     );
 };
-
