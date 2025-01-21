@@ -976,9 +976,48 @@ export const VoiceAssistant = () => {
                         </ScrollView>
                     </View>
                     {showSourceCode && (
-                        <View style={[styles.transcriptionBox, { backgroundColor: '#F9FAFB' }]}>
-                            <ScrollView horizontal>
-                                <Text style={{ fontFamily: 'monospace' }}>{currentComponentCode}</Text>
+                        <View style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: '#F9FAFB',
+                            zIndex: 1000,
+                        }}>
+                            <View style={{
+                                padding: 16,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#E5E7EB',
+                                backgroundColor: 'white',
+                            }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Source Code</Text>
+                                <Pressable
+                                    onPress={() => setShowSourceCode(false)}
+                                    style={{
+                                        padding: 8,
+                                        marginRight: -8,
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 24, color: '#666' }}>×</Text>
+                                </Pressable>
+                            </View>
+                            <ScrollView 
+                                style={{ flex: 1 }}
+                                contentContainerStyle={{ padding: 16 }}
+                            >
+                                <Text style={{ 
+                                    fontFamily: Platform.select({
+                                        ios: 'Menlo',
+                                        android: 'monospace',
+                                        default: 'monospace'
+                                    }),
+                                    fontSize: 14,
+                                    lineHeight: 20,
+                                }}>{currentComponentCode}</Text>
                             </ScrollView>
                         </View>
                     )}
