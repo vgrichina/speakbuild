@@ -448,7 +448,97 @@ export const VoiceAssistant = () => {
                                      Use React.useState for any state management.
                                      Do not include any explanation or markdown - just the pure JavaScript code.
                                      The code should start directly with 'function Component() {'.
-                                     Start your response with \`\`\` and end with \`\`\`.`
+                                     Start your response with \`\`\` and end with \`\`\`.
+                                     Example format:
+                                     \`\`\`
+                                     function Component() {
+                                       const [inputText, setInputText] = React.useState('');
+                                       const [savedNotes, setSavedNotes] = React.useState([]);
+                                       
+                                       const styles = {
+                                         container: {
+                                           flex: 1,
+                                           padding: 16,
+                                           backgroundColor: '#f5f5f5'
+                                         },
+                                         input: {
+                                           borderWidth: 1,
+                                           borderColor: '#ddd',
+                                           borderRadius: 8,
+                                           padding: 12,
+                                           marginBottom: 16,
+                                           backgroundColor: '#fff'
+                                         },
+                                         button: {
+                                           backgroundColor: '#007AFF',
+                                           padding: 16,
+                                           borderRadius: 8,
+                                           alignItems: 'center',
+                                           marginBottom: 16
+                                         },
+                                         buttonText: {
+                                           color: '#fff',
+                                           fontSize: 16,
+                                           fontWeight: '600'
+                                         },
+                                         noteContainer: {
+                                           backgroundColor: '#fff',
+                                           padding: 16,
+                                           borderRadius: 8,
+                                           marginBottom: 8
+                                         },
+                                         noteText: {
+                                           fontSize: 16
+                                         }
+                                       };
+                                       
+                                       return React.createElement(
+                                         RN.View,
+                                         { style: styles.container },
+                                         React.createElement(RN.TextInput, {
+                                           style: styles.input,
+                                           value: inputText,
+                                           onChangeText: setInputText,
+                                           placeholder: 'Enter a note...'
+                                         }),
+                                         React.createElement(
+                                           RN.TouchableOpacity,
+                                           {
+                                             style: styles.button,
+                                             onPress: () => {
+                                               if (inputText.trim()) {
+                                                 setSavedNotes([...savedNotes, inputText]);
+                                                 setInputText('');
+                                               }
+                                             }
+                                           },
+                                           React.createElement(
+                                             RN.Text,
+                                             { style: styles.buttonText },
+                                             'Save Note'
+                                           )
+                                         ),
+                                         React.createElement(
+                                           RN.ScrollView,
+                                           null,
+                                           savedNotes.map((note, index) =>
+                                             React.createElement(
+                                               RN.View,
+                                               {
+                                                 key: index,
+                                                 style: styles.noteContainer
+                                               },
+                                               React.createElement(
+                                                 RN.Text,
+                                                 { style: styles.noteText },
+                                                 note
+                                               )
+                                             )
+                                           )
+                                         )
+                                       );
+                                     }
+                                     \`\`\``
                         }
                     ],
                     stream: true
