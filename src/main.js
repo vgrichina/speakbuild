@@ -597,14 +597,6 @@ export const VoiceAssistant = () => {
                                      - System: RN.Platform.OS, RN.Platform.Version
                                      - Appearance: RN.Appearance for dark/light mode
 
-                                     Expo Sensors (Sensors namespace):
-                                     - Sensors.Accelerometer - device motion data
-                                     - Sensors.Gyroscope - rotation data
-                                     - Sensors.Magnetometer - compass data
-                                     - Sensors.Barometer - atmospheric pressure
-                                     - Sensors.DeviceMotion - combined motion data
-                                     - Sensors.Pedometer - step counting
-
                                      Expo Modules (Expo namespace):
                                      - Expo.Haptics - vibration patterns and haptic feedback
                                      - Expo.Clipboard - copy/paste functionality
@@ -619,16 +611,23 @@ export const VoiceAssistant = () => {
                                      - Expo.Reanimated - advanced animations
                                      - Expo.Gesture - gesture handling
                                      - Expo.Linking - deep linking and URL handling
+                                     - Expo.Sensors - device sensors:
+                                       • Accelerometer - device motion data
+                                       • Gyroscope - rotation data
+                                       • Magnetometer - compass data
+                                       • Barometer - atmospheric pressure
+                                       • DeviceMotion - combined motion data
+                                       • Pedometer - step counting
 
                                      Example sensor usage:
-                                     - Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
-                                     - const subscription = Sensors.Accelerometer.addListener(data => { ... })
-                                     - Sensors.Accelerometer.setUpdateInterval(1000)
+                                     - Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
+                                     - const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
+                                     - Expo.Sensors.Accelerometer.setUpdateInterval(1000)
                                      - subscription.remove()  // cleanup in useEffect
 
                                      Use React.useEffect for subscriptions and cleanup:
                                      React.useEffect(() => {
-                                       const subscription = Sensors.Accelerometer.addListener(data => {
+                                       const subscription = Expo.Sensors.Accelerometer.addListener(data => {
                                          // handle sensor data
                                        });
                                        return () => subscription.remove();
@@ -766,8 +765,7 @@ export const VoiceAssistant = () => {
                     const componentCode = `
                         const React = arguments[0];
                         const RN = arguments[1];
-                        const Sensors = arguments[2];
-                        const Expo = arguments[3];
+                        const Expo = arguments[2];
                         const { useState } = React;
                         ${code}
                         return Component;
@@ -775,7 +773,7 @@ export const VoiceAssistant = () => {
 
                     // Create and execute the function with React and RN components in scope
                     const createComponent = new Function(componentCode);
-                    const GeneratedComponent = createComponent(React, RN, ExpoSensors, ExpoModules);
+                    const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
                     // Store the current component and its source code
                     setCurrentComponent(() => GeneratedComponent);
