@@ -25,5 +25,7 @@ export const ExpoModules = {
   Maps,
   Reanimated,
   Gesture,
-  Linking
+  Linking,
+  Sensors
 };
+import * as Sensors from 'expo-sensors';
