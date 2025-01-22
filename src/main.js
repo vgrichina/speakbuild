@@ -5,6 +5,7 @@ import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linkin
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key, Square } from 'lucide-react-native';
 import * as ExpoSensors from 'expo-sensors';
+import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
 
@@ -586,6 +587,7 @@ export const VoiceAssistant = () => {
 
                                      Available APIs:
 
+                                     Available APIs:
                                      React Native (RN namespace):
                                      - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
                                      - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
@@ -602,6 +604,21 @@ export const VoiceAssistant = () => {
                                      - Sensors.Barometer - atmospheric pressure
                                      - Sensors.DeviceMotion - combined motion data
                                      - Sensors.Pedometer - step counting
+
+                                     Expo Modules (Expo namespace):
+                                     - Expo.Haptics - vibration patterns and haptic feedback
+                                     - Expo.Clipboard - copy/paste functionality
+                                     - Expo.ImagePicker - select images from device
+                                     - Expo.MediaLibrary - access device media
+                                     - Expo.FileSystem - file operations
+                                     - Expo.Sharing - share content
+                                     - Expo.Location - geolocation services
+                                     - Expo.Notifications - push notifications
+                                     - Expo.AV - audio/video playback
+                                     - Expo.Maps - map components and location services
+                                     - Expo.Reanimated - advanced animations
+                                     - Expo.Gesture - gesture handling
+                                     - Expo.Linking - deep linking and URL handling
 
                                      Example sensor usage:
                                      - Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
@@ -750,6 +767,7 @@ export const VoiceAssistant = () => {
                         const React = arguments[0];
                         const RN = arguments[1];
                         const Sensors = arguments[2];
+                        const Expo = arguments[3];
                         const { useState } = React;
                         ${code}
                         return Component;
@@ -757,7 +775,7 @@ export const VoiceAssistant = () => {
 
                     // Create and execute the function with React and RN components in scope
                     const createComponent = new Function(componentCode);
-                    const GeneratedComponent = createComponent(React, RN, ExpoSensors);
+                    const GeneratedComponent = createComponent(React, RN, ExpoSensors, ExpoModules);
 
                     // Store the current component and its source code
                     setCurrentComponent(() => GeneratedComponent);
