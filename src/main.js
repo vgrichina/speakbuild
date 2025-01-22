@@ -482,6 +482,7 @@ export const VoiceAssistant = () => {
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
+    const [isModifying, setIsModifying] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
     const spinValue = React.useRef(new RN.Animated.Value(0)).current;
@@ -581,7 +582,9 @@ export const VoiceAssistant = () => {
                         }] : []),
                         {
                             role: 'user',
-                            content: `Generate a React Native component based on this request: "${text}".
+                            content: `${isModifying ? 
+                                `Modify the existing component based on this request: "${text}". Use the existing code as context.` :
+                                `Generate a React Native component based on this request: "${text}".`}
                                      Return ONLY the component code using React.createElement.
                                      Start with 'function Component() {'.
 
@@ -716,6 +719,7 @@ export const VoiceAssistant = () => {
                     // Clear error and transcribed text after successful generation
                     setError('');
                     setTranscribedText('');
+                    setIsModifying(false);
 
                 } catch (error) {
                     console.error('Error creating component:', error);
@@ -972,6 +976,22 @@ export const VoiceAssistant = () => {
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
                 <View style={{ flex: 1, minHeight: 200, width: '100%' }}>
+                    <Pressable
+                        onPress={() => {
+                            setIsModifying(true);
+                            toggleListening();
+                        }}
+                        style={{
+                            backgroundColor: '#3B82F6',
+                            padding: 8,
+                            borderRadius: 4,
+                            marginBottom: 8
+                        }}
+                    >
+                        <Text style={{ color: 'white', textAlign: 'center' }}>
+                            {isModifying ? 'Speak your modification...' : 'Clarify Request'}
+                        </Text>
+                    </Pressable>
                     <View style={{ 
                         backgroundColor: 'white',
                         flex: 1
