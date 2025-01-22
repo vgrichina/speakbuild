@@ -588,6 +588,9 @@ export const VoiceAssistant = () => {
                                      Available APIs:
 
                                      Available APIs:
+                                     React Hooks:
+                                     Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
+
                                      React Native (RN namespace):
                                      - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
                                      - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
@@ -619,19 +622,17 @@ export const VoiceAssistant = () => {
                                        • DeviceMotion - combined motion data
                                        • Pedometer - step counting
 
-                                     Example sensor usage:
+                                     Example patterns:
                                      - Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
                                      - const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
                                      - Expo.Sensors.Accelerometer.setUpdateInterval(1000)
                                      - subscription.remove()  // cleanup in useEffect
+                                     - RN.Share.share({ message: "Hello!" }).then(result => { ... })
+                                     - Expo.Clipboard.setString("text").then(() => { ... })
 
-                                     Use React.useEffect for subscriptions and cleanup:
-                                     React.useEffect(() => {
-                                       const subscription = Expo.Sensors.Accelerometer.addListener(data => {
-                                         // handle sensor data
-                                       });
-                                       return () => subscription.remove();
-                                     }, []);
+                                     Use hooks via React namespace (React.useState, not useState).
+                                     Avoid async/await - use .then() for promises.
+                                     Use React.useEffect for cleanup and subscriptions.
 
                                      Example usage:
                                      - RN.Vibration.vibrate() for haptic feedback
