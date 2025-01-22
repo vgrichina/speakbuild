@@ -582,10 +582,8 @@ export const VoiceAssistant = () => {
                         {
                             role: 'user',
                             content: `Generate a React Native component based on this request: "${text}".
-                                     Return ONLY the component code using React.createElement (no JSX).
-                                     Define the component as 'function Component() {' (no export statement).
-
-                                     Available APIs:
+                                     Return ONLY the component code using React.createElement.
+                                     Start with 'function Component() {'.
 
                                      Available APIs:
                                      React Hooks:
@@ -597,7 +595,6 @@ export const VoiceAssistant = () => {
                                      - Device Features: RN.Vibration, RN.Share, RN.Platform
                                      - Layout: RN.Dimensions.get('window') for screen size
                                      - Animation: RN.Animated for smooth animations
-                                     - System: RN.Platform.OS, RN.Platform.Version
                                      - Appearance: RN.Appearance for dark/light mode
 
                                      Expo Modules (Expo namespace):
@@ -608,7 +605,6 @@ export const VoiceAssistant = () => {
                                      - Expo.FileSystem - file operations
                                      - Expo.Sharing - share content
                                      - Expo.Location - geolocation services
-                                     - Expo.Notifications - push notifications
                                      - Expo.AV - audio/video playback
                                      - Expo.Maps - map components and location services
                                      - Expo.Reanimated - advanced animations
@@ -616,12 +612,6 @@ export const VoiceAssistant = () => {
                                      - Expo.Linking - deep linking and URL handling
                                      - Expo.Sensors - device sensors:
                                        • Accelerometer - device motion data
-                                       • Gyroscope - rotation data
-                                       • Magnetometer - compass data
-                                       • Barometer - atmospheric pressure
-                                       • DeviceMotion - combined motion data
-                                       • Pedometer - step counting
-
                                      Example patterns:
                                      - Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
                                      - const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
@@ -630,7 +620,6 @@ export const VoiceAssistant = () => {
                                      - RN.Share.share({ message: "Hello!" }).then(result => { ... })
                                      - Expo.Clipboard.setString("text").then(() => { ... })
 
-                                     Use hooks via React namespace (React.useState, not useState).
                                      Avoid async/await - use .then() for promises.
                                      Use React.useEffect for cleanup and subscriptions.
 
@@ -639,7 +628,6 @@ export const VoiceAssistant = () => {
                                      - RN.Share.share({ message: "Hello!" })
                                      - RN.Alert.alert("Title", "Message")
                                      - const { width, height } = RN.Dimensions.get('window')
-                                     - RN.Platform.OS === 'ios' for platform checks
 
                                      Use React.useState for state management.
                                      Use only React Native compatible styles (no web-specific CSS).
@@ -650,88 +638,34 @@ export const VoiceAssistant = () => {
                                      Example format:
                                      \`\`\`
                                      function Component() {
-                                       const [inputText, setInputText] = React.useState('');
-                                       const [savedNotes, setSavedNotes] = React.useState([]);
+                                       const [count, setCount] = React.useState(0);
 
                                        const styles = {
                                          container: {
                                            flex: 1,
-                                           padding: 16,
-                                           backgroundColor: '#f5f5f5'
-                                         },
-                                         input: {
-                                           borderWidth: 1,
-                                           borderColor: '#ddd',
-                                           borderRadius: 8,
-                                           padding: 12,
-                                           marginBottom: 16,
-                                           backgroundColor: '#fff'
+                                           justifyContent: 'center',
+                                           alignItems: 'center'
                                          },
                                          button: {
-                                           backgroundColor: '#007AFF',
+                                           backgroundColor: '#3B82F6',
                                            padding: 16,
-                                           borderRadius: 8,
-                                           alignItems: 'center',
-                                           marginBottom: 16
+                                           borderRadius: 8
                                          },
                                          buttonText: {
-                                           color: '#fff',
-                                           fontSize: 16,
-                                           fontWeight: '600'
-                                         },
-                                         noteContainer: {
-                                           backgroundColor: '#fff',
-                                           padding: 16,
-                                           borderRadius: 8,
-                                           marginBottom: 8
-                                         },
-                                         noteText: {
-                                           fontSize: 16
+                                           color: 'white'
                                          }
                                        };
 
                                        return React.createElement(
                                          RN.View,
                                          { style: styles.container },
-                                         React.createElement(RN.TextInput, {
-                                           style: styles.input,
-                                           value: inputText,
-                                           onChangeText: setInputText,
-                                           placeholder: 'Enter a note...'
-                                         }),
                                          React.createElement(
                                            RN.TouchableOpacity,
-                                           {
-                                             style: styles.button,
-                                             onPress: () => {
-                                               if (inputText.trim()) {
-                                                 setSavedNotes([...savedNotes, { id: Date.now().toString(), text: inputText }]);
-                                                 setInputText('');
-                                               }
-                                             }
-                                           },
+                                           { style: styles.button, onPress: () => setCount(c => c + 1) },
                                            React.createElement(
                                              RN.Text,
                                              { style: styles.buttonText },
-                                             'Save Note'
-                                           )
-                                         ),
-                                         React.createElement(
-                                           RN.ScrollView,
-                                           null,
-                                           savedNotes.map((note, index) =>
-                                             React.createElement(
-                                               RN.View,
-                                               {
-                                                 key: note.id || \`note-\${index}\`,
-                                                 style: styles.noteContainer
-                                               },
-                                               React.createElement(
-                                                 RN.Text,
-                                                 { style: styles.noteText },
-                                                 note.text
-                                               )
-                                             )
+                                             \`Count: \${count}\`
                                            )
                                          )
                                        );
