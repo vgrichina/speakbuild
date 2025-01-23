@@ -552,6 +552,8 @@ export const VoiceAssistant = () => {
     });
 
 
+    const [requestHistory, setRequestHistory] = useState([]);
+
     const analyzeIntent = async (text) => {
         if (!currentComponent) return false;
         
@@ -567,7 +569,7 @@ export const VoiceAssistant = () => {
                     'X-Title': 'Voice Assistant Web App'
                 },
                 body: JSON.stringify({
-                    model: 'mistralai/mistral-tiny',
+                    model: 'anthropic/claude-2',
                     messages: [
                         {
                             role: 'system',
@@ -575,7 +577,11 @@ export const VoiceAssistant = () => {
                         },
                         {
                             role: 'user',
-                            content: `There is an existing component. Does this request intend to modify it or create something new? Request: "${text}"`
+                            content: `Previous requests for this component:
+${requestHistory.map(req => `- "${req}"`).join('\n')}
+
+Current component exists. Does this new request intend to modify it or create something new?
+Request: "${text}"`
                         }
                     ],
                     max_tokens: 1,
@@ -585,6 +591,15 @@ export const VoiceAssistant = () => {
 
             const data = await response.json();
             const intent = data.choices[0].message.content.toLowerCase().trim();
+            
+            // Add request to history if it's a modification
+            if (intent === 'modify') {
+                setRequestHistory(prev => [...prev, text]);
+            } else {
+                // Clear history if it's a new component
+                setRequestHistory([]);
+            }
+            
             return intent === 'modify';
         } catch (error) {
             console.error('Intent analysis error:', error);
