@@ -777,6 +777,9 @@ Request: "${text}"`
                     // Clear error and transcribed text after successful generation
                     setError('');
                     setTranscribedText('');
+                    if (!isModifying) {
+                        setRequestHistory([]);
+                    }
 
                 } catch (error) {
                     console.error('Error creating component:', error);
