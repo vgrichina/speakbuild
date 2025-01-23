@@ -569,7 +569,7 @@ export const VoiceAssistant = () => {
                     'X-Title': 'Voice Assistant Web App'
                 },
                 body: JSON.stringify({
-                    model: 'anthropic/claude-2',
+                    model: 'anthropic/claude-3.5-haiku',
                     messages: [
                         {
                             role: 'system',
