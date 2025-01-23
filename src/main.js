@@ -449,6 +449,7 @@ export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
 
     useEffect(() => {
         const checkApiKey = async () => {
@@ -605,6 +606,7 @@ export const VoiceAssistant = () => {
         try {
             // Determine intent using the small LLM
             const isModifying = await analyzeIntent(text);
+            setModificationIntent(isModifying ? 'modify' : 'new');
             console.log('Making OpenRouter API request...');
             window.currentEventSource = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
                 headers: {
@@ -766,6 +768,7 @@ export const VoiceAssistant = () => {
                     setError(`Failed to create component: ${error.message}`);
                 } finally {
                     setIsProcessing(false);
+                    setModificationIntent(null);
                 }
             };
 
@@ -955,7 +958,11 @@ export const VoiceAssistant = () => {
                 ]}>
                     <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                            <Text style={styles.heading}>Response:</Text>
+                            <Text style={styles.heading}>
+                                {modificationIntent === 'modify' ? 'Modifying Component:' : 
+                                 modificationIntent === 'new' ? 'Creating New Component:' : 
+                                 'Response:'}
+                            </Text>
                             {isProcessing && (
                                 <Animated.View
                                     style={{
@@ -968,7 +975,12 @@ export const VoiceAssistant = () => {
                                         }]
                                     }}
                                 >
-                                    <Loader2 size={16} color="#666" />
+                                    <Loader2 
+                                        size={16} 
+                                        color={modificationIntent === 'modify' ? '#EF4444' : 
+                                              modificationIntent === 'new' ? '#3B82F6' : 
+                                              '#666'} 
+                                    />
                                 </Animated.View>
                             )}
                         </View>
