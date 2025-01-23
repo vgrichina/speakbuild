@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
+import { SettingsModal } from './components/SettingsModal';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key, Square } from 'lucide-react-native';
 import * as ExpoSensors from 'expo-sensors';
@@ -9,62 +10,14 @@ import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
 
-const LANGUAGES = [
-    { code: 'en-US', name: 'English (US)' },
-    { code: 'en-GB', name: 'English (UK)' },
-    { code: 'es-ES', name: 'Spanish' },
-    { code: 'fr-FR', name: 'French' },
-    { code: 'de-DE', name: 'German' },
-    { code: 'it-IT', name: 'Italian' },
-    { code: 'ja-JP', name: 'Japanese' },
-    { code: 'ko-KR', name: 'Korean' },
-    { code: 'zh-CN', name: 'Chinese (Simplified)' },
-    { code: 'ru-RU', name: 'Russian' }
-];
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: {
-        width: 0,
-        height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
   buttonDisabled: {
     opacity: 0.5,
-  },
-  linkText: {
-    color: '#3B82F6',
-    textDecorationLine: 'underline',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',
@@ -228,129 +181,6 @@ const styles = StyleSheet.create({
   }
 });
 
-// Settings modal component
-const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setSelectedLanguage }) => {
-    const [key, setKey] = useState(apiKey);
-
-     const modalContentRef = React.useRef(null);
-    const [modalLayout, setModalLayout] = React.useState(null);
-
-     const handleOutsideClick = (event) => {
-         const { pageX, pageY } = event.nativeEvent;
-
-         if (!modalLayout) return;
-
-         // Check if touch is outside modal bounds
-         if (
-             pageX < modalLayout.x ||
-             pageX > modalLayout.x + modalLayout.width ||
-             pageY < modalLayout.y ||
-             pageY > modalLayout.y + modalLayout.height
-         ) {
-             onClose();
-         }
-     };
-
-    return (
-        <Modal
-            visible={isOpen}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={onClose}
-        >
-            <Pressable 
-                style={styles.modalContainer} 
-                onTouchStart={handleOutsideClick}
-            >
-                <View 
-                    style={styles.modalContent} 
-                    ref={modalContentRef}
-                    onLayout={(event) => {
-                        const { x, y, width, height } = event.nativeEvent.layout;
-                        setModalLayout({ x, y, width, height });
-                    }}
-                >
-                <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Settings</Text>
-                    <Pressable 
-                        onPress={onClose}
-                        style={{
-                            padding: 12,
-                            margin: -8,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Text style={{ fontSize: 24 }}>×</Text>
-                    </Pressable>
-                </View>
-
-                <View style={{ gap: 24 }}>
-                    <View style={{ gap: 16 }}>
-                        <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
-                        <TextInput
-                            secureTextEntry
-                            value={key}
-                            onChangeText={setKey}
-                            style={styles.input}
-                            placeholder="sk-or-..."
-                        />
-                        <Pressable 
-                            onPress={() => Linking.openURL('https://openrouter.ai/keys')}
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                        >
-                            <Key size={12} color="#3B82F6" />
-                            <Text style={{ color: '#3B82F6' }}>Get your API key</Text>
-                        </Pressable>
-                    </View>
-
-                    <View style={{ gap: 8 }}>
-                        <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
-                        <View style={{ maxHeight: 150 }}>
-                            <ScrollView>
-                                {LANGUAGES.map(lang => (
-                                    <Pressable
-                                        key={lang.code}
-                                        style={[
-                                            styles.languageOption,
-                                            selectedLanguage === lang.code && styles.languageOptionSelected
-                                        ]}
-                                        onPress={() => setSelectedLanguage(lang.code)}
-                                    >
-                                        <Text style={[
-                                            styles.languageOptionText,
-                                            selectedLanguage === lang.code && styles.languageOptionTextSelected
-                                        ]}>
-                                            {lang.name}
-                                        </Text>
-                                    </Pressable>
-                                ))}
-                            </ScrollView>
-                        </View>
-                    </View>
-
-                    <Text style={{ color: '#666' }}>
-                        Using Claude as the default model for optimal results.
-                    </Text>
-
-                    <Pressable
-                        style={[styles.button, !key && styles.buttonDisabled]}
-                        onPress={() => {
-                            if (key) {
-                                onSave(key);
-                                onClose();
-                            }
-                        }}
-                        disabled={!key}
-                    >
-                        <Text style={styles.buttonText}>Save Settings</Text>
-                    </Pressable>
-                </View>
-                </View>
-            </Pressable>
-        </Modal>
-    );
-};
 
 
 const Alert = ({ children, variant }) => (
