@@ -482,7 +482,6 @@ export const VoiceAssistant = () => {
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
-    const [isModifying, setIsModifying] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
     const spinValue = React.useRef(new RN.Animated.Value(0)).current;
@@ -552,6 +551,46 @@ export const VoiceAssistant = () => {
     });
 
 
+    const analyzeIntent = async (text) => {
+        if (!currentComponent) return false;
+        
+        const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
+        if (!currentApiKey) return false;
+
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentApiKey}`,
+                    'Content-Type': 'application/json',
+                    'X-Title': 'Voice Assistant Web App'
+                },
+                body: JSON.stringify({
+                    model: 'mistralai/mistral-tiny',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are a binary classifier. Determine if the user wants to modify an existing component or create a new one. Reply with only "modify" or "new".'
+                        },
+                        {
+                            role: 'user',
+                            content: `There is an existing component. Does this request intend to modify it or create something new? Request: "${text}"`
+                        }
+                    ],
+                    max_tokens: 1,
+                    temperature: 0.1
+                })
+            });
+
+            const data = await response.json();
+            const intent = data.choices[0].message.content.toLowerCase().trim();
+            return intent === 'modify';
+        } catch (error) {
+            console.error('Intent analysis error:', error);
+            return false;
+        }
+    };
+
     const processWithClaudeStream = async (text) => {
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
         if (!currentApiKey) {
@@ -564,6 +603,8 @@ export const VoiceAssistant = () => {
         setResponseStream('');
 
         try {
+            // Determine intent using the small LLM
+            const isModifying = await analyzeIntent(text);
             console.log('Making OpenRouter API request...');
             window.currentEventSource = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
                 headers: {
@@ -719,7 +760,6 @@ export const VoiceAssistant = () => {
                     // Clear error and transcribed text after successful generation
                     setError('');
                     setTranscribedText('');
-                    setIsModifying(false);
 
                 } catch (error) {
                     console.error('Error creating component:', error);
@@ -976,22 +1016,6 @@ export const VoiceAssistant = () => {
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
                 <View style={{ flex: 1, minHeight: 200, width: '100%' }}>
-                    <Pressable
-                        onPress={() => {
-                            setIsModifying(true);
-                            toggleListening();
-                        }}
-                        style={{
-                            backgroundColor: '#3B82F6',
-                            padding: 8,
-                            borderRadius: 4,
-                            marginBottom: 8
-                        }}
-                    >
-                        <Text style={{ color: 'white', textAlign: 'center' }}>
-                            {isModifying ? 'Speak your modification...' : 'Clarify Request'}
-                        </Text>
-                    </Pressable>
                     <View style={{ 
                         backgroundColor: 'white',
                         flex: 1
