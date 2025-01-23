@@ -864,10 +864,10 @@ Request: "${text}"`
                 onClose={() => setIsSettingsOpen(false)}
                 apiKey={apiKey}
                 selectedLanguage={selectedLanguage}
-                setSelectedLanguage={setSelectedLanguage}
-                onSave={async (newKey) => {
-                    setApiKey(newKey);
+                onSave={async (newKey, newLanguage) => {
                     await AsyncStorage.setItem('openrouter_api_key', newKey);
+                    setApiKey(newKey);
+                    setSelectedLanguage(newLanguage);
                     setError(''); // Clear any previous API key errors
                 }}
             />

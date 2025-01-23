@@ -86,10 +86,19 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, setSelectedLanguage }) => {
-    const [key, setKey] = useState(apiKey);
+export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage }) => {
+    const [draftKey, setDraftKey] = useState('');
+    const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const modalContentRef = useRef(null);
     const [modalLayout, setModalLayout] = useState(null);
+
+    // Reset drafts when modal opens
+    React.useEffect(() => {
+        if (isOpen) {
+            setDraftKey(apiKey || '');
+            setDraftLanguage(selectedLanguage);
+        }
+    }, [isOpen, apiKey, selectedLanguage]);
 
     const handleOutsideClick = (event) => {
         const { pageX, pageY } = event.nativeEvent;
@@ -146,8 +155,8 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                             <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
                             <TextInput
                                 secureTextEntry
-                                value={key}
-                                onChangeText={setKey}
+                                value={draftKey}
+                                onChangeText={setDraftKey}
                                 style={styles.input}
                                 placeholder="sk-or-..."
                             />
@@ -171,11 +180,11 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                                                 styles.languageOption,
                                                 selectedLanguage === lang.code && styles.languageOptionSelected
                                             ]}
-                                            onPress={() => setSelectedLanguage(lang.code)}
+                                            onPress={() => setDraftLanguage(lang.code)}
                                         >
                                             <Text style={[
                                                 styles.languageOptionText,
-                                                selectedLanguage === lang.code && styles.languageOptionTextSelected
+                                                draftLanguage === lang.code && styles.languageOptionTextSelected
                                             ]}>
                                                 {lang.name}
                                             </Text>
@@ -190,14 +199,14 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                         </Text>
 
                         <Pressable
-                            style={[styles.button, !key && styles.buttonDisabled]}
+                            style={[styles.button, !draftKey && styles.buttonDisabled]}
                             onPress={() => {
-                                if (key) {
-                                    onSave(key);
+                                if (draftKey) {
+                                    onSave(draftKey, draftLanguage);
                                     onClose();
                                 }
                             }}
-                            disabled={!key}
+                            disabled={!draftKey}
                         >
                             <Text style={styles.buttonText}>Save Settings</Text>
                         </Pressable>
