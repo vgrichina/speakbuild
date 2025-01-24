@@ -643,12 +643,20 @@ export const VoiceAssistant = () => {
                         setResponseStream(prev => prev + content);
                     }
                     if (done) {
-                        processCompleteResponse(fullResponse);
+                        // Only process response if we haven't been aborted
+                        if (!abortControllerRef.current?.signal.aborted) {
+                            processCompleteResponse(fullResponse);
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Stream error:', error);
-                setError(`Stream error: ${error.message}`);
+                if (error.message === 'Stream aborted') {
+                    // Clear response stream when aborted
+                    setResponseStream('');
+                } else {
+                    setError(`Stream error: ${error.message}`);
+                }
                 setIsProcessing(false);
             }
         } catch (error) {
