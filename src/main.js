@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { api } from './services/api';
 
 const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
     const messages = [];
@@ -515,23 +516,11 @@ export const VoiceAssistant = () => {
         if (!currentApiKey) return 'new';
 
         try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${currentApiKey}`,
-                    'Content-Type': 'application/json',
-                    'X-Title': 'Voice Assistant Web App'
-                },
-                body: JSON.stringify({
-                    model: 'anthropic/claude-3.5-haiku',
-                    messages: intentPrompt({ text, requestHistory }),
-                    max_tokens: 1,
-                    temperature: 0.1
-                })
-            });
-
-            const data = await response.json();
-            const intent = data.choices[0].message.content.toLowerCase().trim();
+            const intent = await api.completion(
+                currentApiKey,
+                intentPrompt({ text, requestHistory }),
+                { max_tokens: 1 }
+            );
             
             // Add request to history if it's a modification
             if (intent === 'modify') {
@@ -564,23 +553,7 @@ export const VoiceAssistant = () => {
             const intent = await analyzeIntent(text);
             setModificationIntent(intent);
             console.log('Making OpenRouter API request...');
-            window.currentEventSource = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
-                headers: {
-                    'Authorization': `Bearer ${currentApiKey}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream',
-                    'X-Title': 'Voice Assistant Web App',
-                },
-                method: 'POST',
-                body: JSON.stringify({
-                    model: 'anthropic/claude-3.5-sonnet',
-                    messages: componentPrompt({ text, isModifying: intent === 'modify', currentComponentCode }),
-                    stream: true
-                })
-            });
-
-            let fullResponse = '';
-
+            
             const processCompleteResponse = (response) => {
                 try {
                     console.log('Full response:', response);
@@ -631,35 +604,20 @@ export const VoiceAssistant = () => {
                 }
             };
 
-            window.currentEventSource.addEventListener('message', (event) => {
-                if (event.data === '[DONE]') {
-                    window.currentEventSource.close();
-                    window.currentEventSource = null;
-                    // Process the complete response after stream ends
-                    processCompleteResponse(fullResponse);
-                    return;
-                }
-
-                try {
-                    const data = JSON.parse(event.data);
-                    const content = data.choices?.[0]?.delta?.content;
-                    if (content) {
-                        fullResponse += content;
-                        setResponseStream(prev => prev + content);
+            const messages = componentPrompt({ text, isModifying: intent === 'modify', currentComponentCode });
+            
+            try {
+                for await (const { content, fullResponse } of api.streamCompletion(currentApiKey, messages)) {
+                    setResponseStream(prev => prev + content);
+                    if (fullResponse.includes('```')) {
+                        processCompleteResponse(fullResponse);
                     }
-                } catch (e) {
-                    console.error('Error parsing SSE message:', e);
-                    setError(`Failed to parse response: ${e.message}`);
                 }
-            });
-
-            window.currentEventSource.addEventListener('error', (error) => {
-                console.error('SSE error:', error);
+            } catch (error) {
+                console.error('Stream error:', error);
                 setError(`Stream error: ${error.message}`);
-                window.currentEventSource.close();
-                window.currentEventSource = null;
                 setIsProcessing(false);
-            });
+            }
         } catch (error) {
             console.error('API call error:', error);
             if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
@@ -760,10 +718,7 @@ export const VoiceAssistant = () => {
                     volume={speechVolume}
                     isGenerating={isProcessing}
                     onStopGeneration={() => {
-                        if (window.currentEventSource) {
-                            window.currentEventSource.close();
-                            setIsProcessing(false);
-                        }
+                        setIsProcessing(false);
                     }}
                 />
             </View>
