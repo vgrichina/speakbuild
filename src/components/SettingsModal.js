@@ -4,6 +4,11 @@ import { Key } from 'lucide-react-native';
 import { getSupportedLocales } from 'expo-speech-recognition';
 
 // Language name mapping for common locales
+const MODELS = [
+    { code: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
+    { code: 'deepseek/deepseek-r1', name: 'DeepSeek R1' }
+];
+
 const LANGUAGE_NAMES = {
     'en': 'English',
     'es': 'Spanish',
@@ -95,9 +100,10 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage }) => {
+export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, selectedModel }) => {
     const [draftKey, setDraftKey] = useState('');
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
+    const [draftModel, setDraftModel] = useState(selectedModel);
     const modalContentRef = useRef(null);
     const [modalLayout, setModalLayout] = useState(null);
     const [languages, setLanguages] = useState([]);
@@ -248,15 +254,36 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                             </View>
                         </View>
 
-                        <Text style={{ color: '#666' }}>
-                            Using Claude as the default model for optimal results.
-                        </Text>
+                        <View style={{ gap: 8 }}>
+                            <Text style={{ fontWeight: 'bold' }}>Model Selection</Text>
+                            <View style={{ maxHeight: 150 }}>
+                                <ScrollView>
+                                    {MODELS.map(model => (
+                                        <Pressable
+                                            key={model.code}
+                                            style={[
+                                                styles.languageOption,
+                                                draftModel === model.code && styles.languageOptionSelected
+                                            ]}
+                                            onPress={() => setDraftModel(model.code)}
+                                        >
+                                            <Text style={[
+                                                styles.languageOptionText,
+                                                draftModel === model.code && styles.languageOptionTextSelected
+                                            ]}>
+                                                {model.name}
+                                            </Text>
+                                        </Pressable>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        </View>
 
                         <Pressable
                             style={[styles.button, !draftKey && styles.buttonDisabled]}
                             onPress={() => {
                                 if (draftKey) {
-                                    onSave(draftKey, draftLanguage);
+                                    onSave(draftKey, draftLanguage, draftModel);
                                     onClose();
                                 }
                             }}

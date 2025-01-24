@@ -433,6 +433,7 @@ export const VoiceAssistant = () => {
     const [selectedLanguage, setSelectedLanguage] = useState('en-US');
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [apiKey, setApiKey] = useState('');
+    const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.5-sonnet');
 
     // Load API key from AsyncStorage on mount
     useEffect(() => {
@@ -634,7 +635,8 @@ export const VoiceAssistant = () => {
             
             try {
                 for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages, {
-                    abortController: abortControllerRef.current
+                    abortController: abortControllerRef.current,
+                    model: selectedModel
                 })) {
                     if (content) {
                         setResponseStream(prev => prev + content);
@@ -858,10 +860,12 @@ export const VoiceAssistant = () => {
                 onClose={() => setIsSettingsOpen(false)}
                 apiKey={apiKey}
                 selectedLanguage={selectedLanguage}
-                onSave={async (newKey, newLanguage) => {
+                selectedModel={selectedModel}
+                onSave={async (newKey, newLanguage, newModel) => {
                     await AsyncStorage.setItem('openrouter_api_key', newKey);
                     setApiKey(newKey);
                     setSelectedLanguage(newLanguage);
+                    setSelectedModel(newModel);
                     setError(''); // Clear any previous API key errors
                 }}
             />
