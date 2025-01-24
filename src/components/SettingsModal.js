@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator } from 'react-native';
 import { Key } from 'lucide-react-native';
 import { getSupportedLocales } from 'expo-speech-recognition';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Language name mapping for common locales
 const MODELS = [
