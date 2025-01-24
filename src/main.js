@@ -554,8 +554,9 @@ export const VoiceAssistant = () => {
     };
 
     const stopGeneration = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
+        const controller = abortControllerRef.current;
+        if (controller) {
+            controller.abort();
             abortControllerRef.current = null;
             setIsProcessing(false);
         }
