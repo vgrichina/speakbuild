@@ -1,4 +1,128 @@
 import React, { useState, useEffect, useCallback } from 'react';
+
+const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
+    const messages = [];
+    
+    if (currentComponentCode) {
+        messages.push({
+            role: 'system',
+            content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if the new request is similar or builds upon it.`
+        });
+    }
+
+    messages.push({
+        role: 'user',
+        content: `${isModifying ? 
+            `Modify the existing component based on this request: "${text}". Use the existing code as context.` :
+            `Generate a React Native component based on this request: "${text}".`}
+                 Return ONLY the component code using React.createElement.
+                 Start with 'function Component() {'.
+
+                 Available APIs:
+                 React Hooks:
+                 Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
+
+                 React Native (RN namespace):
+                 - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
+                 - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
+                 - Device Features: RN.Vibration, RN.Share, RN.Platform
+                 - Layout: RN.Dimensions.get('window') for screen size
+                 - Animation: RN.Animated for smooth animations
+                 - Appearance: RN.Appearance for dark/light mode
+
+                 Expo Modules (Expo namespace):
+                 - Expo.Haptics - vibration patterns and haptic feedback
+                 - Expo.Clipboard - copy/paste functionality
+                 - Expo.ImagePicker - select images from device
+                 - Expo.MediaLibrary - access device media
+                 - Expo.FileSystem - file operations
+                 - Expo.Sharing - share content
+                 - Expo.Location - geolocation services
+                 - Expo.AV - audio/video playback
+                 - Expo.Maps - map components and location services
+                 - Expo.Reanimated - advanced animations
+                 - Expo.Gesture - gesture handling
+                 - Expo.Linking - deep linking and URL handling
+                 - Expo.Sensors - device sensors:
+                   • Accelerometer - device motion data
+                 Example patterns:
+                 - Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
+                 - const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
+                 - Expo.Sensors.Accelerometer.setUpdateInterval(1000)
+                 - subscription.remove()  // cleanup in useEffect
+                 - RN.Share.share({ message: "Hello!" }).then(result => { ... })
+                 - Expo.Clipboard.setString("text").then(() => { ... })
+
+                 Avoid async/await - use .then() for promises.
+                 Use React.useEffect for cleanup and subscriptions.
+
+                 Example usage:
+                 - RN.Vibration.vibrate() for haptic feedback
+                 - RN.Share.share({ message: "Hello!" })
+                 - RN.Alert.alert("Title", "Message")
+                 - const { width, height } = RN.Dimensions.get('window')
+
+                 Use React.useState for state management.
+                 Use only React Native compatible styles (no web-specific CSS).
+                 Do not include any explanation or markdown - just the pure JavaScript code.
+                 The code should start directly with 'function Component() {'.
+                 Start your response with \`\`\` and end with \`\`\`.
+
+                 Example format:
+                 \`\`\`
+                 function Component() {
+                   const [count, setCount] = React.useState(0);
+
+                   const styles = {
+                     container: {
+                       flex: 1,
+                       justifyContent: 'center',
+                       alignItems: 'center'
+                     },
+                     button: {
+                       backgroundColor: '#3B82F6',
+                       padding: 16,
+                       borderRadius: 8
+                     },
+                     buttonText: {
+                       color: 'white'
+                     }
+                   };
+
+                   return React.createElement(
+                     RN.View,
+                     { style: styles.container },
+                     React.createElement(
+                       RN.TouchableOpacity,
+                       { style: styles.button, onPress: () => setCount(c => c + 1) },
+                       React.createElement(
+                         RN.Text,
+                         { style: styles.buttonText },
+                         \`Count: \${count}\`
+                       )
+                     )
+                   );
+                 }
+                 \`\`\``
+    });
+
+    return messages;
+};
+
+const intentPrompt = ({ text, requestHistory }) => [
+    {
+        role: 'system',
+        content: 'You are a binary classifier. Determine if the user wants to modify an existing component or create a new one. Reply with only "modify" or "new".'
+    },
+    {
+        role: 'user',
+        content: `Previous requests for this component:
+${requestHistory.map(req => `- "${req}"`).join('\n')}
+
+Current component exists. Does this new request intend to modify it or create something new?
+Request: "${text}"`
+    }
+];
 import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
@@ -400,20 +524,7 @@ export const VoiceAssistant = () => {
                 },
                 body: JSON.stringify({
                     model: 'anthropic/claude-3.5-haiku',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are a binary classifier. Determine if the user wants to modify an existing component or create a new one. Reply with only "modify" or "new".'
-                        },
-                        {
-                            role: 'user',
-                            content: `Previous requests for this component:
-${requestHistory.map(req => `- "${req}"`).join('\n')}
-
-Current component exists. Does this new request intend to modify it or create something new?
-Request: "${text}"`
-                        }
-                    ],
+                    messages: intentPrompt({ text, requestHistory }),
                     max_tokens: 1,
                     temperature: 0.1
                 })
@@ -463,107 +574,7 @@ Request: "${text}"`
                 method: 'POST',
                 body: JSON.stringify({
                     model: 'anthropic/claude-3.5-sonnet',
-                    messages: [
-                        ...(currentComponentCode ? [{
-                            role: 'system',
-                            content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if the new request is similar or builds upon it.`
-                        }] : []),
-                        {
-                            role: 'user',
-                            content: `${isModifying ? 
-                                `Modify the existing component based on this request: "${text}". Use the existing code as context.` :
-                                `Generate a React Native component based on this request: "${text}".`}
-                                     Return ONLY the component code using React.createElement.
-                                     Start with 'function Component() {'.
-
-                                     Available APIs:
-                                     React Hooks:
-                                     Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
-
-                                     React Native (RN namespace):
-                                     - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
-                                     - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
-                                     - Device Features: RN.Vibration, RN.Share, RN.Platform
-                                     - Layout: RN.Dimensions.get('window') for screen size
-                                     - Animation: RN.Animated for smooth animations
-                                     - Appearance: RN.Appearance for dark/light mode
-
-                                     Expo Modules (Expo namespace):
-                                     - Expo.Haptics - vibration patterns and haptic feedback
-                                     - Expo.Clipboard - copy/paste functionality
-                                     - Expo.ImagePicker - select images from device
-                                     - Expo.MediaLibrary - access device media
-                                     - Expo.FileSystem - file operations
-                                     - Expo.Sharing - share content
-                                     - Expo.Location - geolocation services
-                                     - Expo.AV - audio/video playback
-                                     - Expo.Maps - map components and location services
-                                     - Expo.Reanimated - advanced animations
-                                     - Expo.Gesture - gesture handling
-                                     - Expo.Linking - deep linking and URL handling
-                                     - Expo.Sensors - device sensors:
-                                       • Accelerometer - device motion data
-                                     Example patterns:
-                                     - Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
-                                     - const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
-                                     - Expo.Sensors.Accelerometer.setUpdateInterval(1000)
-                                     - subscription.remove()  // cleanup in useEffect
-                                     - RN.Share.share({ message: "Hello!" }).then(result => { ... })
-                                     - Expo.Clipboard.setString("text").then(() => { ... })
-
-                                     Avoid async/await - use .then() for promises.
-                                     Use React.useEffect for cleanup and subscriptions.
-
-                                     Example usage:
-                                     - RN.Vibration.vibrate() for haptic feedback
-                                     - RN.Share.share({ message: "Hello!" })
-                                     - RN.Alert.alert("Title", "Message")
-                                     - const { width, height } = RN.Dimensions.get('window')
-
-                                     Use React.useState for state management.
-                                     Use only React Native compatible styles (no web-specific CSS).
-                                     Do not include any explanation or markdown - just the pure JavaScript code.
-                                     The code should start directly with 'function Component() {'.
-                                     Start your response with \`\`\` and end with \`\`\`.
-
-                                     Example format:
-                                     \`\`\`
-                                     function Component() {
-                                       const [count, setCount] = React.useState(0);
-
-                                       const styles = {
-                                         container: {
-                                           flex: 1,
-                                           justifyContent: 'center',
-                                           alignItems: 'center'
-                                         },
-                                         button: {
-                                           backgroundColor: '#3B82F6',
-                                           padding: 16,
-                                           borderRadius: 8
-                                         },
-                                         buttonText: {
-                                           color: 'white'
-                                         }
-                                       };
-
-                                       return React.createElement(
-                                         RN.View,
-                                         { style: styles.container },
-                                         React.createElement(
-                                           RN.TouchableOpacity,
-                                           { style: styles.button, onPress: () => setCount(c => c + 1) },
-                                           React.createElement(
-                                             RN.Text,
-                                             { style: styles.buttonText },
-                                             \`Count: \${count}\`
-                                           )
-                                         )
-                                       );
-                                     }
-                                     \`\`\``
-                        }
-                    ],
+                    messages: componentPrompt({ text, isModifying, currentComponentCode }),
                     stream: true
                 })
             });
