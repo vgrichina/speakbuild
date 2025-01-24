@@ -405,6 +405,17 @@ export const VoiceAssistant = () => {
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
+    const abortControllerRef = React.useRef(null);
+
+    useEffect(() => {
+        // Cleanup function to abort any ongoing streams when component unmounts
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
+        };
+    }, []);
 
     useEffect(() => {
         const checkApiKey = async () => {
@@ -537,7 +548,22 @@ export const VoiceAssistant = () => {
         }
     };
 
+    const stopGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+            setIsProcessing(false);
+        }
+    };
+
     const processWithClaudeStream = async (text) => {
+        // Abort any existing stream
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        
+        // Create new AbortController for this stream
+        abortControllerRef.current = new AbortController();
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
         if (!currentApiKey) {
             setError('Please set your OpenRouter API key in settings');
@@ -607,7 +633,9 @@ export const VoiceAssistant = () => {
             const messages = componentPrompt({ text, isModifying: intent === 'modify', currentComponentCode });
             
             try {
-                for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages)) {
+                for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages, {
+                    abortController: abortControllerRef.current
+                })) {
                     if (content) {
                         setResponseStream(prev => prev + content);
                     }
@@ -719,9 +747,7 @@ export const VoiceAssistant = () => {
                     disabled={!hasSpeechPermission && !isProcessing}
                     volume={speechVolume}
                     isGenerating={isProcessing}
-                    onStopGeneration={() => {
-                        setIsProcessing(false);
-                    }}
+                    onStopGeneration={stopGeneration}
                 />
             </View>
 

@@ -44,7 +44,7 @@ class AsyncIterator {
 
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7 } = {}) {
+async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7, abortController } = {}) {
     let fullResponse = '';
     
     const eventSource = new EventSource(API_URL, {
@@ -66,6 +66,14 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
     try {
         // Use an async iterator to handle EventSource events
         const events = new AsyncIterator((push, stop) => {
+            // Handle abort controller
+            if (abortController) {
+                abortController.signal.addEventListener('abort', () => {
+                    eventSource.close();
+                    stop(new Error('Stream aborted'));
+                });
+            }
+
             eventSource.addEventListener('open', () => {});
 
             eventSource.addEventListener('message', (event) => {
