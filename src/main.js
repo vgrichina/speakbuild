@@ -127,6 +127,7 @@ Request: "${text}"`
 import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
+import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Key, Square } from 'lucide-react-native';
@@ -882,51 +883,10 @@ export const VoiceAssistant = () => {
                             {React.createElement(currentComponent)}
                         </ScrollView>
                     </View>
-                    {showSourceCode && (
-                        <View style={{
-                            position: 'absolute',
-                            top: -56, // Position above normal header to cover it
-                            left: 0,
-                            right: 0,
-                            bottom: -56, // Extend past bottom to compensate for top offset
-                            backgroundColor: '#F9FAFB',
-                            zIndex: 1000,
-                        }}>
-                            <View style={{
-                                padding: 16,
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#E5E7EB',
-                                backgroundColor: 'white',
-                            }}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Source Code</Text>
-                                <Pressable
-                                    onPress={() => setShowSourceCode(false)}
-                                    style={{
-                                        padding: 8,
-                                        marginRight: -8,
-                                    }}
-                                >
-                                    <Text style={{ fontSize: 24, color: '#666' }}>×</Text>
-                                </Pressable>
-                            </View>
-                            <ScrollView 
-                                style={{ flex: 1 }}
-                                contentContainerStyle={{ padding: 16 }}
-                            >
-                                <Text style={{ 
-                                    fontFamily: Platform.select({
-                                        ios: 'Menlo',
-                                        android: 'monospace',
-                                        default: 'monospace'
-                                    }),
-                                    fontSize: 14,
-                                    lineHeight: 20,
-                                }}>{currentComponentCode}</Text>
-                            </ScrollView>
-                        </View>
+                    <ViewCode 
+                        isVisible={showSourceCode}
+                        onClose={() => setShowSourceCode(false)}
+                        code={currentComponentCode}
                     )}
                 </View>
             )}
