@@ -534,7 +534,7 @@ export const VoiceAssistant = () => {
                 intentPrompt({ text, requestHistory }),
                 { 
                     max_tokens: 1,
-                    abortController: abortControllerRef.current
+                    abortController: currentController
                 }
             );
             
@@ -569,7 +569,9 @@ export const VoiceAssistant = () => {
         }
         
         // Create new AbortController for this stream
-        abortControllerRef.current = new AbortController();
+        const currentController = new AbortController();
+        abortControllerRef.current = currentController;
+        
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
         if (!currentApiKey) {
             setError('Please set your OpenRouter API key in settings');
@@ -640,11 +642,11 @@ export const VoiceAssistant = () => {
             
             try {
                 for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages, {
-                    abortController: abortControllerRef.current,
+                    abortController: currentController,
                     model: selectedModel
                 })) {
                     // Early exit if aborted
-                    if (abortControllerRef.current?.signal.aborted) break;
+                    if (currentController?.signal.aborted) break;
 
                     if (content) {
                         setResponseStream(prev => prev + content);
