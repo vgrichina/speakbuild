@@ -1,19 +1,28 @@
-import React, { useState, useRef } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator } from 'react-native';
 import { Key } from 'lucide-react-native';
+import { getSupportedLocales } from 'expo-speech-recognition';
 
-const LANGUAGES = [
-    { code: 'en-US', name: 'English (US)' },
-    { code: 'en-GB', name: 'English (UK)' },
-    { code: 'es-ES', name: 'Spanish' },
-    { code: 'fr-FR', name: 'French' },
-    { code: 'de-DE', name: 'German' },
-    { code: 'it-IT', name: 'Italian' },
-    { code: 'ja-JP', name: 'Japanese' },
-    { code: 'ko-KR', name: 'Korean' },
-    { code: 'zh-CN', name: 'Chinese (Simplified)' },
-    { code: 'ru-RU', name: 'Russian' }
-];
+// Language name mapping for common locales
+const LANGUAGE_NAMES = {
+    'en': 'English',
+    'es': 'Spanish',
+    'fr': 'French',
+    'de': 'German',
+    'it': 'Italian',
+    'ja': 'Japanese',
+    'ko': 'Korean',
+    'zh': 'Chinese',
+    'ru': 'Russian',
+    'pt': 'Portuguese',
+    'nl': 'Dutch',
+    'pl': 'Polish',
+    'tr': 'Turkish',
+    'ar': 'Arabic',
+    'hi': 'Hindi',
+    'th': 'Thai',
+    'vi': 'Vietnamese'
+};
 
 const styles = StyleSheet.create({
     modalContainer: {
@@ -91,6 +100,44 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const modalContentRef = useRef(null);
     const [modalLayout, setModalLayout] = useState(null);
+    const [languages, setLanguages] = useState([]);
+    const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsLoadingLanguages(true);
+            getSupportedLocales({
+                androidRecognitionServicePackage: "com.google.android.as"
+            })
+            .then((supportedLocales) => {
+                // Combine both online and installed locales
+                const allLocales = [...new Set([
+                    ...supportedLocales.locales,
+                    ...supportedLocales.installedLocales
+                ])].sort();
+
+                // Format locales with readable names
+                const formattedLocales = allLocales.map(locale => {
+                    const [lang, region] = locale.split('-');
+                    const baseName = LANGUAGE_NAMES[lang] || lang;
+                    return {
+                        code: locale,
+                        name: region ? `${baseName} (${region})` : baseName
+                    };
+                });
+
+                setLanguages(formattedLocales);
+            })
+            .catch((error) => {
+                console.error('Error getting supported locales:', error);
+                // Fallback to basic language list
+                setLanguages([{ code: 'en-US', name: 'English (US)' }]);
+            })
+            .finally(() => {
+                setIsLoadingLanguages(false);
+            });
+        }
+    }, [isOpen]);
 
     // Reset drafts when modal opens
     React.useEffect(() => {
@@ -172,8 +219,14 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                         <View style={{ gap: 8 }}>
                             <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
                             <View style={{ maxHeight: 150 }}>
-                                <ScrollView>
-                                    {LANGUAGES.map(lang => (
+                                {isLoadingLanguages ? (
+                                    <View style={{ padding: 20, alignItems: 'center' }}>
+                                        <ActivityIndicator size="small" color="#3B82F6" />
+                                        <Text style={{ marginTop: 8, color: '#666' }}>Loading languages...</Text>
+                                    </View>
+                                ) : (
+                                    <ScrollView>
+                                        {languages.map(lang => (
                                         <Pressable
                                             key={lang.code}
                                             style={[
@@ -189,8 +242,9 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                                                 {lang.name}
                                             </Text>
                                         </Pressable>
-                                    ))}
-                                </ScrollView>
+                                        ))}
+                                    </ScrollView>
+                                )}
                             </View>
                         </View>
 
