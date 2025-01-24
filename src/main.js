@@ -522,7 +522,7 @@ export const VoiceAssistant = () => {
 
     const [requestHistory, setRequestHistory] = useState([]);
 
-    const analyzeIntent = async (text) => {
+    const analyzeIntent = async (text, controller) => {
         if (!currentComponent) return 'new';
         
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
@@ -534,7 +534,7 @@ export const VoiceAssistant = () => {
                 intentPrompt({ text, requestHistory }),
                 { 
                     max_tokens: 1,
-                    abortController: currentController
+                    abortController: controller
                 }
             );
             
@@ -549,7 +549,7 @@ export const VoiceAssistant = () => {
             return intent;
         } catch (error) {
             console.error('Intent analysis error:', error);
-            return false;
+            throw error; // Re-throw to properly handle the error
         }
     };
 
@@ -584,7 +584,10 @@ export const VoiceAssistant = () => {
 
         try {
             // Determine intent using the small LLM
-            const intent = await analyzeIntent(text);
+            const intent = await analyzeIntent(text, currentController);
+            if (!intent) {
+                throw new Error('Failed to determine intent');
+            }
             setModificationIntent(intent);
             console.log('Making OpenRouter API request...');
             
