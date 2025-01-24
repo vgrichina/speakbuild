@@ -591,7 +591,7 @@ export const VoiceAssistant = () => {
                     // Clear error and transcribed text after successful generation
                     setError('');
                     setTranscribedText('');
-                    if (!isModifying) {
+                    if (intent !== 'modify') {
                         setRequestHistory([]);
                     }
 
