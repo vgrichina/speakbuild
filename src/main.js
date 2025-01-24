@@ -607,9 +607,11 @@ export const VoiceAssistant = () => {
             const messages = componentPrompt({ text, isModifying: intent === 'modify', currentComponentCode });
             
             try {
-                for await (const { content, fullResponse } of api.streamCompletion(currentApiKey, messages)) {
-                    setResponseStream(prev => prev + content);
-                    if (fullResponse.includes('```')) {
+                for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages)) {
+                    if (content) {
+                        setResponseStream(prev => prev + content);
+                    }
+                    if (done) {
                         processCompleteResponse(fullResponse);
                     }
                 }

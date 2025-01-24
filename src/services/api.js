@@ -29,22 +29,28 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
             });
 
             if (event.data === '[DONE]') {
+                yield { content: '', fullResponse, done: true };
                 break;
             }
 
-            const data = JSON.parse(event.data);
-            const content = data.choices?.[0]?.delta?.content;
-            
-            if (content) {
-                fullResponse += content;
-                yield { content, fullResponse };
+            try {
+                const data = JSON.parse(event.data);
+                const content = data.choices?.[0]?.delta?.content;
+                
+                if (content) {
+                    fullResponse += content;
+                    yield { content, fullResponse, done: false };
+                }
+            } catch (e) {
+                console.error('Error parsing SSE message:', e);
+                throw new Error(`Failed to parse response: ${e.message}`);
             }
         }
     } finally {
         eventSource.close();
     }
 
-    return fullResponse;
+    return { content: '', fullResponse, done: true };
 }
 
 async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens } = {}) {
