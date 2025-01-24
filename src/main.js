@@ -887,7 +887,7 @@ export const VoiceAssistant = () => {
                         isVisible={showSourceCode}
                         onClose={() => setShowSourceCode(false)}
                         code={currentComponentCode}
-                    )}
+                    />
                 </View>
             )}
         </View>
