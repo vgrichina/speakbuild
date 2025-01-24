@@ -1,3 +1,5 @@
+import EventSource from 'react-native-sse';
+
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7 } = {}) {
