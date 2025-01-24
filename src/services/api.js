@@ -45,7 +45,6 @@ class AsyncIterator {
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7 } = {}) {
-    console.log('Starting streamCompletion');
     let fullResponse = '';
     
     const eventSource = new EventSource(API_URL, {
@@ -67,14 +66,9 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
     try {
         // Use an async iterator to handle EventSource events
         const events = new AsyncIterator((push, stop) => {
-            console.log('Setting up event listeners');
-            
-            eventSource.addEventListener('open', () => {
-                console.log('EventSource connection opened');
-            });
+            eventSource.addEventListener('open', () => {});
 
             eventSource.addEventListener('message', (event) => {
-                console.log('Received event:', event.data.slice(0, 100) + '...');
                 push(event);
             });
 
@@ -85,7 +79,6 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
 
             // Return cleanup function
             return () => {
-                console.log('Cleaning up event listeners');
                 eventSource.close();
             };
         });
@@ -93,7 +86,6 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
         // Process events as they arrive
         for await (const event of events) {
             if (event.data === '[DONE]') {
-                console.log('Received [DONE] event');
                 yield { content: '', fullResponse, done: true };
                 break;
             }
@@ -103,7 +95,6 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
                 const content = data.choices?.[0]?.delta?.content;
                 
                 if (content) {
-                    console.log('Processing content:', content.slice(0, 50) + '...');
                     fullResponse += content;
                     yield { content, fullResponse, done: false };
                 }
@@ -113,7 +104,6 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
             }
         }
     } finally {
-        console.log('Closing EventSource connection');
         eventSource.close();
     }
 }
