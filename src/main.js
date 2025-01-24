@@ -639,14 +639,14 @@ export const VoiceAssistant = () => {
                     abortController: abortControllerRef.current,
                     model: selectedModel
                 })) {
+                    // Early exit if aborted
+                    if (abortControllerRef.current?.signal.aborted) break;
+
                     if (content) {
                         setResponseStream(prev => prev + content);
                     }
                     if (done) {
-                        // Only process response if we haven't been aborted
-                        if (!abortControllerRef.current?.signal.aborted) {
-                            processCompleteResponse(fullResponse);
-                        }
+                        processCompleteResponse(fullResponse);
                     }
                 }
             } catch (error) {

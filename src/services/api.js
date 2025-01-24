@@ -99,6 +99,9 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
             }
 
             try {
+                // Early exit if aborted
+                if (abortController?.signal.aborted) break;
+                
                 const data = JSON.parse(event.data);
                 const content = data.choices?.[0]?.delta?.content;
                 
