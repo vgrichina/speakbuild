@@ -509,10 +509,10 @@ export const VoiceAssistant = () => {
     const [requestHistory, setRequestHistory] = useState([]);
 
     const analyzeIntent = async (text) => {
-        if (!currentComponent) return false;
+        if (!currentComponent) return 'new';
         
         const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
-        if (!currentApiKey) return false;
+        if (!currentApiKey) return 'new';
 
         try {
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -541,7 +541,7 @@ export const VoiceAssistant = () => {
                 setRequestHistory([]);
             }
             
-            return intent === 'modify';
+            return intent;
         } catch (error) {
             console.error('Intent analysis error:', error);
             return false;
@@ -561,8 +561,8 @@ export const VoiceAssistant = () => {
 
         try {
             // Determine intent using the small LLM
-            const isModifying = await analyzeIntent(text);
-            setModificationIntent(isModifying ? 'modify' : 'new');
+            const intent = await analyzeIntent(text);
+            setModificationIntent(intent);
             console.log('Making OpenRouter API request...');
             window.currentEventSource = new EventSource('https://openrouter.ai/api/v1/chat/completions', {
                 headers: {
@@ -574,7 +574,7 @@ export const VoiceAssistant = () => {
                 method: 'POST',
                 body: JSON.stringify({
                     model: 'anthropic/claude-3.5-sonnet',
-                    messages: componentPrompt({ text, isModifying, currentComponentCode }),
+                    messages: componentPrompt({ text, isModifying: intent === 'modify', currentComponentCode }),
                     stream: true
                 })
             });
