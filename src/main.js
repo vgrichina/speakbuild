@@ -532,7 +532,10 @@ export const VoiceAssistant = () => {
             const intent = await api.completion(
                 currentApiKey,
                 intentPrompt({ text, requestHistory }),
-                { max_tokens: 1 }
+                { 
+                    max_tokens: 1,
+                    abortController: abortControllerRef.current
+                }
             );
             
             // Add request to history if it's a modification

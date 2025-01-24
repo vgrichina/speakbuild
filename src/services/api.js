@@ -119,8 +119,9 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
     }
 }
 
-async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens } = {}) {
+async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens, abortController } = {}) {
     const response = await fetch(API_URL, {
+        signal: abortController?.signal,
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${apiKey}`,
