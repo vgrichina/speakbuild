@@ -136,9 +136,27 @@ async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haik
         })
     });
 
+    if (!response.ok) {
+        const data = await response.json();
+        console.error('API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: JSON.stringify(data, null, 2)
+        });
+        throw new Error(`API error ${response.status}: ${JSON.stringify(data)}`);
+    }
+
     const data = await response.json();
+    console.log('API Response:', JSON.stringify(data, null, 2));
+    
     if (!data.choices?.[0]?.message?.content) {
-        throw new Error('Invalid API response');
+        console.error('Invalid API Response Structure:', {
+            hasChoices: Boolean(data.choices),
+            firstChoice: data.choices?.[0],
+            message: data.choices?.[0]?.message,
+            content: data.choices?.[0]?.message?.content
+        });
+        throw new Error(`Invalid API response: ${JSON.stringify(data)}`);
     }
     
     return data.choices[0].message.content;
