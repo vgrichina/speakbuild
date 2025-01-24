@@ -283,8 +283,19 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                             style={[styles.button, !draftKey && styles.buttonDisabled]}
                             onPress={() => {
                                 if (draftKey) {
-                                    onSave(draftKey, draftLanguage, draftModel);
-                                    onClose();
+                                    Promise.all([
+                                        AsyncStorage.setItem('openrouter_api_key', draftKey),
+                                        AsyncStorage.setItem('recognition_language', draftLanguage),
+                                        AsyncStorage.setItem('selected_model', draftModel)
+                                    ]).then(() => {
+                                        onSave(draftKey, draftLanguage, draftModel);
+                                        onClose();
+                                    }).catch(error => {
+                                        console.error('Error saving settings:', error);
+                                        // Still save to state even if storage fails
+                                        onSave(draftKey, draftLanguage, draftModel);
+                                        onClose();
+                                    });
                                 }
                             }}
                             disabled={!draftKey}
