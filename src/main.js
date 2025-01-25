@@ -647,28 +647,30 @@ export const VoiceAssistant = () => {
                     const createComponent = new Function(componentCode);
                     const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
-                    // Store in history
+                    // If we're not at the latest point in history, clear alternative future
+                    const newHistory = componentHistory.slice(0, currentHistoryIndex + 1);
                     const newHistoryEntry = {
                         component: GeneratedComponent,
                         code: code,
                         request: text
                     };
                     
-                    // Remove any future history entries if we're not at the latest point
-                    const newHistory = componentHistory.slice(0, currentHistoryIndex + 1);
+                    // Update history and current state
                     setComponentHistory([...newHistory, newHistoryEntry]);
-                    setCurrentHistoryIndex(newHistory.length);
-                    
-                    // Update current component
+                    setCurrentHistoryIndex(currentHistoryIndex + 1);
                     setCurrentComponent(() => GeneratedComponent);
                     setCurrentComponentCode(code);
                     
-                    // Clear states
-                    setError('');
-                    setTranscribedText('');
-                    if (intent !== 'modify') {
+                    // Update request history
+                    if (intent === 'modify') {
+                        setRequestHistory(prev => [...prev, text]);
+                    } else {
                         setRequestHistory([]);
                     }
+                    
+                    // Clear other states
+                    setError('');
+                    setTranscribedText('');
 
                 } catch (error) {
                     console.error('Error creating component:', error);
