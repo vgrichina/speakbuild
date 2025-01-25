@@ -545,7 +545,6 @@ export const VoiceAssistant = () => {
     });
 
 
-    const [requestHistory, setRequestHistory] = useState([]);
 
     const analyzeIntent = async (text, controller) => {
         if (!currentComponent) return 'new';
@@ -563,13 +562,7 @@ export const VoiceAssistant = () => {
                 }
             );
             
-            // Add request to history if it's a modification
-            if (intent === 'modify') {
-                setRequestHistory(prev => [...prev, text]);
-            } else {
-                // Clear history if it's a new component
-                setRequestHistory([]);
-            }
+            return intent;
             
             return intent;
         } catch (error) {
@@ -661,12 +654,6 @@ export const VoiceAssistant = () => {
                     setCurrentComponent(() => GeneratedComponent);
                     setCurrentComponentCode(code);
                     
-                    // Update request history
-                    if (intent === 'modify') {
-                        setRequestHistory(prev => [...prev, text]);
-                    } else {
-                        setRequestHistory([]);
-                    }
                     
                     // Clear other states
                     setError('');
@@ -899,7 +886,14 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Final Transcription */}
-            {(transcribedText || requestHistory.length > 0) && (
+            {(() => {
+                // Compute request history from component history
+                const requestHistory = componentHistory
+                    .slice(0, currentHistoryIndex + 1)
+                    .filter(entry => entry.request)
+                    .map(entry => entry.request);
+
+                return (transcribedText || requestHistory.length > 0) && (
                 <View style={styles.transcriptionBox}>
                     <Text style={styles.heading}>Transcribed:</Text>
                     {requestHistory.length > 0 && (
@@ -932,7 +926,8 @@ export const VoiceAssistant = () => {
                         </View>
                     )}
                 </View>
-            )}
+                );
+            })()}
 
             {/* Response Stream */}
             {(responseStream || isProcessing) && (!currentComponent || isProcessing) && (
