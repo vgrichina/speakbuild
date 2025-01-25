@@ -130,7 +130,7 @@ import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Platform, Ani
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
-import { Mic, MicOff, Radio, Loader2, Settings, Key, Square } from 'lucide-react-native';
+import { Mic, MicOff, Radio, Loader2, Settings, Key, Square, ArrowLeft, ArrowRight } from 'lucide-react-native';
 import * as ExpoSensors from 'expo-sensors';
 import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -144,6 +144,15 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  navButton: {
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: '#f5f5f5',
+    marginHorizontal: 2,
+  },
+  buttonPressed: {
+    backgroundColor: '#e5e5e5',
   },
   header: {
     flexDirection: 'row',
@@ -467,6 +476,8 @@ export const VoiceAssistant = () => {
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
+    const [componentHistory, setComponentHistory] = useState([]);
+    const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
     const spinValue = React.useRef(new RN.Animated.Value(0)).current;
 
     React.useEffect(() => {
@@ -636,10 +647,23 @@ export const VoiceAssistant = () => {
                     const createComponent = new Function(componentCode);
                     const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
-                    // Store the current component and its source code
+                    // Store in history
+                    const newHistoryEntry = {
+                        component: GeneratedComponent,
+                        code: code,
+                        request: text
+                    };
+                    
+                    // Remove any future history entries if we're not at the latest point
+                    const newHistory = componentHistory.slice(0, currentHistoryIndex + 1);
+                    setComponentHistory([...newHistory, newHistoryEntry]);
+                    setCurrentHistoryIndex(newHistory.length);
+                    
+                    // Update current component
                     setCurrentComponent(() => GeneratedComponent);
                     setCurrentComponentCode(code);
-                    // Clear error and transcribed text after successful generation
+                    
+                    // Clear states
                     setError('');
                     setTranscribedText('');
                     if (intent !== 'modify') {
@@ -727,19 +751,65 @@ export const VoiceAssistant = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header with Settings and Debug Menu */}
+            {/* Header with Navigation, Settings and Debug Menu */}
             <View style={styles.compactHeader}>
-                <Pressable
-                    onPress={() => setIsSettingsOpen(true)}
-                    style={{
-                        padding: 12,
-                        marginLeft: -8,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Settings size={24} color="#666" />
-                </Pressable>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Pressable
+                        onPress={() => setIsSettingsOpen(true)}
+                        style={{
+                            padding: 12,
+                            marginLeft: -8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Settings size={24} color="#666" />
+                    </Pressable>
+
+                    {currentComponent && (
+                        <View style={{ flexDirection: 'row', marginLeft: 8 }}>
+                            <Pressable
+                                onPress={() => {
+                                    if (currentHistoryIndex > 0) {
+                                        const newIndex = currentHistoryIndex - 1;
+                                        const previousEntry = componentHistory[newIndex];
+                                        setCurrentHistoryIndex(newIndex);
+                                        setCurrentComponent(() => previousEntry.component);
+                                        setCurrentComponentCode(previousEntry.code);
+                                    }
+                                }}
+                                disabled={currentHistoryIndex <= 0}
+                                style={({ pressed }) => [
+                                    styles.navButton,
+                                    currentHistoryIndex <= 0 && styles.buttonDisabled,
+                                    pressed && styles.buttonPressed
+                                ]}
+                            >
+                                <ArrowLeft size={20} color={currentHistoryIndex <= 0 ? '#999' : '#666'} />
+                            </Pressable>
+                            
+                            <Pressable
+                                onPress={() => {
+                                    if (currentHistoryIndex < componentHistory.length - 1) {
+                                        const newIndex = currentHistoryIndex + 1;
+                                        const nextEntry = componentHistory[newIndex];
+                                        setCurrentHistoryIndex(newIndex);
+                                        setCurrentComponent(() => nextEntry.component);
+                                        setCurrentComponentCode(nextEntry.code);
+                                    }
+                                }}
+                                disabled={currentHistoryIndex >= componentHistory.length - 1}
+                                style={({ pressed }) => [
+                                    styles.navButton,
+                                    currentHistoryIndex >= componentHistory.length - 1 && styles.buttonDisabled,
+                                    pressed && styles.buttonPressed
+                                ]}
+                            >
+                                <ArrowRight size={20} color={currentHistoryIndex >= componentHistory.length - 1 ? '#999' : '#666'} />
+                            </Pressable>
+                        </View>
+                    )}
+                </View>
 
                 {currentComponent && (
                     <View style={{ overflow: 'visible' }}>
