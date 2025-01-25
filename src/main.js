@@ -553,6 +553,7 @@ export const VoiceAssistant = () => {
         if (!currentApiKey) return 'new';
 
         try {
+            const requestHistory = getRequestHistory(componentHistory, currentHistoryIndex);
             const intent = await api.completion(
                 currentApiKey,
                 intentPrompt({ text, requestHistory }),
@@ -563,9 +564,7 @@ export const VoiceAssistant = () => {
             );
             
             return intent;
-            
-            return intent;
-        } catch (error) {
+                    } catch (error) {
             console.error('Intent analysis error:', error);
             throw error; // Re-throw to properly handle the error
         }
@@ -765,12 +764,7 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => previousEntry.component);
                                         setCurrentComponentCode(previousEntry.code);
-                                        // Update request history when going back
-                                        const previousRequests = componentHistory
-                                            .slice(0, newIndex)
-                                            .filter(entry => entry.request)
-                                            .map(entry => entry.request);
-                                        setRequestHistory(previousRequests);
+                                        setCurrentHistoryIndex(newIndex);
                                     }
                                 }}
                                 disabled={currentHistoryIndex <= 0}
@@ -791,12 +785,7 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => nextEntry.component);
                                         setCurrentComponentCode(nextEntry.code);
-                                        // Update request history when going forward
-                                        const requests = componentHistory
-                                            .slice(0, newIndex + 1)
-                                            .filter(entry => entry.request)
-                                            .map(entry => entry.request);
-                                        setRequestHistory(requests);
+                                        setCurrentHistoryIndex(newIndex);
                                     }
                                 }}
                                 disabled={currentHistoryIndex >= componentHistory.length - 1}
@@ -887,12 +876,7 @@ export const VoiceAssistant = () => {
 
             {/* Final Transcription */}
             {(() => {
-                // Compute request history from component history
-                const requestHistory = componentHistory
-                    .slice(0, currentHistoryIndex + 1)
-                    .filter(entry => entry.request)
-                    .map(entry => entry.request);
-
+                const requestHistory = getRequestHistory(componentHistory, currentHistoryIndex);
                 return (transcribedText || requestHistory.length > 0) && (
                 <View style={styles.transcriptionBox}>
                     <Text style={styles.heading}>Transcribed:</Text>
@@ -1031,3 +1015,13 @@ export const VoiceAssistant = () => {
         </View>
     );
 };
+    // Stateless helper function to compute request history
+    const getRequestHistory = (history, currentIndex) => {
+        if (!Array.isArray(history) || typeof currentIndex !== 'number' || currentIndex < 0) {
+            return [];
+        }
+        return history
+            .slice(0, currentIndex + 1)
+            .filter(entry => entry && entry.request)
+            .map(entry => entry.request);
+    };
