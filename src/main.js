@@ -764,6 +764,9 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => previousEntry.component);
                                         setCurrentComponentCode(previousEntry.code);
+                                       setTranscribedText('');
+                                       setResponseStream('');
+                                       stopGeneration();
                                         setCurrentHistoryIndex(newIndex);
                                     }
                                 }}
@@ -785,6 +788,9 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => nextEntry.component);
                                         setCurrentComponentCode(nextEntry.code);
+                                       setTranscribedText('');
+                                       setResponseStream('');
+                                       stopGeneration();
                                         setCurrentHistoryIndex(newIndex);
                                     }
                                 }}
