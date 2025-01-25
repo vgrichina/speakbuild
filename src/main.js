@@ -885,10 +885,38 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Final Transcription */}
-            {transcribedText && (
+            {(transcribedText || requestHistory.length > 0) && (
                 <View style={styles.transcriptionBox}>
                     <Text style={styles.heading}>Transcribed:</Text>
-                    <Text>{transcribedText}</Text>
+                    {requestHistory.length > 0 && (
+                        <View style={{ marginBottom: 8 }}>
+                            <Text style={{ color: '#666', fontSize: 12, marginBottom: 4 }}>Previous requests:</Text>
+                            {requestHistory.map((request, index) => (
+                                <Text key={index} style={{ 
+                                    color: '#666',
+                                    fontSize: 14,
+                                    marginLeft: 8,
+                                    marginBottom: 2
+                                }}>
+                                    • {request}
+                                </Text>
+                            ))}
+                        </View>
+                    )}
+                    {transcribedText && (
+                        <View>
+                            {requestHistory.length > 0 && (
+                                <Text style={{ color: '#666', fontSize: 12, marginBottom: 4 }}>Current request:</Text>
+                            )}
+                            <Text style={{ 
+                                color: '#000',
+                                fontSize: 14,
+                                ...(requestHistory.length > 0 && { marginLeft: 8 })
+                            }}>
+                                {transcribedText}
+                            </Text>
+                        </View>
+                    )}
                 </View>
             )}
 
