@@ -776,6 +776,12 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => previousEntry.component);
                                         setCurrentComponentCode(previousEntry.code);
+                                        // Update request history when going back
+                                        const previousRequests = componentHistory
+                                            .slice(0, newIndex)
+                                            .filter(entry => entry.request)
+                                            .map(entry => entry.request);
+                                        setRequestHistory(previousRequests);
                                     }
                                 }}
                                 disabled={currentHistoryIndex <= 0}
@@ -796,6 +802,12 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => nextEntry.component);
                                         setCurrentComponentCode(nextEntry.code);
+                                        // Update request history when going forward
+                                        const requests = componentHistory
+                                            .slice(0, newIndex + 1)
+                                            .filter(entry => entry.request)
+                                            .map(entry => entry.request);
+                                        setRequestHistory(requests);
                                     }
                                 }}
                                 disabled={currentHistoryIndex >= componentHistory.length - 1}
