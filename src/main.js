@@ -1,5 +1,55 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api';
+import { widgetStorage } from './services/widgetStorage';
+
+const analyzeWidgetNeeds = async (text, controller) => {
+    const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
+    if (!currentApiKey) return null;
+
+    try {
+        const response = await api.completion(
+            currentApiKey,
+            [
+                {
+                    role: 'system',
+                    content: `Analyze the user request and determine:
+                        1. Widget URL following the pattern:
+                           Describe the widget's purpose in a URL-like format
+                           Examples:
+                           - input/numeric/counter/basic
+                           - display/timer/countdown
+                           - input/text/single-line
+                           - chart/bar/vertical
+                        2. Required capabilities
+                        3. Data parameters needed
+
+                        Respond in JSON format:
+                        {
+                            "widgetUrl": "category/type/variant",
+                            "capabilities": ["string"],
+                            "params": {
+                                "paramName": "value"
+                            }
+                        }`
+                },
+                {
+                    role: 'user',
+                    content: text
+                }
+            ],
+            { 
+                max_tokens: 200,
+                model: 'anthropic/claude-3.5-haiku',
+                abortController: controller
+            }
+        );
+
+        return JSON.parse(response);
+    } catch (error) {
+        console.error('Widget analysis error:', error);
+        throw error;
+    }
+};
 
 const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
     const messages = [];
@@ -600,7 +650,21 @@ export const VoiceAssistant = () => {
         setResponseStream('');
 
         try {
-            // Determine intent using the small LLM
+            // First analyze widget needs
+            const widgetAnalysis = await analyzeWidgetNeeds(text, currentController);
+            if (!widgetAnalysis) {
+                throw new Error('Failed to analyze widget needs');
+            }
+
+            // Check cache for matching widget
+            const cachedWidget = await widgetStorage.find(widgetAnalysis.widgetUrl);
+            if (cachedWidget) {
+                console.log('Found cached widget:', widgetAnalysis.widgetUrl);
+                processCompleteResponse(cachedWidget.code);
+                return;
+            }
+
+            // If no cached widget, determine intent and generate new one
             const intent = await analyzeIntent(text, currentController);
             if (!intent) {
                 throw new Error('Failed to determine intent');
@@ -647,12 +711,14 @@ export const VoiceAssistant = () => {
                         request: text
                     };
                     
+                    // Cache the new widget
+                    await widgetStorage.store(widgetAnalysis.widgetUrl, GeneratedComponent, code);
+
                     // Update history and current state
                     setComponentHistory([...newHistory, newHistoryEntry]);
                     setCurrentHistoryIndex(currentHistoryIndex + 1);
                     setCurrentComponent(() => GeneratedComponent);
                     setCurrentComponentCode(code);
-                    
                     
                     // Clear other states
                     setError('');
