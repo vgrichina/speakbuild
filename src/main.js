@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api';
 import { widgetStorage } from './services/widgetStorage';
 
-const analyzeRequest = async (text, controller) => {
+const analyzeRequest = async (text, controller, history, historyIndex) => {
     const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
     if (!currentApiKey) return null;
 
     try {
-        const requestHistory = getRequestHistory(componentHistory, currentHistoryIndex);
+        const requestHistory = getRequestHistory(history, historyIndex);
         const response = await api.completion(
             currentApiKey,
             [
@@ -643,7 +643,7 @@ export const VoiceAssistant = () => {
 
         try {
             // Analyze the request
-            const analysis = await analyzeRequest(text, currentController);
+            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
             if (!analysis) {
                 throw new Error('Failed to analyze request');
             }
