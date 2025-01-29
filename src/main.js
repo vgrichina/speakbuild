@@ -699,13 +699,17 @@ export const VoiceAssistant = () => {
                     };
                     
                     // Cache the new widget
-                    await widgetStorage.store(widgetAnalysis.widgetUrl, GeneratedComponent, code);
-
-                    // Update history and current state
-                    setComponentHistory([...newHistory, newHistoryEntry]);
-                    setCurrentHistoryIndex(currentHistoryIndex + 1);
-                    setCurrentComponent(() => GeneratedComponent);
-                    setCurrentComponentCode(code);
+                    widgetStorage.store(analysis.widgetUrl, GeneratedComponent, code)
+                        .then(() => {
+                            // Update history and current state
+                            setComponentHistory([...newHistory, newHistoryEntry]);
+                            setCurrentHistoryIndex(currentHistoryIndex + 1);
+                            setCurrentComponent(() => GeneratedComponent);
+                            setCurrentComponentCode(code);
+                        })
+                        .catch(error => {
+                            console.error('Widget storage error:', error);
+                        });
                     
                     // Clear other states
                     setError('');
