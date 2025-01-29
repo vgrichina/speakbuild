@@ -160,20 +160,6 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
     return messages;
 };
 
-const intentPrompt = ({ text, requestHistory }) => [
-    {
-        role: 'system',
-        content: 'You are a binary classifier. Determine if the user wants to modify an existing component or create a new one. Reply with only "modify" or "new".'
-    },
-    {
-        role: 'user',
-        content: `Previous requests for this component:
-${requestHistory.map(req => `- "${req}"`).join('\n')}
-
-Current component exists. Does this new request intend to modify it or create something new?
-Request: "${text}"`
-    }
-];
 import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
@@ -650,26 +636,21 @@ export const VoiceAssistant = () => {
         setResponseStream('');
 
         try {
-            // First analyze widget needs
-            const widgetAnalysis = await analyzeWidgetNeeds(text, currentController);
-            if (!widgetAnalysis) {
-                throw new Error('Failed to analyze widget needs');
+            // Analyze the request
+            const analysis = await analyzeRequest(text, currentController);
+            if (!analysis) {
+                throw new Error('Failed to analyze request');
             }
 
             // Check cache for matching widget
-            const cachedWidget = await widgetStorage.find(widgetAnalysis.widgetUrl);
+            const cachedWidget = await widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
-                console.log('Found cached widget:', widgetAnalysis.widgetUrl);
+                console.log('Found cached widget:', analysis.widgetUrl);
                 processCompleteResponse(cachedWidget.code);
                 return;
             }
 
-            // If no cached widget, determine intent and generate new one
-            const intent = await analyzeIntent(text, currentController);
-            if (!intent) {
-                throw new Error('Failed to determine intent');
-            }
-            setModificationIntent(intent);
+            setModificationIntent(analysis.intent);
             console.log('Making OpenRouter API request...');
             
             const processCompleteResponse = (response) => {
