@@ -729,7 +729,7 @@ export const VoiceAssistant = () => {
                 }
             };
 
-            const messages = componentPrompt({ text, isModifying: intent === 'modify', currentComponentCode });
+            const messages = componentPrompt({ text, isModifying: analysis.intent === 'modify', currentComponentCode });
             
             try {
                 for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages, {
