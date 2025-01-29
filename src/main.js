@@ -50,7 +50,12 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
             }
         );
 
-        return JSON.parse(response);
+        // Extract just the JSON part from the response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('No JSON object found in response');
+        }
+        return JSON.parse(jsonMatch[0]);
     } catch (error) {
         console.error('Request analysis error:', error);
         throw error;
