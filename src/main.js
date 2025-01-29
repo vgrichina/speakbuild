@@ -13,30 +13,30 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
             [
                 {
                     role: 'system',
-                    content: `Analyze the user request and determine:
-                        1. Intent: Should we modify the existing component or create a new one? Reply with "modify" or "new".
-                        2. Widget URL following the pattern:
-                           Describe the widget's purpose in a URL-like format
-                           Examples:
-                           - input/numeric/counter/basic
-                           - display/timer/countdown
-                           - input/text/single-line
-                           - chart/bar/vertical
-                        3. Required capabilities
-                        4. Data parameters needed
-
-                        Previous requests for this component:
-                        ${requestHistory.map(req => `- "${req}"`).join('\n')}
-
-                        Respond in JSON format:
+                    content: `You are a JSON-only responder. Analyze the request and output a single JSON object with this exact structure:
                         {
                             "intent": "modify" | "new",
-                            "widgetUrl": "category/type/variant",
+                            "widgetUrl": "string",
                             "capabilities": ["string"],
-                            "params": {
-                                "paramName": "value"
-                            }
-                        }`
+                            "params": {}
+                        }
+
+                        Widget URL examples:
+                        - input/numeric/counter/basic
+                        - display/timer/countdown
+                        - input/text/single-line
+                        - chart/bar/vertical
+
+                        Rules:
+                        - "intent" must be exactly "modify" or "new"
+                        - "capabilities" must be array of strings
+                        - "params" must be object with string keys
+
+                        Context - Previous requests:
+                        ${requestHistory.map(req => `- "${req}"`).join('\n')}
+
+                        DO NOT include any explanation or additional text.
+                        ONLY return the JSON object.`
                 },
                 {
                     role: 'user',
