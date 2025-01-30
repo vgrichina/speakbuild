@@ -152,12 +152,8 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                         <Text style={{ fontSize: 24, color: '#666' }}>×</Text>
                     </Pressable>
                 </View>
-                <ScrollView 
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ padding: 16 }}
-                >
-
-                    <View style={{ gap: 24 }}>
+                <View style={{ flex: 1, padding: 16 }}>
+                    <View style={{ gap: 24, flex: 1 }}>
                         <View style={{ gap: 16 }}>
                             <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
                             <TextInput
@@ -265,7 +261,7 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                             <Text style={styles.buttonText}>Save Settings</Text>
                         </Pressable>
                     </View>
-                </ScrollView>
+                </View>
             </SafeAreaView>
         </Modal>
     );
