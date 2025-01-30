@@ -77,8 +77,6 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
                 });
             }
 
-            eventSource.addEventListener('open', () => {});
-
             eventSource.addEventListener('message', (event) => {
                 push(event);
             });

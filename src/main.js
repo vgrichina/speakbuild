@@ -197,15 +197,13 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
 
 import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Platform, Animated, Image, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, TouchableOpacity } from 'react-native';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
-import { Mic, MicOff, Radio, Loader2, Settings, Key, Square, ArrowLeft, ArrowRight } from 'lucide-react-native';
-import * as ExpoSensors from 'expo-sensors';
+import { Mic, MicOff, Radio, Loader2, Settings, Square, ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Speech from 'expo-speech';
 
 
 const styles = StyleSheet.create({
@@ -540,13 +538,11 @@ export const VoiceAssistant = () => {
         };
         loadApiKey();
     }, []);
-    const [isSpeaking, setIsSpeaking] = useState(false);
     const [textInput, setTextInput] = useState('');
     const [currentComponent, setCurrentComponent] = useState(null);
     const [currentComponentCode, setCurrentComponentCode] = useState('');
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
-    const [showLanguageModal, setShowLanguageModal] = useState(false);
     const [componentHistory, setComponentHistory] = useState([]);
     const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
     const spinValue = React.useRef(new RN.Animated.Value(0)).current;
@@ -894,9 +890,8 @@ export const VoiceAssistant = () => {
                                         setCurrentComponent(() => previousEntry.component);
                                         setCurrentComponentCode(previousEntry.code);
                                         setTranscribedText('');
-                                       setResponseStream('');
-                                       stopGeneration();
-                                        setCurrentHistoryIndex(newIndex);
+                                        setResponseStream('');
+                                        stopGeneration();
                                     }
                                 }}
                                 disabled={currentHistoryIndex <= 0}
@@ -923,9 +918,8 @@ export const VoiceAssistant = () => {
                                         setCurrentComponent(() => nextEntry.component);
                                         setCurrentComponentCode(nextEntry.code);
                                         setTranscribedText('');
-                                       setResponseStream('');
-                                       stopGeneration();
-                                        setCurrentHistoryIndex(newIndex);
+                                        setResponseStream('');
+                                        stopGeneration();
                                     }
                                 }}
                                 disabled={currentHistoryIndex >= componentHistory.length - 1}
