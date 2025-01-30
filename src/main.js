@@ -657,8 +657,32 @@ export const VoiceAssistant = () => {
             const cachedWidget = await widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
                 console.log('Found cached widget:', analysis.widgetUrl);
-                processCompleteResponse(cachedWidget.code);
-                return;
+                try {
+                    // Create and execute the function with React and RN components in scope
+                    const createComponent = new Function(cachedWidget.code);
+                    const GeneratedComponent = createComponent(React, RN, ExpoModules);
+
+                    // Update history and current state
+                    const newHistory = componentHistory.slice(0, currentHistoryIndex + 1);
+                    const newHistoryEntry = {
+                        component: GeneratedComponent,
+                        code: cachedWidget.code,
+                        request: text
+                    };
+                    
+                    setComponentHistory([...newHistory, newHistoryEntry]);
+                    setCurrentHistoryIndex(currentHistoryIndex + 1);
+                    setCurrentComponent(() => GeneratedComponent);
+                    setCurrentComponentCode(cachedWidget.code);
+                    setError('');
+                    setTranscribedText('');
+                    setIsProcessing(false);
+                    setModificationIntent(null);
+                    return;
+                } catch (error) {
+                    console.error('Error creating component from cache:', error);
+                    // Continue with API call if cache processing fails
+                }
             }
 
             setModificationIntent(analysis.intent);
@@ -703,8 +727,8 @@ export const VoiceAssistant = () => {
                         request: text
                     };
                     
-                    // Cache the new widget
-                    widgetStorage.store(analysis.widgetUrl, GeneratedComponent, code)
+                    // Cache the new widget with processed component code
+                    widgetStorage.store(analysis.widgetUrl, GeneratedComponent, componentCode)
                         .then(() => {
                             // Update history and current state
                             setComponentHistory([...newHistory, newHistoryEntry]);
