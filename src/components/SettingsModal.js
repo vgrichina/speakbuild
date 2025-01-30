@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView } from 'react-native';
 import { Key } from 'lucide-react-native';
 import { getSupportedLocales } from 'expo-speech-recognition';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -31,38 +31,6 @@ const LANGUAGE_NAMES = {
 };
 
 const styles = StyleSheet.create({
-    modalContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-    },
-    modalContent: {
-        backgroundColor: 'white',
-        borderRadius: 8,
-        padding: 24,
-        width: '100%',
-        maxWidth: 400,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
     input: {
         borderWidth: 1,
         borderColor: '#D1D5DB',
@@ -105,8 +73,6 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
     const [draftKey, setDraftKey] = useState('');
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const [draftModel, setDraftModel] = useState(selectedModel);
-    const modalContentRef = useRef(null);
-    const [modalLayout, setModalLayout] = useState(null);
     const [languages, setLanguages] = useState([]);
     const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
@@ -154,55 +120,41 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
         }
     }, [isOpen, apiKey, selectedLanguage]);
 
-    const handleOutsideClick = (event) => {
-        const { pageX, pageY } = event.nativeEvent;
-
-        if (!modalLayout) return;
-
-        // Check if touch is outside modal bounds
-        if (
-            pageX < modalLayout.x ||
-            pageX > modalLayout.x + modalLayout.width ||
-            pageY < modalLayout.y ||
-            pageY > modalLayout.y + modalLayout.height
-        ) {
-            onClose();
-        }
-    };
-
     return (
         <Modal
             visible={isOpen}
-            transparent={true}
-            animationType="fade"
+            animationType="slide"
             onRequestClose={onClose}
+            presentationStyle="fullScreen"
         >
-            <Pressable 
-                style={styles.modalContainer} 
-                onTouchStart={handleOutsideClick}
-            >
-                <View 
-                    style={styles.modalContent} 
-                    ref={modalContentRef}
-                    onLayout={(event) => {
-                        const { x, y, width, height } = event.nativeEvent.layout;
-                        setModalLayout({ x, y, width, height });
-                    }}
+            <SafeAreaView style={{
+                flex: 1,
+                backgroundColor: '#F9FAFB',
+            }}>
+                <View style={{
+                    padding: 16,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E7EB',
+                    backgroundColor: 'white',
+                }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Settings</Text>
+                    <Pressable
+                        onPress={onClose}
+                        style={{
+                            padding: 8,
+                            marginRight: -8,
+                        }}
+                    >
+                        <Text style={{ fontSize: 24, color: '#666' }}>×</Text>
+                    </Pressable>
+                </View>
+                <ScrollView 
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ padding: 16 }}
                 >
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Settings</Text>
-                        <Pressable 
-                            onPress={onClose}
-                            style={{
-                                padding: 12,
-                                margin: -8,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Text style={{ fontSize: 24 }}>×</Text>
-                        </Pressable>
-                    </View>
 
                     <View style={{ gap: 24 }}>
                         <View style={{ gap: 16 }}>
@@ -304,8 +256,8 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                             <Text style={styles.buttonText}>Save Settings</Text>
                         </Pressable>
                     </View>
-                </View>
-            </Pressable>
+                </ScrollView>
+            </SafeAreaView>
         </Modal>
     );
 };
