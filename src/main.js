@@ -324,63 +324,6 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -24 }],
     zIndex: 1000,
   },
-  languageOption: {
-    padding: 12,
-    borderRadius: 4,
-    marginVertical: 2,
-  },
-  languageOptionSelected: {
-    backgroundColor: '#EBF8FF',
-  },
-  languageOptionText: {
-    color: '#666',
-  },
-  languageOptionTextSelected: {
-    color: '#3B82F6',
-    fontWeight: 'bold',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  linkText: {
-    color: '#3B82F6',
-    textDecorationLine: 'underline',
-  },
-  errorText: {
-    color: '#EF4444',
-  },
-  selectContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  selectLabel: {
-    fontSize: 16,
-    color: '#374151',
-  },
-  select: {
-    position: 'relative',
-    minWidth: 150,
-  },
-  selectButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  selectButtonText: {
-    fontSize: 16,
     color: '#374151',
   }
 });
