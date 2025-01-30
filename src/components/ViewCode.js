@@ -1,19 +1,18 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, Platform, Modal, SafeAreaView } from 'react-native';
 
 export const ViewCode = ({ isVisible, onClose, code }) => {
-    if (!isVisible) return null;
-
     return (
-        <View style={{
-            position: 'absolute',
-            top: -56,
-            left: 0,
-            right: 0,
-            bottom: -56,
-            backgroundColor: '#F9FAFB',
-            zIndex: 1000,
-        }}>
+        <Modal
+            visible={isVisible}
+            animationType="slide"
+            onRequestClose={onClose}
+            presentationStyle="fullScreen"
+        >
+            <SafeAreaView style={{
+                flex: 1,
+                backgroundColor: '#F9FAFB',
+            }}>
             <View style={{
                 padding: 16,
                 flexDirection: 'row',
@@ -48,6 +47,7 @@ export const ViewCode = ({ isVisible, onClose, code }) => {
                     lineHeight: 20,
                 }}>{code}</Text>
             </ScrollView>
-        </View>
+            </SafeAreaView>
+        </Modal>
     );
 };
