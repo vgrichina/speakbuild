@@ -554,29 +554,6 @@ export const VoiceAssistant = () => {
 
 
 
-    const analyzeIntent = async (text, controller) => {
-        if (!currentComponent) return 'new';
-        
-        const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
-        if (!currentApiKey) return 'new';
-
-        try {
-            const requestHistory = getRequestHistory(componentHistory, currentHistoryIndex);
-            const intent = await api.completion(
-                currentApiKey,
-                intentPrompt({ text, requestHistory }),
-                { 
-                    max_tokens: 1,
-                    abortController: controller
-                }
-            );
-            
-            return intent;
-                    } catch (error) {
-            console.error('Intent analysis error:', error);
-            throw error; // Re-throw to properly handle the error
-        }
-    };
 
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
