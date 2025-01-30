@@ -80,7 +80,14 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
             `Modify the existing component based on this request: "${text}". Use the existing code as context.` :
             `Generate a React Native component based on this request: "${text}".`}
                  Return ONLY the component code using React.createElement.
-                 Start with 'function Component() {'.
+                 Start with 'function Component(props) {'.
+
+                 The component will receive customization parameters as props, for example:
+                 - props.initialValue - starting values
+                 - props.color - styling colors
+                 - props.title - display text
+                 - props.min/max - numeric limits
+                 - props.placeholder - input hints
 
                  Available APIs:
                  React Hooks:
@@ -134,8 +141,8 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
 
                  Example format:
                  \`\`\`
-                 function Component() {
-                   const [count, setCount] = React.useState(0);
+                 function Component(props) {
+                   const [count, setCount] = React.useState(props.initialValue || 0);
 
                    const styles = {
                      container: {
@@ -144,7 +151,7 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
                        alignItems: 'center'
                      },
                      button: {
-                       backgroundColor: '#3B82F6',
+                       backgroundColor: props.color || '#3B82F6',
                        padding: 16,
                        borderRadius: 8
                      },
@@ -162,7 +169,7 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
                        React.createElement(
                          RN.Text,
                          { style: styles.buttonText },
-                         \`Count: \${count}\`
+                         props.title ? `${props.title}: ${count}` : `Count: ${count}`
                        )
                      )
                    );
@@ -669,7 +676,8 @@ export const VoiceAssistant = () => {
                     const newHistoryEntry = {
                         component: GeneratedComponent,
                         code: cachedWidget.code,
-                        request: text
+                        request: text,
+                        params: analysis.params || {}
                     };
                     
                     setComponentHistory([...newHistory, newHistoryEntry]);
@@ -726,7 +734,8 @@ export const VoiceAssistant = () => {
                     const newHistoryEntry = {
                         component: GeneratedComponent,
                         code: code,
-                        request: text
+                        request: text,
+                        params: analysis.params || {}
                     };
                     
                     // Cache the new widget with processed component code
@@ -1083,7 +1092,9 @@ export const VoiceAssistant = () => {
                         flex: 1
                     }}>
                         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                            {React.createElement(currentComponent)}
+                            {React.createElement(currentComponent, 
+                                componentHistory[currentHistoryIndex]?.params || {}
+                            )}
                         </ScrollView>
                     </View>
                     <ViewCode 
