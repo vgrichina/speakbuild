@@ -884,7 +884,7 @@ export const VoiceAssistant = () => {
                                 <Pressable
                                     style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
                                     onPress={async () => {
-                                        await AsyncStorage.clear();
+                                        await widgetStorage.clear();
                                         setComponentHistory([]);
                                         setCurrentHistoryIndex(-1);
                                         setCurrentComponent(null);
@@ -892,7 +892,7 @@ export const VoiceAssistant = () => {
                                         setShowSourceCode(false);
                                         setResponseStream('');
                                         setShowDebugMenu(false);
-                                        RN.Alert.alert('Storage cleared', 'All cached data has been removed');
+                                        RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
                                     }}
                                 >
                                     <Text style={[styles.menuItemText, { color: '#EF4444' }]}>
