@@ -95,12 +95,14 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
                  Return ONLY the component code using React.createElement.
                  Start with 'function Component(props) {'.
 
-                 The component will receive customization parameters as props, for example:
-                 - props.initialValue - starting values
-                 - props.color - styling colors
-                 - props.title - display text
-                 - props.min/max - numeric limits
-                 - props.placeholder - input hints
+                 The component will receive the exact parameters specified in the URL as props.
+                 For example, if URL is "display/text/single-line?params=text,color,font_size",
+                 you must use:
+                 - props.text - the text content
+                 - props.color - the text color
+                 - props.font_size - the font size
+
+                 Do not use different parameter names than those specified in the URL.
 
                  Available APIs:
                  React Hooks:
