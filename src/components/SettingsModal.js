@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView, FlatList } from 'react-native';
 import { Key } from 'lucide-react-native';
 import { getSupportedLocales } from 'expo-speech-recognition';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -185,25 +185,33 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                                         <Text style={{ marginTop: 8, color: '#666' }}>Loading languages...</Text>
                                     </View>
                                 ) : (
-                                    <ScrollView>
-                                        {languages.map(lang => (
-                                        <Pressable
-                                            key={lang.code}
-                                            style={[
-                                                styles.languageOption,
-                                                selectedLanguage === lang.code && styles.languageOptionSelected
-                                            ]}
-                                            onPress={() => setDraftLanguage(lang.code)}
-                                        >
-                                            <Text style={[
-                                                styles.languageOptionText,
-                                                draftLanguage === lang.code && styles.languageOptionTextSelected
-                                            ]}>
-                                                {lang.name}
-                                            </Text>
-                                        </Pressable>
-                                        ))}
-                                    </ScrollView>
+                                    <FlatList
+                                        data={languages}
+                                        keyExtractor={item => item.code}
+                                        style={{ maxHeight: 150 }}
+                                        getItemLayout={(data, index) => ({
+                                            length: 44, // Fixed height for each item
+                                            offset: 44 * index,
+                                            index,
+                                        })}
+                                        initialScrollIndex={languages.findIndex(l => l.code === selectedLanguage)}
+                                        renderItem={({ item }) => (
+                                            <Pressable
+                                                style={[
+                                                    styles.languageOption,
+                                                    draftLanguage === item.code && styles.languageOptionSelected
+                                                ]}
+                                                onPress={() => setDraftLanguage(item.code)}
+                                            >
+                                                <Text style={[
+                                                    styles.languageOptionText,
+                                                    draftLanguage === item.code && styles.languageOptionTextSelected
+                                                ]}>
+                                                    {item.name}
+                                                </Text>
+                                            </Pressable>
+                                        )}
+                                    />
                                 )}
                             </View>
                         </View>
