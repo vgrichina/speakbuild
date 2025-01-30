@@ -1092,9 +1092,11 @@ export const VoiceAssistant = () => {
                         flex: 1
                     }}>
                         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                            {React.createElement(currentComponent, 
-                                componentHistory[currentHistoryIndex]?.params || {}
-                            )}
+                            {(() => {
+                                const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
+                                console.log('Rendering component with params:', params);
+                                return React.createElement(currentComponent, params);
+                            })()}
                         </ScrollView>
                     </View>
                     <ViewCode 
