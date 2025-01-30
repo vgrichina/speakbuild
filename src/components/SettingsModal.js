@@ -114,11 +114,12 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
 
     // Reset drafts when modal opens
     React.useEffect(() => {
-        if (isOpen) {
-            setDraftKey(apiKey || '');
+        if (isOpen && apiKey !== null && selectedLanguage !== null && selectedModel !== null) {
+            setDraftKey(apiKey);
             setDraftLanguage(selectedLanguage);
+            setDraftModel(selectedModel);
         }
-    }, [isOpen, apiKey, selectedLanguage]);
+    }, [isOpen, apiKey, selectedLanguage, selectedModel]);
 
     return (
         <Modal
