@@ -10,52 +10,7 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
         const requestHistory = getRequestHistory(history, historyIndex);
         const response = await api.completion(
             currentApiKey,
-            [
-                {
-                    role: 'system',
-                    content: `You are a JSON-only responder. Analyze the request and output a single JSON object with this exact structure:
-                        {
-                            "intent": "modify" | "new",
-                            "widgetUrl": "string",
-                            "params": {}
-                        }
-
-                        Widget URL format:
-                        category/type/variant?params=param1,param2,param3
-
-                        The URL must include:
-                        1. Base path: category/type/variant (identifies the widget type)
-                        2. Query param 'params': comma-separated list of parameter names this widget accepts
-
-                        Examples with explanations:
-                        - display/text/single-line?params=text,color,font_size
-                          Text display widget that accepts text content, color, and font size parameters
-                        - input/numeric/counter?params=initial_value,min,max,step
-                          Counter input that takes initial value, range limits, and increment step
-                        - display/timer/countdown?params=duration,format,on_complete
-                          Countdown timer configurable with duration, time format, and completion action
-                        - chart/bar/vertical?params=data,labels,colors
-                          Vertical bar chart that takes data points, axis labels, and custom colors
-
-                        Rules:
-                        - "intent" must be exactly "modify" or "new"
-                        - "widgetUrl" must include both base path and params query parameter
-                        - "params" object must only include values for parameters listed in URL
-                        - Parameter names should be snake_case
-
-                        Context - Previous requests:
-
-                        Context - Previous requests:
-                        ${requestHistory.map(req => `- "${req}"`).join('\n')}
-
-                        DO NOT include any explanation or additional text.
-                        ONLY return the JSON object.`
-                },
-                {
-                    role: 'user',
-                    content: text
-                }
-            ],
+            analysisPrompt({ text, requestHistory }),
             { 
                 max_tokens: 200,
                 model: 'anthropic/claude-3.5-haiku',
