@@ -466,20 +466,47 @@ export const VoiceAssistant = () => {
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
     const [error, setError] = useState('');
-    const [selectedLanguage, setSelectedLanguage] = useState('en-US');
+    const [selectedLanguage, setSelectedLanguage] = useState(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [apiKey, setApiKey] = useState('');
-    const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.5-sonnet');
+    const [apiKey, setApiKey] = useState(null);
+    const [selectedModel, setSelectedModel] = useState(null);
+    const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
 
-    // Load API key from AsyncStorage on mount
+    // Load all settings from AsyncStorage on mount
     useEffect(() => {
-        const loadApiKey = async () => {
-            const savedKey = await AsyncStorage.getItem('openrouter_api_key');
-            if (savedKey) {
-                setApiKey(savedKey);
+        const loadSettings = async () => {
+            try {
+                const [savedKey, savedLanguage, savedModel] = await Promise.all([
+                    AsyncStorage.getItem('openrouter_api_key'),
+                    AsyncStorage.getItem('recognition_language'),
+                    AsyncStorage.getItem('selected_model')
+                ]);
+
+                // Set API key
+                setApiKey(savedKey || '');
+                
+                // Set language with default
+                setSelectedLanguage(savedLanguage || 'en-US');
+                
+                // Set model with default
+                const modelToUse = savedModel || 'anthropic/claude-3.5-sonnet';
+                await AsyncStorage.setItem('selected_model', modelToUse);
+                setSelectedModel(modelToUse);
+                
+                // Mark settings as loaded
+                setIsSettingsLoaded(true);
+
+                // Show settings modal if no API key
+                if (!savedKey) {
+                    setIsSettingsOpen(true);
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                setError('Failed to load settings');
+                setIsSettingsLoaded(true); // Still mark as loaded even on error
             }
         };
-        loadApiKey();
+        loadSettings();
     }, []);
     const [textInput, setTextInput] = useState('');
     const [currentComponent, setCurrentComponent] = useState(null);
