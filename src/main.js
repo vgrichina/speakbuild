@@ -92,106 +92,106 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
     messages.push({
         role: 'user',
         content: `${isModifying ? 
-            `Modify the existing component based on this request: "${text}". Use the existing code as context.` :
-            `Generate a React Native component based on this request: "${text}".`}
-                 Return ONLY the component code using React.createElement.
-                 Start with 'function Component(props) {'.
+`Modify the existing component based on this request: "${text}". Use the existing code as context.` :
+`Generate a React Native component based on this request: "${text}".`}
+Return ONLY the component code using React.createElement.
+Start with 'function Component(props) {'.
 
-                 The component will receive the exact parameters specified in the URL as props.
-                 For example, if URL is "display/text/single-line?params=text,color,font_size",
-                 you must use:
-                 - props.text - the text content
-                 - props.color - the text color
-                 - props.font_size - the font size
+The component will receive the exact parameters specified in the URL as props.
+For example, if URL is "display/text/single-line?params=text,color,font_size",
+you must use:
+- props.text - the text content
+- props.color - the text color
+- props.font_size - the font size
 
-                 Do not use different parameter names than those specified in the URL.
+Do not use different parameter names than those specified in the URL.
 
-                 Available APIs:
-                 React Hooks:
-                 Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
+Available APIs:
+React Hooks:
+Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
 
-                 React Native (RN namespace):
-                 - Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
-                 - Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
-                 - Device Features: RN.Vibration, RN.Share, RN.Platform
-                 - Layout: RN.Dimensions.get('window') for screen size
-                 - Animation: RN.Animated for smooth animations
-                 - Appearance: RN.Appearance for dark/light mode
+React Native (RN namespace):
+- Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
+- Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
+- Device Features: RN.Vibration, RN.Share, RN.Platform
+- Layout: RN.Dimensions.get('window') for screen size
+- Animation: RN.Animated for smooth animations
+- Appearance: RN.Appearance for dark/light mode
 
-                 Expo Modules (Expo namespace):
-                 - Expo.Haptics - vibration patterns and haptic feedback
-                 - Expo.Clipboard - copy/paste functionality
-                 - Expo.ImagePicker - select images from device
-                 - Expo.MediaLibrary - access device media
-                 - Expo.FileSystem - file operations
-                 - Expo.Sharing - share content
-                 - Expo.Location - geolocation services
-                 - Expo.AV - audio/video playback
-                 - Expo.Maps - map components and location services
-                 - Expo.Reanimated - advanced animations
-                 - Expo.Gesture - gesture handling
-                 - Expo.Linking - deep linking and URL handling
-                 - Expo.Sensors - device sensors:
-                   • Accelerometer - device motion data
-                 Example patterns:
-                 - Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
-                 - const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
-                 - Expo.Sensors.Accelerometer.setUpdateInterval(1000)
-                 - subscription.remove()  // cleanup in useEffect
-                 - RN.Share.share({ message: "Hello!" }).then(result => { ... })
-                 - Expo.Clipboard.setString("text").then(() => { ... })
+Expo Modules (Expo namespace):
+- Expo.Haptics - vibration patterns and haptic feedback
+- Expo.Clipboard - copy/paste functionality
+- Expo.ImagePicker - select images from device
+- Expo.MediaLibrary - access device media
+- Expo.FileSystem - file operations
+- Expo.Sharing - share content
+- Expo.Location - geolocation services
+- Expo.AV - audio/video playback
+- Expo.Maps - map components and location services
+- Expo.Reanimated - advanced animations
+- Expo.Gesture - gesture handling
+- Expo.Linking - deep linking and URL handling
+- Expo.Sensors - device sensors:
+  • Accelerometer - device motion data
+Example patterns:
+- Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
+- const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
+- Expo.Sensors.Accelerometer.setUpdateInterval(1000)
+- subscription.remove()  // cleanup in useEffect
+- RN.Share.share({ message: "Hello!" }).then(result => { ... })
+- Expo.Clipboard.setString("text").then(() => { ... })
 
-                 Avoid async/await - use .then() for promises.
-                 Use React.useEffect for cleanup and subscriptions.
+Avoid async/await - use .then() for promises.
+Use React.useEffect for cleanup and subscriptions.
 
-                 Example usage:
-                 - RN.Vibration.vibrate() for haptic feedback
-                 - RN.Share.share({ message: "Hello!" })
-                 - RN.Alert.alert("Title", "Message")
-                 - const { width, height } = RN.Dimensions.get('window')
+Example usage:
+- RN.Vibration.vibrate() for haptic feedback
+- RN.Share.share({ message: "Hello!" })
+- RN.Alert.alert("Title", "Message")
+- const { width, height } = RN.Dimensions.get('window')
 
-                 Use React.useState for state management.
-                 Use only React Native compatible styles (no web-specific CSS).
-                 Do not include any explanation or markdown - just the pure JavaScript code.
-                 The code should start directly with 'function Component() {'.
-                 Start your response with \`\`\` and end with \`\`\`.
+Use React.useState for state management.
+Use only React Native compatible styles (no web-specific CSS).
+Do not include any explanation or markdown - just the pure JavaScript code.
+The code should start directly with 'function Component() {'.
+Start your response with \`\`\` and end with \`\`\`.
 
-                 Example format:
-                 \`\`\`
-                 function Component(props) {
-                   const [count, setCount] = React.useState(props.initialValue || 0);
+Example format:
+\`\`\`
+function Component(props) {
+  const [count, setCount] = React.useState(props.initialValue || 0);
 
-                   const styles = {
-                     container: {
-                       flex: 1,
-                       justifyContent: 'center',
-                       alignItems: 'center'
-                     },
-                     button: {
-                       backgroundColor: props.color || '#3B82F6',
-                       padding: 16,
-                       borderRadius: 8
-                     },
-                     buttonText: {
-                       color: 'white'
-                     }
-                   };
+  const styles = {
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    button: {
+      backgroundColor: props.color || '#3B82F6',
+      padding: 16,
+      borderRadius: 8
+    },
+    buttonText: {
+      color: 'white'
+    }
+  };
 
-                   return React.createElement(
-                     RN.View,
-                     { style: styles.container },
-                     React.createElement(
-                       RN.TouchableOpacity,
-                       { style: styles.button, onPress: () => setCount(c => c + 1) },
-                       React.createElement(
-                         RN.Text,
-                         { style: styles.buttonText },
-                         props.title ? \`\${props.title}: \${count}\` : \`Count: \${count}\`
-                       )
-                     )
-                   );
-                 }
-                 \`\`\``
+  return React.createElement(
+    RN.View,
+    { style: styles.container },
+    React.createElement(
+      RN.TouchableOpacity,
+      { style: styles.button, onPress: () => setCount(c => c + 1) },
+      React.createElement(
+        RN.Text,
+        { style: styles.buttonText },
+        props.title ? \`\${props.title}: \${count}\` : \`Count: \${count}\`
+      )
+    )
+  );
+}
+\`\`\``
     });
 
     return messages;
