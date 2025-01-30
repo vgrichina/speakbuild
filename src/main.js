@@ -889,6 +889,8 @@ export const VoiceAssistant = () => {
                                         setCurrentHistoryIndex(-1);
                                         setCurrentComponent(null);
                                         setCurrentComponentCode('');
+                                        setShowSourceCode(false);
+                                        setResponseStream('');
                                         setShowDebugMenu(false);
                                         RN.Alert.alert('Storage cleared', 'All cached data has been removed');
                                     }}
