@@ -47,6 +47,9 @@ const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7, abortController } = {}) {
     let fullResponse = '';
     
+    console.log(`Stream [${model.split('/')[1]}] t=${temperature}`);
+    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0,50)}...`).join(' | ')}`);
+
     const eventSource = new EventSource(API_URL, {
         headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -110,16 +113,20 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
                     yield { content, fullResponse, done: false };
                 }
             } catch (e) {
-                console.error('Error parsing SSE message:', e);
+                console.error(`Stream Error [${model.split('/')[1]}]:`, e.message);
                 throw new Error(`Failed to parse response: ${e.message}`);
             }
         }
+        console.log(`<< ${fullResponse.slice(0,100)}...`);
     } finally {
         eventSource.close();
     }
 }
 
 async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens, abortController } = {}) {
+    console.log(`API [${model.split('/')[1]}] t=${temperature}${max_tokens ? ` max=${max_tokens}` : ''}`);
+    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0,50)}...`).join(' | ')}`);
+
     const response = await fetch(API_URL, {
         signal: abortController?.signal,
         method: 'POST',
@@ -138,24 +145,14 @@ async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haik
 
     if (!response.ok) {
         const data = await response.json();
-        console.error('API Error Response:', {
-            status: response.status,
-            statusText: response.statusText,
-            data: JSON.stringify(data, null, 2)
-        });
+        console.error(`API Error [${model.split('/')[1]}]:`, `${response.status} - ${response.statusText}`);
         throw new Error(`API error ${response.status}: ${JSON.stringify(data)}`);
     }
 
     const data = await response.json();
-    console.log('API Response:', JSON.stringify(data, null, 2));
+    console.log(`<< ${data.choices[0].message.content.slice(0,100)}...`);
     
     if (!data.choices?.[0]?.message?.content) {
-        console.error('Invalid API Response Structure:', {
-            hasChoices: Boolean(data.choices),
-            firstChoice: data.choices?.[0],
-            message: data.choices?.[0]?.message,
-            content: data.choices?.[0]?.message?.content
-        });
         throw new Error(`Invalid API response: ${JSON.stringify(data)}`);
     }
     
