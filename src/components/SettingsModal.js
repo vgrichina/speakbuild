@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView } from 'react-native';
 import { Key } from 'lucide-react-native';
 import { getSupportedLocales } from 'expo-speech-recognition';
 import AsyncStorage from '@react-native-async-storage/async-storage';
