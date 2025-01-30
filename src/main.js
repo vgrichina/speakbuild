@@ -323,8 +323,6 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -24 }],
     zIndex: 1000,
-  },
-    color: '#374151',
   }
 });
 
