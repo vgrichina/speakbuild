@@ -680,6 +680,12 @@ export const VoiceAssistant = () => {
                         params: analysis.params || {}
                     };
                     
+                    console.log('Updating history for cached widget:', {
+                        previousLength: newHistory.length,
+                        newLength: newHistory.length + 1,
+                        truncatedAt: currentHistoryIndex + 1,
+                        params: newHistoryEntry.params
+                    });
                     setComponentHistory([...newHistory, newHistoryEntry]);
                     setCurrentHistoryIndex(currentHistoryIndex + 1);
                     setCurrentComponent(() => GeneratedComponent);
@@ -742,6 +748,12 @@ export const VoiceAssistant = () => {
                     widgetStorage.store(analysis.widgetUrl, GeneratedComponent, componentCode)
                         .then(() => {
                             // Update history and current state
+                            console.log('Updating history for new component:', {
+                                previousLength: newHistory.length,
+                                newLength: newHistory.length + 1,
+                                truncatedAt: currentHistoryIndex + 1,
+                                params: newHistoryEntry.params
+                            });
                             setComponentHistory([...newHistory, newHistoryEntry]);
                             setCurrentHistoryIndex(currentHistoryIndex + 1);
                             setCurrentComponent(() => GeneratedComponent);
@@ -858,10 +870,15 @@ export const VoiceAssistant = () => {
                                     if (currentHistoryIndex > 0) {
                                         const newIndex = currentHistoryIndex - 1;
                                         const previousEntry = componentHistory[newIndex];
+                                        console.log('Moving back in history:', {
+                                            fromIndex: currentHistoryIndex,
+                                            toIndex: newIndex,
+                                            params: previousEntry.params
+                                        });
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => previousEntry.component);
                                         setCurrentComponentCode(previousEntry.code);
-                                       setTranscribedText('');
+                                        setTranscribedText('');
                                        setResponseStream('');
                                        stopGeneration();
                                         setCurrentHistoryIndex(newIndex);
@@ -882,10 +899,15 @@ export const VoiceAssistant = () => {
                                     if (currentHistoryIndex < componentHistory.length - 1) {
                                         const newIndex = currentHistoryIndex + 1;
                                         const nextEntry = componentHistory[newIndex];
+                                        console.log('Moving forward in history:', {
+                                            fromIndex: currentHistoryIndex,
+                                            toIndex: newIndex,
+                                            params: nextEntry.params
+                                        });
                                         setCurrentHistoryIndex(newIndex);
                                         setCurrentComponent(() => nextEntry.component);
                                         setCurrentComponentCode(nextEntry.code);
-                                       setTranscribedText('');
+                                        setTranscribedText('');
                                        setResponseStream('');
                                        stopGeneration();
                                         setCurrentHistoryIndex(newIndex);
