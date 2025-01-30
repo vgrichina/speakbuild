@@ -881,6 +881,22 @@ export const VoiceAssistant = () => {
                                         {showSourceCode ? 'Hide source' : 'View source'}
                                     </Text>
                                 </Pressable>
+                                <Pressable
+                                    style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
+                                    onPress={async () => {
+                                        await AsyncStorage.clear();
+                                        setComponentHistory([]);
+                                        setCurrentHistoryIndex(-1);
+                                        setCurrentComponent(null);
+                                        setCurrentComponentCode('');
+                                        setShowDebugMenu(false);
+                                        RN.Alert.alert('Storage cleared', 'All cached data has been removed');
+                                    }}
+                                >
+                                    <Text style={[styles.menuItemText, { color: '#EF4444' }]}>
+                                        Clear storage
+                                    </Text>
+                                </Pressable>
                             </View>
                         )}
                     </View>
