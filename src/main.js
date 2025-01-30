@@ -169,7 +169,7 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
                        React.createElement(
                          RN.Text,
                          { style: styles.buttonText },
-                         props.title ? `${props.title}: ${count}` : `Count: ${count}`
+                         props.title ? \`\${props.title}: \${count}\` : \`Count: \${count}\`
                        )
                      )
                    );
