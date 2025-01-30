@@ -55,7 +55,9 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
         if (!jsonMatch) {
             throw new Error('No JSON object found in response');
         }
-        return JSON.parse(jsonMatch[0]);
+        const parsedJson = JSON.parse(jsonMatch[0]);
+        console.log(`Analysis << ${JSON.stringify(parsedJson)}`);
+        return parsedJson;
     } catch (error) {
         console.error('Request analysis error:', error);
         throw error;
@@ -699,7 +701,7 @@ export const VoiceAssistant = () => {
                         throw new Error('No code block found in response');
                     }
                     const code = codeMatch[1].trim();
-                    console.log('Extracted code:', code);
+                    console.log(`Component << ${code}`);
 
                     if (!code.includes('function Component()')) {
                         throw new Error('Invalid component code format');
