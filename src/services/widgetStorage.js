@@ -9,7 +9,7 @@ export const widgetStorage = {
             const existingData = await AsyncStorage.getItem(WIDGET_STORAGE_KEY);
             const widgets = existingData ? JSON.parse(existingData) : {};
             
-            // Store multiple widgets under same URL
+            // Store widget under its full URL (including params definition)
             if (!widgets[widgetUrl]) {
                 widgets[widgetUrl] = [];
             }
@@ -18,6 +18,7 @@ export const widgetStorage = {
                 code,
                 timestamp: Date.now()
             });
+            console.log('Stored widget:', widgetUrl);
             
             // Store back to AsyncStorage
             await AsyncStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify(widgets));
@@ -36,7 +37,11 @@ export const widgetStorage = {
             const widgets = JSON.parse(data);
             const matches = widgets[widgetUrl];
             
-            if (!matches || matches.length === 0) return null;
+            if (!matches || matches.length === 0) {
+                console.log('No cached widget found for:', widgetUrl);
+                return null;
+            }
+            console.log('Found cached widget:', widgetUrl);
             
             // Return the most recent widget for this URL
             return matches[matches.length - 1];

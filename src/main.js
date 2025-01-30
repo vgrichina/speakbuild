@@ -17,15 +17,17 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
                         {
                             "intent": "modify" | "new",
                             "widgetUrl": "string",
-                            "capabilities": ["string"],
                             "params": {}
                         }
 
-                        Widget URL examples:
-                        - input/numeric/counter/basic
-                        - display/timer/countdown
-                        - input/text/single-line
-                        - chart/bar/vertical
+                        Widget URL format:
+                        category/type/variant?params=param1,param2,param3
+
+                        Examples:
+                        - display/text/single-line?params=text,color,font_size
+                        - input/numeric/counter?params=initial_value,min,max,step
+                        - display/timer/countdown?params=duration,format,on_complete
+                        - chart/bar/vertical?params=data,labels,colors
 
                         Rules:
                         - "intent" must be exactly "modify" or "new"
