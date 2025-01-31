@@ -43,12 +43,14 @@ class AsyncIterator {
 }
 
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const PROMPT_PREVIEW_LENGTH = 200;  // Characters to show in logs
+const RESPONSE_PREVIEW_LENGTH = 200;  // Characters to show in logs
 
 async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7, abortController } = {}) {
     let fullResponse = '';
     
     console.log(`Stream [${model.split('/')[1]}] t=${temperature}`);
-    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0,50)}...`).join(' | ')}`);
+    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0, PROMPT_PREVIEW_LENGTH)}...`).join('\n')}`);
 
     const eventSource = new EventSource(API_URL, {
         headers: {
@@ -115,7 +117,7 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
                 throw new Error(`Failed to parse response: ${e.message}`);
             }
         }
-        console.log(`<< ${fullResponse.slice(0,100)}...`);
+        console.log(`<< ${fullResponse.slice(0, RESPONSE_PREVIEW_LENGTH)}...`);
     } finally {
         eventSource.close();
     }
@@ -123,7 +125,7 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
 
 async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens, abortController } = {}) {
     console.log(`API [${model.split('/')[1]}] t=${temperature}${max_tokens ? ` max=${max_tokens}` : ''}`);
-    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0,50)}...`).join(' | ')}`);
+    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0, PROMPT_PREVIEW_LENGTH)}...`).join('\n')}`);
 
     const response = await fetch(API_URL, {
         signal: abortController?.signal,
@@ -148,7 +150,7 @@ async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haik
     }
 
     const data = await response.json();
-    console.log(`<< ${data.choices[0].message.content.slice(0,100)}...`);
+    console.log(`<< ${data.choices[0].message.content.slice(0, RESPONSE_PREVIEW_LENGTH)}...`);
     
     if (!data.choices?.[0]?.message?.content) {
         throw new Error(`Invalid API response: ${JSON.stringify(data)}`);
