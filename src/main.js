@@ -79,21 +79,21 @@ Context - Previous requests:
     ];
 };
 
-const componentPrompt = ({ text, isModifying, currentComponentCode, widgetUrl }) => {
+const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
     const messages = [];
     
     if (currentComponentCode) {
         messages.push({
             role: 'system',
-            content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if the new request is similar or builds upon it.`
+            content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if modifying.`
         });
     }
 
     messages.push({
         role: 'user',
         content: `${isModifying ? 
-`Modify the existing component based on this request: "${text}". Use the existing code as context.` :
-`Generate a React Native component based on this request: "${text}".`}
+`Modify the existing component to match this widget specification.` :
+`Generate a React Native component for this widget specification:`}
 
 Widget URL: ${widgetUrl}
 The component must use the exact parameter names specified in the URL's params.
@@ -739,7 +739,6 @@ export const VoiceAssistant = () => {
             };
 
             const messages = componentPrompt({ 
-                text, 
                 isModifying: analysis.intent === 'modify', 
                 currentComponentCode,
                 widgetUrl: analysis.widgetUrl
