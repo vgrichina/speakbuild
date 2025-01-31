@@ -79,7 +79,7 @@ Context - Previous requests:
     ];
 };
 
-const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
+const componentPrompt = ({ text, isModifying, currentComponentCode, widgetUrl }) => {
     const messages = [];
     
     if (currentComponentCode) {
@@ -94,6 +94,10 @@ const componentPrompt = ({ text, isModifying, currentComponentCode }) => {
         content: `${isModifying ? 
 `Modify the existing component based on this request: "${text}". Use the existing code as context.` :
 `Generate a React Native component based on this request: "${text}".`}
+
+Widget URL: ${widgetUrl}
+The component must use the exact parameter names specified in the URL's params.
+
 Return ONLY the component code using React.createElement.
 Start with 'function Component(props) {'.
 
@@ -734,7 +738,12 @@ export const VoiceAssistant = () => {
                 }
             };
 
-            const messages = componentPrompt({ text, isModifying: analysis.intent === 'modify', currentComponentCode });
+            const messages = componentPrompt({ 
+                text, 
+                isModifying: analysis.intent === 'modify', 
+                currentComponentCode,
+                widgetUrl: analysis.widgetUrl
+            });
             
             try {
                 for await (const { content, fullResponse, done } of api.streamCompletion(currentApiKey, messages, {
