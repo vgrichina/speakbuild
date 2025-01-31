@@ -36,35 +36,56 @@ const analysisPrompt = ({ text, requestHistory }) => {
     return [
         {
             role: 'system',
-            content: `You are a JSON-only responder. Analyze the request and output a single JSON object with this exact structure:
+            content: `You are a widget URL generator. Output JSON only:
 {
     "intent": "modify" | "new",
-    "widgetUrl": "string",
-    "params": {}
+    "widgetUrl": "string"
 }
 
-Widget URL format:
-category/type/variant?params=param1,param2,param3
+Examples:
+"Create a progress bar" ->
+{
+    "intent": "new",
+    "widgetUrl": "feedback/progress-indicator/basic/dark?with_percentage=yes&params=progress:number,bar_color:color"
+}
 
-The URL must include:
-1. Base path: category/type/variant (identifies the widget type)
-2. Query param 'params': comma-separated list of parameter names this widget accepts
+"Add milestone markers" ->
+{
+    "intent": "modify",
+    "widgetUrl": "feedback/progress-indicator/basic/dark?with_percentage=yes&with_milestone_markers=yes&params=progress:number,bar_color:color,milestone_positions:number[],milestone_icons:string[]"
+}
 
-Examples with explanations:
-- display/text/single-line?params=text,color,font_size
-  Text display widget that accepts text content, color, and font size parameters
-- input/numeric/counter?params=initial_value,min,max,step
-  Counter input that takes initial value, range limits, and increment step
-- display/timer/countdown?params=duration,format,on_complete
-  Countdown timer configurable with duration, time format, and completion action
-- chart/bar/vertical?params=data,labels,colors
-  Vertical bar chart that takes data points, axis labels, and custom colors
+"Make it glow on completion" ->
+{
+    "intent": "modify",
+    "widgetUrl": "feedback/progress-indicator/basic/dark?with_percentage=yes&with_milestone_markers=yes&with_completion_effects=glow&params=progress:number,bar_color:color,milestone_positions:number[],milestone_icons:string[],glow_color:color,glow_intensity:number"
+}
 
-Rules:
-- "intent" must be exactly "modify" or "new"
-- "widgetUrl" must include both base path and params query parameter
-- "params" object must only include values for parameters listed in URL
-- Parameter names should be snake_case
+Another example:
+
+"Create an input field" ->
+{
+    "intent": "new",
+    "widgetUrl": "input/text-field/rounded/light?with_clear_button=yes&params=value:string,placeholder:string"
+}
+
+"Add validation" ->
+{
+    "intent": "modify",
+    "widgetUrl": "input/text-field/rounded/light?with_clear_button=yes&with_validation=email&with_error_messages=yes&params=value:string,placeholder:string,error_text:string,validation_pattern:string"
+}
+
+"Make it animate on error" ->
+{
+    "intent": "modify",
+    "widgetUrl": "input/text-field/rounded/light?with_clear_button=yes&with_validation=email&with_error_messages=yes&with_error_animation=shake&params=value:string,placeholder:string,error_text:string,validation_pattern:string,animation_intensity:number"
+}
+
+URLs use:
+- Base path: category/component/style/theme
+- Feature flags: with_feature=value
+- Typed parameters: params=name:type
+Parameter types: string, number, boolean, color, string[], number[]
 
 Context - Previous requests:
                 ${requestHistory.map(req => `- "${req}"`).join('\n')}
