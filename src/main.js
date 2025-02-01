@@ -105,33 +105,23 @@ const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
 `Generate a React Native component for this widget specification:`}
 
 Widget URL: ${widgetUrl}
-The component must use the exact parameter names specified in the URL's params.
 
 Return ONLY the component code using React.createElement.
 Start with 'function Component(props) {'.
-
-The component will receive the exact parameters specified in the URL as props.
-For example, if URL is "display/text/single-line?params=text,color,font_size",
-you must use:
-- props.text - the text content
-- props.color - the text color
-- props.font_size - the font size
-
-Do not use different parameter names than those specified in the URL.
+Use ONLY the exact parameter names from the URL's params.
 
 Available APIs:
 
 React Hooks:
-Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
+- Direct via React namespace (React.useState, React.useEffect)
 
 React Native (RN namespace):
-Core components available as RN.Component, including:
-View, Text, Image, ScrollView, TextInput, Pressable, TouchableOpacity, Alert,
-Vibration, Share, Platform, Dimensions, Animated, Appearance
+- Core components: View, Text, Image, ScrollView, TextInput, Pressable, 
+  TouchableOpacity, Alert, Vibration, Share, Platform, 
+  Dimensions, Animated, Appearance
 
 Expo Modules (Expo namespace):
-All modules from expo-modules.js are available as Expo.ModuleName:
-
+Available as Expo.ModuleName with these imports:
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -141,89 +131,51 @@ import * as Sharing from 'expo-sharing';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as AV from 'expo-av';
-import * as Maps from 'react-native-maps';  // MapView, Polygon, Marker, Circle components
+import * as Maps from 'react-native-maps';
 import * as Reanimated from 'react-native-reanimated';
 import * as Gesture from 'react-native-gesture-handler';
 import * as Linking from 'react-native/Libraries/Linking/Linking';
 import * as Sensors from 'expo-sensors';
 
-Example component patterns:
+Example component pattern:
 
-function ExampleComponent(props) {
-  // Use React hooks
-  const [state, setState] = React.useState(null);
-  
-  // Cleanup pattern
-  React.useEffect(() => {
-    return () => {
-      // Cleanup subscriptions, etc
-    };
-  }, []);
-
-  // Use promise-based APIs
-  const handlePress = () => {
-    Expo.Haptics.selectionAsync()
-      .then(() => Expo.Clipboard.setStringAsync("copied!"))
-      .catch(console.error);
-  };
-  
-  // Access RN components
-  return React.createElement(RN.View, {
-    style: { flex: 1 }
-  });
-}
-
-Avoid async/await - use .then() for promises.
-Use React.useEffect for cleanup and subscriptions.
-
-Example usage:
-- RN.Vibration.vibrate() for haptic feedback
-- RN.Share.share({ message: "Hello!" })
-- RN.Alert.alert("Title", "Message")
-- const { width, height } = RN.Dimensions.get('window')
-
-Use React.useState for state management.
-Use only React Native compatible styles (no web-specific CSS).
-Do not include any explanation or markdown - just the pure JavaScript code.
-The code should start directly with 'function Component() {'.
-Start your response with \`\`\` and end with \`\`\`.
-
-Example format:
 \`\`\`
 function Component(props) {
-  const [count, setCount] = React.useState(props.initialValue || 0);
+  const [state, setState] = React.useState(null);
+  
+  React.useEffect(() => {
+    return () => {
+      // Cleanup pattern
+    };
+  }, []);
 
   const styles = {
     container: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    button: {
-      backgroundColor: props.color || '#3B82F6',
-      padding: 16,
-      borderRadius: 8
-    },
-    buttonText: {
-      color: 'white'
+      justifyContent: 'center'
     }
   };
 
   return React.createElement(
     RN.View,
     { style: styles.container },
-    React.createElement(
-      RN.TouchableOpacity,
-      { style: styles.button, onPress: () => setCount(c => c + 1) },
-      React.createElement(
-        RN.Text,
-        { style: styles.buttonText },
-        props.title ? \`\${props.title}: \${count}\` : \`Count: \${count}\`
-      )
-    )
+    React.createElement(RN.Text, null, props.text)
   );
 }
-\`\`\``
+\`\`\`
+
+Key requirements:
+- Use React.createElement (no JSX)
+- Handle cleanup in useEffect
+- Use .then() for promises (no async/await)
+- Use only React Native compatible styles
+- Return pure JavaScript code without explanations
+
+Start your response with \`\`\` and end with \`\`\`.`
+    });
+
+    return messages;
+};
     });
 
     return messages;
