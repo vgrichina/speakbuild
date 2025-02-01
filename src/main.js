@@ -176,10 +176,6 @@ Start your response with \`\`\` and end with \`\`\`.`
 
     return messages;
 };
-    });
-
-    return messages;
-};
 
 import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
