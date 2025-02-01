@@ -170,39 +170,58 @@ you must use:
 Do not use different parameter names than those specified in the URL.
 
 Available APIs:
+
 React Hooks:
 Use hooks directly via React namespace (e.g., React.useState, React.useEffect)
 
 React Native (RN namespace):
-- Core UI: RN.View, RN.Text, RN.Image, RN.ScrollView, RN.TextInput
-- Interaction: RN.Pressable, RN.TouchableOpacity, RN.Alert
-- Device Features: RN.Vibration, RN.Share, RN.Platform
-- Layout: RN.Dimensions.get('window') for screen size
-- Animation: RN.Animated for smooth animations
-- Appearance: RN.Appearance for dark/light mode
+Core components available as RN.Component, including:
+View, Text, Image, ScrollView, TextInput, Pressable, TouchableOpacity, Alert,
+Vibration, Share, Platform, Dimensions, Animated, Appearance
 
 Expo Modules (Expo namespace):
-- Expo.Haptics - vibration patterns and haptic feedback
-- Expo.Clipboard - copy/paste functionality
-- Expo.ImagePicker - select images from device
-- Expo.MediaLibrary - access device media
-- Expo.FileSystem - file operations
-- Expo.Sharing - share content
-- Expo.Location - geolocation services
-- Expo.AV - audio/video playback
-- Expo.Maps - map components and location services
-- Expo.Reanimated - advanced animations
-- Expo.Gesture - gesture handling
-- Expo.Linking - deep linking and URL handling
-- Expo.Sensors - device sensors:
-  • Accelerometer - device motion data
-Example patterns:
-- Expo.Sensors.Accelerometer.isAvailableAsync().then(available => { ... })
-- const subscription = Expo.Sensors.Accelerometer.addListener(data => { ... })
-- Expo.Sensors.Accelerometer.setUpdateInterval(1000)
-- subscription.remove()  // cleanup in useEffect
-- RN.Share.share({ message: "Hello!" }).then(result => { ... })
-- Expo.Clipboard.setString("text").then(() => { ... })
+All modules from expo-modules.js are available as Expo.ModuleName:
+
+import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import * as AV from 'expo-av';
+import * as Maps from 'react-native-maps';  // MapView, Polygon, Marker, Circle components
+import * as Reanimated from 'react-native-reanimated';
+import * as Gesture from 'react-native-gesture-handler';
+import * as Linking from 'react-native/Libraries/Linking/Linking';
+import * as Sensors from 'expo-sensors';
+
+Example component patterns:
+
+function ExampleComponent(props) {
+  // Use React hooks
+  const [state, setState] = React.useState(null);
+  
+  // Cleanup pattern
+  React.useEffect(() => {
+    return () => {
+      // Cleanup subscriptions, etc
+    };
+  }, []);
+
+  // Use promise-based APIs
+  const handlePress = () => {
+    Expo.Haptics.selectionAsync()
+      .then(() => Expo.Clipboard.setStringAsync("copied!"))
+      .catch(console.error);
+  };
+  
+  // Access RN components
+  return React.createElement(RN.View, {
+    style: { flex: 1 }
+  });
+}
 
 Avoid async/await - use .then() for promises.
 Use React.useEffect for cleanup and subscriptions.
