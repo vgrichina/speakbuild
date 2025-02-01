@@ -45,7 +45,8 @@ const analysisPrompt = ({ text, requestHistory }) => {
     }
 }
 
-Examples:
+Example flow:
+
 "Create a progress bar" ->
 {
     "intent": "new",
@@ -65,57 +66,6 @@ Examples:
         "bar_color": "#3B82F6",
         "milestone_positions": [25, 50, 75],
         "milestone_icons": ["🔵", "🟡", "🟢"]
-    }
-}
-
-"Make it glow on completion" ->
-{
-    "intent": "modify",
-    "widgetUrl": "feedback/progress-indicator/basic/dark?with_percentage=yes&with_milestone_markers=yes&with_completion_effects=glow&params=progress:number,bar_color:color,milestone_positions:number[],milestone_icons:string[],glow_color:color,glow_intensity:number",
-    "params": {
-        "progress": 100,
-        "bar_color": "#3B82F6",
-        "milestone_positions": [25, 50, 75],
-        "milestone_icons": ["🔵", "🟡", "🟢"],
-        "glow_color": "#60A5FA",
-        "glow_intensity": 0.8
-    }
-}
-
-Another example:
-
-"Create an input field" ->
-{
-    "intent": "new",
-    "widgetUrl": "input/text-field/rounded/light?with_clear_button=yes&params=value:string,placeholder:string",
-    "params": {
-        "value": "",
-        "placeholder": "Enter text..."
-    }
-}
-
-"Add validation" ->
-{
-    "intent": "modify",
-    "widgetUrl": "input/text-field/rounded/light?with_clear_button=yes&with_validation=email&with_error_messages=yes&params=value:string,placeholder:string,error_text:string,validation_pattern:string",
-    "params": {
-        "value": "",
-        "placeholder": "Enter email...",
-        "error_text": "Please enter a valid email address",
-        "validation_pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
-    }
-}
-
-"Make it animate on error" ->
-{
-    "intent": "modify",
-    "widgetUrl": "input/text-field/rounded/light?with_clear_button=yes&with_validation=email&with_error_messages=yes&with_error_animation=shake&params=value:string,placeholder:string,error_text:string,validation_pattern:string,animation_intensity:number",
-    "params": {
-        "value": "",
-        "placeholder": "Enter email...",
-        "error_text": "Please enter a valid email address",
-        "validation_pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
-        "animation_intensity": 1.0
     }
 }
 
