@@ -665,6 +665,7 @@ export const VoiceAssistant = () => {
                         const RN = arguments[1];
                         const Expo = arguments[2];
                         const { useState } = React;
+                        console.log('Maps module:', Object.keys(Expo.Maps));
                         ${code}
                         return Component;
                     `;
