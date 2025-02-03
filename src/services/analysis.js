@@ -24,6 +24,11 @@ Example flow:
     }
 }
 
+Generated component will receive these params as props:
+function Component({ progress, bar_color }) {
+  // or
+function Component(props) { // props.progress, props.bar_color
+
 "Add milestone markers" ->
 {
     "intent": "modify",
@@ -40,7 +45,10 @@ URLs use:
 - Base path: category/component/style/theme
 - Feature flags: with_feature=value
 - Typed parameters: params=name:type
-Parameter types: string, number, boolean, color, string[], number[]
+Parameter types: 
+- Basic: string, number, boolean, color
+- Arrays: string[], number[]
+- Note: All parameters are passed as props to the Component function
 
 DO NOT include any explanation or additional text.
 ONLY return the JSON object.`
