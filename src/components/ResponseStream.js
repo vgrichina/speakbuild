@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Animated } from 'react-native';
+import { View, Text, ScrollView, Animated, Easing } from 'react-native';
 import { Loader2 } from 'lucide-react-native';
 
 const styles = {
@@ -24,7 +24,7 @@ const LoadingSpinner = () => {
             Animated.timing(spinValue, {
                 toValue: 1,
                 duration: 1000,
-                easing: Animated.Easing.linear,
+                easing: Easing.linear,
                 useNativeDriver: true,
             })
         ).start();
