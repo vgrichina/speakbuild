@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 
-export function useSpeechRecognition({ onTranscription, selectedLanguage }) {
+export function useSpeechRecognition({ onTranscription, selectedLanguage, onError }) {
     const [isListening, setIsListening] = useState(false);
     const [volume, setVolume] = useState(0);
     const [partialResults, setPartialResults] = useState('');
     const [hasSpeechPermission, setHasSpeechPermission] = useState(false);
-    const [error, setError] = useState('');
 
     useEffect(() => {
         const checkPermissions = async () => {
@@ -46,7 +45,7 @@ export function useSpeechRecognition({ onTranscription, selectedLanguage }) {
     });
 
     useSpeechRecognitionEvent("error", (event) => {
-        setError(`Recognition error: ${event.error}`);
+        onError?.(`Recognition error: ${event.error}`);
         setIsListening(false);
     });
 
@@ -67,7 +66,7 @@ export function useSpeechRecognition({ onTranscription, selectedLanguage }) {
                 });
             }
         } catch (error) {
-            setError(`Toggle error: ${error.message}`);
+            onError?.(`Toggle error: ${error.message}`);
         }
     }, [isListening, selectedLanguage]);
 
@@ -76,7 +75,6 @@ export function useSpeechRecognition({ onTranscription, selectedLanguage }) {
         volume,
         partialResults,
         hasSpeechPermission,
-        error,
         toggleListening
     };
 }
