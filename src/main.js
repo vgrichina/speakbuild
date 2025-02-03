@@ -242,57 +242,24 @@ export const VoiceAssistant = () => {
         }
     }, [isProcessing]);
 
-    const [isSpeechListening, setIsSpeechListening] = useState(false);
-    const [speechVolume, setSpeechVolume] = useState(0);
-    const [speechPartialResults, setSpeechPartialResults] = useState('');
-    const [hasSpeechPermission, setHasSpeechPermission] = useState(false);
-
-    useEffect(() => {
-        const checkPermissions = async () => {
-            const result = await ExpoSpeechRecognitionModule.getPermissionsAsync();
-            if (result.granted) {
-                setHasSpeechPermission(true);
-            } else if (result.canAskAgain) {
-                const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-                setHasSpeechPermission(granted);
-            }
-        };
-        checkPermissions();
-    }, []);
-
-    // Speech recognition event handlers
-    useSpeechRecognitionEvent("start", () => setIsSpeechListening(true));
-    useSpeechRecognitionEvent("end", () => {
-        setIsSpeechListening(false);
-        setSpeechVolume(0);
-    });
-
-    useSpeechRecognitionEvent("result", (event) => {
-        if (event.results?.[0]) {
-            if (event.isFinal) {
-                setTranscribedText(event.results[0].transcript);
-                processWithClaudeStream(event.results[0].transcript);
-                setSpeechVolume(0);
-            } else {
-                setSpeechPartialResults(event.results[0].transcript);
-            }
+    const {
+        isListening: isSpeechListening,
+        volume: speechVolume,
+        partialResults: speechPartialResults,
+        hasSpeechPermission,
+        error: speechError,
+        toggleListening
+    } = useSpeechRecognition({
+        selectedLanguage,
+        onTranscription: (text) => {
+            setTranscribedText(text);
+            setResponseStream('');
+            processWithClaudeStream(text);
         }
     });
 
-    useSpeechRecognitionEvent("volumechange", (event) => {
-        if (typeof event.value === 'number') {
-            const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
-            setSpeechVolume(normalizedVolume);
-        }
-    });
-
-    useSpeechRecognitionEvent("error", (event) => {
-        setError(`Recognition error: ${event.error}`);
-        setIsSpeechListening(false);
-    });
-
-
-
+    // Combine errors from different sources
+    const combinedError = speechError || error;
 
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
