@@ -110,21 +110,6 @@ const styles = StyleSheet.create({
 
 
 
-const Alert = ({ children, variant }) => (
-    <View style={{
-        padding: 16,
-        borderRadius: 8,
-        backgroundColor: variant === 'destructive' ? '#FEE2E2' : '#DBEAFE',
-    }}>
-        {children}
-    </View>
-);
-
-const AlertDescription = ({ children }) => (
-    <Text style={{ fontSize: 14 }}>{children}</Text>
-);
-
-
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
     const [isListening, setIsListening] = useState(false);
