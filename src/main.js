@@ -103,8 +103,7 @@ const styles = StyleSheet.create({
   floatingButtonContainer: {
     position: 'absolute',
     bottom: 24,
-    left: '50%',
-    transform: [{ translateX: -24 }],
+    alignSelf: 'center',
     zIndex: 1000,
   }
 });
