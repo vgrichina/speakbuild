@@ -16,37 +16,72 @@ Output JSON only:
     }
 }
 
-Example flow:
+Example flows:
 
-"Create a progress bar" ->
+"What time is it?" ->
 {
     "intent": "new",
-    "widgetUrl": "feedback/progress-indicator/basic/dark?with_percentage=yes&params=progress:number,bar_color:color",
+    "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
     "params": {
-        "progress": 0,
-        "bar_color": "#3B82F6"
+        "format": "HH:mm",
+        "size": 48
+    }
+}
+
+"Show me the weather" ->
+{
+    "intent": "new",
+    "widgetUrl": "display/weather/card/light?params=location:string,unit:string",
+    "params": {
+        "location": "current",
+        "unit": "celsius"
+    }
+}
+
+"Make it show hourly forecast" ->
+{
+    "intent": "modify",
+    "widgetUrl": "display/weather/card/light?with_hourly=yes&params=location:string,unit:string,hours:number",
+    "params": {
+        "location": "current",
+        "unit": "celsius",
+        "hours": 24
+    }
+}
+
+"Start a 5 minute timer" ->
+{
+    "intent": "new",
+    "widgetUrl": "interactive/timer/countdown/dark?with_controls=yes&params=duration:number,size:number",
+    "params": {
+        "duration": 300,
+        "size": 32
+    }
+}
+
+"Add a shopping list" ->
+{
+    "intent": "new",
+    "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:string,items:string[]",
+    "params": {
+        "title": "Shopping List",
+        "items": []
     }
 }
 
 Generated component will receive these params as props:
-function Component({ progress, bar_color }) {
+function Component({ format, size }) {
   // or
-function Component(props) { // props.progress, props.bar_color
-
-"Add milestone markers" ->
-{
-    "intent": "modify",
-    "widgetUrl": "feedback/progress-indicator/basic/dark?with_percentage=yes&with_milestone_markers=yes&params=progress:number,bar_color:color,milestone_positions:number[],milestone_icons:string[]",
-    "params": {
-        "progress": 0,
-        "bar_color": "#3B82F6",
-        "milestone_positions": [25, 50, 75],
-        "milestone_icons": ["🔵", "🟡", "🟢"]
-    }
-}
+function Component(props) { // props.format, props.size
 
 URLs use:
-- Base path: category/component/style/theme
+- Base paths: category/type/style/theme
+  Categories:
+  - display: for showing information (clock, weather, calendar)
+  - input: for user data entry (lists, notes, forms)
+  - interactive: for user actions (timer, player, calculator)
+  - feedback: for system responses (progress, loading, alerts)
+  - media: for rich content (images, video, audio)
 - Feature flags: with_feature=value
 - Typed parameters: params=name:type
 Parameter Types:
