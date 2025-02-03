@@ -243,10 +243,19 @@ export const VoiceAssistant = () => {
         setResponseStream('');
 
         try {
-            // Analyze the request
-            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
-            if (!analysis) {
-                throw new Error('Failed to analyze request');
+            try {
+                // Analyze the request
+                const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
+                if (!analysis) {
+                    throw new Error('Failed to analyze request');
+                }
+            } catch (error) {
+                if (error.name === 'AbortError' || error.message === 'Stream aborted') {
+                    console.log('Analysis aborted by user');
+                    setIsProcessing(false);
+                    return;
+                }
+                throw error;
             }
 
             // Check cache for matching widget
@@ -380,11 +389,15 @@ export const VoiceAssistant = () => {
                 setResponseStream('');
             }
         } catch (error) {
-            console.error('API call error:', error);
-            if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
-                setError('Network error: Please check your internet connection');
+            if (error.name === 'AbortError' || error.message === 'Stream aborted') {
+                console.log('Request aborted by user');
             } else {
-                setError(`Error: ${error.message}`);
+                console.error('API call error:', error);
+                if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
+                    setError('Network error: Please check your internet connection');
+                } else {
+                    setError(`Error: ${error.message}`);
+                }
             }
             setIsProcessing(false);
         }
