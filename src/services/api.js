@@ -101,20 +101,15 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
                 break;
             }
 
-            try {
-                // Early exit if aborted
-                if (abortController?.signal.aborted) break;
-                
-                const data = JSON.parse(event.data);
-                const content = data.choices?.[0]?.delta?.content;
-                
-                if (content) {
-                    fullResponse += content;
-                    yield { content, fullResponse, done: false };
-                }
-            } catch (e) {
-                console.error(`Stream Error [${model.split('/')[1]}]:`, e.message);
-                throw new Error(`Failed to parse response: ${e.message}`);
+            // Early exit if aborted
+            if (abortController?.signal.aborted) break;
+            
+            const data = JSON.parse(event.data);
+            const content = data.choices?.[0]?.delta?.content;
+            
+            if (content) {
+                fullResponse += content;
+                yield { content, fullResponse, done: false };
             }
         }
         console.log(`<< ${fullResponse.slice(0, RESPONSE_PREVIEW_LENGTH)}...`);
