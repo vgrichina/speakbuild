@@ -4,6 +4,7 @@ import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { streamComponent, componentPrompt } from './services/componentGenerator';
 import { widgetStorage } from './services/widgetStorage';
 import { useComponentHistory } from './hooks/useComponentHistory';
+import { useSettings } from './hooks/useSettings';
 
 
 
@@ -777,13 +778,7 @@ export const VoiceAssistant = () => {
                 apiKey={apiKey}
                 selectedLanguage={selectedLanguage}
                 selectedModel={selectedModel}
-                onSave={async (newKey, newLanguage, newModel) => {
-                    await AsyncStorage.setItem('openrouter_api_key', newKey);
-                    setApiKey(newKey);
-                    setSelectedLanguage(newLanguage);
-                    setSelectedModel(newModel);
-                    setError(''); // Clear any previous API key errors
-                }}
+                onSave={saveSettings}
             />
 
 
