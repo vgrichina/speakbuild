@@ -131,7 +131,7 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
         currentApiKey,
         analysisPrompt({ text, requestHistory }),
         { 
-            max_tokens: 200,
+            max_tokens: 1000,  // Increased to handle larger JSON responses
             model: 'anthropic/claude-3.5-haiku',
             abortController: controller
         }
