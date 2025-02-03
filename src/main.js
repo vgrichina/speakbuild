@@ -3,6 +3,7 @@ import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { streamComponent, componentPrompt } from './services/componentGenerator';
 import { widgetStorage } from './services/widgetStorage';
+import { useComponentHistory } from './hooks/useComponentHistory';
 
 
 
@@ -427,47 +428,15 @@ export const VoiceAssistant = () => {
                     const createComponent = new Function(componentCode);
                     const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
-                    // If we're not at the latest point in history, clear alternative future
-                    const newHistory = componentHistory.slice(0, currentHistoryIndex + 1);
-                    const newHistoryEntry = {
-                        component: GeneratedComponent,
-                        code: code,
-                        request: text,
-                        params: analysis.params || {}
-                    };
-                    
-                    const updateComponentState = (newHistoryEntry, GeneratedComponent, componentCode) => {
-                        setComponentHistory(prevHistory => {
-                            const newHistory = [...prevHistory.slice(0, currentHistoryIndex + 1), newHistoryEntry];
-                            const newIndex = newHistory.length - 1;
-                            
-                            console.log('Updating component state:', {
-                                prevHistoryLength: prevHistory.length,
-                                newHistoryLength: newHistory.length,
-                                newIndex,
-                                params: newHistoryEntry.params
-                            });
-                            
-                            // Batch these updates
-                            setCurrentHistoryIndex(newIndex);
-                            setCurrentComponent(() => GeneratedComponent);
-                            setCurrentComponentCode(componentCode);
-                            
-                            return newHistory;
-                        });
-                    };
-
                     // Cache the new widget with processed component code
                     widgetStorage.store(analysis.widgetUrl, GeneratedComponent, componentCode)
                         .then(() => {
-                            const newHistoryEntry = {
+                            addToHistory({
                                 component: GeneratedComponent,
                                 code: componentCode,
                                 request: text,
                                 params: analysis.params || {}
-                            };
-                            
-                            updateComponentState(newHistoryEntry, GeneratedComponent, componentCode);
+                            });
                         })
                         .catch(error => {
                             console.error('Widget storage error:', error);
@@ -578,35 +547,11 @@ export const VoiceAssistant = () => {
                         <View style={{ flexDirection: 'row', marginLeft: 8 }}>
                             <Pressable
                                 onPress={() => {
-                                    const navigateHistory = (direction) => {
-                                        setComponentHistory(prevHistory => {
-                                            const newIndex = currentHistoryIndex + direction;
-                                            
-                                            if (newIndex < 0 || newIndex >= prevHistory.length) {
-                                                return prevHistory;
-                                            }
-                                            
-                                            const historyEntry = prevHistory[newIndex];
-                                            console.log('Navigating history:', {
-                                                direction,
-                                                fromIndex: currentHistoryIndex,
-                                                toIndex: newIndex,
-                                                params: historyEntry.params
-                                            });
-                                            
-                                            setCurrentHistoryIndex(newIndex);
-                                            setCurrentComponent(() => historyEntry.component);
-                                            setCurrentComponentCode(historyEntry.code);
-                                            setTranscribedText('');
-                                            setResponseStream('');
-                                            
-                                            return prevHistory;
-                                        });
-                                    };
-
                                     if (currentHistoryIndex > 0) {
                                         stopGeneration();
-                                        navigateHistory(-1);
+                                        setCurrentHistoryIndex(currentHistoryIndex - 1);
+                                        setTranscribedText('');
+                                        setResponseStream('');
                                     }
                                 }}
                                 disabled={currentHistoryIndex <= 0}
@@ -621,35 +566,11 @@ export const VoiceAssistant = () => {
                             
                             <Pressable
                                 onPress={() => {
-                                    const navigateHistory = (direction) => {
-                                        setComponentHistory(prevHistory => {
-                                            const newIndex = currentHistoryIndex + direction;
-                                            
-                                            if (newIndex < 0 || newIndex >= prevHistory.length) {
-                                                return prevHistory;
-                                            }
-                                            
-                                            const historyEntry = prevHistory[newIndex];
-                                            console.log('Navigating history:', {
-                                                direction,
-                                                fromIndex: currentHistoryIndex,
-                                                toIndex: newIndex,
-                                                params: historyEntry.params
-                                            });
-                                            
-                                            setCurrentHistoryIndex(newIndex);
-                                            setCurrentComponent(() => historyEntry.component);
-                                            setCurrentComponentCode(historyEntry.code);
-                                            setTranscribedText('');
-                                            setResponseStream('');
-                                            
-                                            return prevHistory;
-                                        });
-                                    };
-
                                     if (currentHistoryIndex < componentHistory.length - 1) {
                                         stopGeneration();
-                                        navigateHistory(1);
+                                        setCurrentHistoryIndex(currentHistoryIndex + 1);
+                                        setTranscribedText('');
+                                        setResponseStream('');
                                     }
                                 }}
                                 disabled={currentHistoryIndex >= componentHistory.length - 1}
@@ -694,11 +615,7 @@ export const VoiceAssistant = () => {
                                 <Pressable
                                     style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
                                     onPress={async () => {
-                                        await widgetStorage.clear();
-                                        setComponentHistory([]);
-                                        setCurrentHistoryIndex(-1);
-                                        setCurrentComponent(null);
-                                        setCurrentComponentCode('');
+                                        await clearHistory();
                                         setShowSourceCode(false);
                                         setResponseStream('');
                                         setShowDebugMenu(false);
