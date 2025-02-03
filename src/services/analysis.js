@@ -1,11 +1,9 @@
 import { api } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const analysisPrompt = ({ text, requestHistory }) => {
-    return [
-        {
-            role: 'system',
-            content: `You are a widget URL generator. Output JSON only:
+const SYSTEM_PROMPT = {
+    role: 'system',
+    content: `You are a widget URL generator. Output JSON only:
 {
     "intent": "modify" | "new",
     "widgetUrl": "string",
@@ -44,15 +42,19 @@ URLs use:
 - Typed parameters: params=name:type
 Parameter types: string, number, boolean, color, string[], number[]
 
-Context - Previous requests:
-                ${requestHistory.map(req => `- "${req}"`).join('\n')}
+DO NOT include any explanation or additional text.
+ONLY return the JSON object.`
+};
 
-                DO NOT include any explanation or additional text.
-                ONLY return the JSON object.`
-        },
+const analysisPrompt = ({ text, requestHistory }) => {
+    return [
+        SYSTEM_PROMPT,
         {
             role: 'user',
-            content: text
+            content: `Previous requests:
+${requestHistory.map(req => `- "${req}"`).join('\n')}
+
+Current request: ${text}`
         }
     ];
 };
