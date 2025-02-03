@@ -15,7 +15,8 @@ import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
-import { Mic, MicOff, Radio, Loader2, Settings, Square, ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { Mic, MicOff, Radio, Loader2, Square } from 'lucide-react-native';
+import { Header } from './components/Header';
 import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -96,40 +97,6 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 400,
-  },
-  compactHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    height: 56,
-   overflow: 'visible',
-  },
-  debugMenu: {
-    position: 'absolute',
-    right: 8,
-    top: 48,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    minWidth: 150,
-    zIndex: 1002,
-  },
-  menuItem: {
-    padding: 12,
-    borderRadius: 4,
-  },
-  menuItemText: {
-    color: '#666',
-    fontSize: 14,
   },
   floatingButtonContainer: {
     position: 'absolute',
@@ -449,109 +416,31 @@ export const VoiceAssistant = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header with Navigation, Settings and Debug Menu */}
-            <View style={styles.compactHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Pressable
-                        onPress={() => setIsSettingsOpen(true)}
-                        style={{
-                            padding: 12,
-                            marginLeft: -8,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Settings size={24} color="#666" />
-                    </Pressable>
-
-                    {currentComponent && (
-                        <View style={{ flexDirection: 'row', marginLeft: 8 }}>
-                            <Pressable
-                                onPress={() => {
-                                    if (currentHistoryIndex > 0) {
-                                        stopGeneration();
-                                        setCurrentHistoryIndex(currentHistoryIndex - 1);
-                                        setTranscribedText('');
-                                        setResponseStream('');
-                                    }
-                                }}
-                                disabled={currentHistoryIndex <= 0}
-                                style={({ pressed }) => [
-                                    styles.navButton,
-                                    currentHistoryIndex <= 0 && styles.buttonDisabled,
-                                    pressed && styles.buttonPressed
-                                ]}
-                            >
-                                <ArrowLeft size={20} color={currentHistoryIndex <= 0 ? '#999' : '#666'} />
-                            </Pressable>
-                            
-                            <Pressable
-                                onPress={() => {
-                                    if (currentHistoryIndex < componentHistory.length - 1) {
-                                        stopGeneration();
-                                        setCurrentHistoryIndex(currentHistoryIndex + 1);
-                                        setTranscribedText('');
-                                        setResponseStream('');
-                                    }
-                                }}
-                                disabled={currentHistoryIndex >= componentHistory.length - 1}
-                                style={({ pressed }) => [
-                                    styles.navButton,
-                                    currentHistoryIndex >= componentHistory.length - 1 && styles.buttonDisabled,
-                                    pressed && styles.buttonPressed
-                                ]}
-                            >
-                                <ArrowRight size={20} color={currentHistoryIndex >= componentHistory.length - 1 ? '#999' : '#666'} />
-                            </Pressable>
-                        </View>
-                    )}
-                </View>
-
-                {currentComponent && (
-                    <View style={{ overflow: 'visible' }}>
-                        <Pressable
-                            onPress={() => setShowDebugMenu(!showDebugMenu)}
-                            style={{
-                                padding: 12,
-                                marginRight: -8,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Text style={{ color: '#666', fontSize: 24, lineHeight: 24, height: 32, textAlignVertical: 'center' }}>⋮</Text>
-                        </Pressable>
-                        {showDebugMenu && (
-                            <View style={styles.debugMenu}>
-                                <Pressable
-                                    style={styles.menuItem}
-                                    onPress={() => {
-                                        setShowSourceCode(!showSourceCode);
-                                        setShowDebugMenu(false);
-                                    }}
-                                >
-                                    <Text style={styles.menuItemText}>
-                                        {showSourceCode ? 'Hide source' : 'View source'}
-                                    </Text>
-                                </Pressable>
-                                <Pressable
-                                    style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
-                                    onPress={async () => {
-                                        await clearHistory();
-                                        setShowSourceCode(false);
-                                        setResponseStream('');
-                                        setShowDebugMenu(false);
-                                        RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
-                                    }}
-                                >
-                                    <Text style={[styles.menuItemText, { color: '#EF4444' }]}>
-                                        Clear storage
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        )}
-                    </View>
-                )}
-            </View>
+            <Header
+                currentComponent={currentComponent}
+                currentHistoryIndex={currentHistoryIndex}
+                componentHistory={componentHistory}
+                onNavigateBack={() => {
+                    setCurrentHistoryIndex(currentHistoryIndex - 1);
+                    setTranscribedText('');
+                    setResponseStream('');
+                }}
+                onNavigateForward={() => {
+                    setCurrentHistoryIndex(currentHistoryIndex + 1);
+                    setTranscribedText('');
+                    setResponseStream('');
+                }}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onClearHistory={async () => {
+                    await clearHistory();
+                    setShowSourceCode(false);
+                    setResponseStream('');
+                    RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
+                }}
+                onToggleSourceCode={() => setShowSourceCode(!showSourceCode)}
+                showSourceCode={showSourceCode}
+                stopGeneration={stopGeneration}
+            />
 
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
