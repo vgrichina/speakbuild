@@ -15,8 +15,9 @@ import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
-import { Mic, MicOff, Radio, Loader2, Square } from 'lucide-react-native';
+import { Mic, MicOff, Radio, Square } from 'lucide-react-native';
 import { Header } from './components/Header';
+import { ResponseStream } from './components/ResponseStream';
 import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -192,22 +193,6 @@ export const VoiceAssistant = () => {
     const currentComponentCode = currentHistoryEntry?.code;
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
-    const spinValue = React.useRef(new RN.Animated.Value(0)).current;
-
-    React.useEffect(() => {
-        if (isProcessing) {
-            Animated.loop(
-                Animated.timing(spinValue, {
-                    toValue: 1,
-                    duration: 1000,
-                    easing: RN.Easing.linear,
-                    useNativeDriver: true,
-                })
-            ).start();
-        } else {
-            spinValue.setValue(0);
-        }
-    }, [isProcessing]);
 
     const {
         isListening: isSpeechListening,
@@ -509,61 +494,12 @@ export const VoiceAssistant = () => {
                 );
             })()}
 
-            {/* Response Stream */}
-            {(responseStream || isProcessing) && (!currentComponent || isProcessing) && (
-                <View style={[
-                    styles.transcriptionBox, 
-                    { 
-                        backgroundColor: '#EBF8FF',
-                        flex: 1,
-                        marginBottom: 16
-                    }
-                ]}>
-                    <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                            <Text style={styles.heading}>
-                                {modificationIntent === 'modify' ? 'Modifying Component:' : 
-                                 modificationIntent === 'new' ? 'Creating New Component:' : 
-                                 'Response:'}
-                            </Text>
-                            {isProcessing && (
-                                <Animated.View
-                                    style={{
-                                        marginLeft: 8,
-                                        transform: [{
-                                            rotate: spinValue.interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: ['0deg', '360deg']
-                                            })
-                                        }]
-                                    }}
-                                >
-                                    <Loader2 
-                                        size={16} 
-                                        color={modificationIntent === 'modify' ? '#EF4444' : 
-                                              modificationIntent === 'new' ? '#3B82F6' : 
-                                              '#666'} 
-                                    />
-                                </Animated.View>
-                            )}
-                        </View>
-                        <ScrollView 
-                            style={{ flex: 1 }}
-                            ref={scrollViewRef => {
-                                if (scrollViewRef) {
-                                    scrollViewRef.scrollToEnd({ animated: true });
-                                }
-                            }}
-                            onContentSizeChange={() => {
-                                if (scrollViewRef.current) {
-                                    scrollViewRef.current.scrollToEnd({ animated: true });
-                                }
-                            }}
-                        >
-                            <Text>{responseStream}</Text>
-                        </ScrollView>
-                    </View>
-                </View>
+            {(!currentComponent || isProcessing) && (
+                <ResponseStream
+                    responseStream={responseStream}
+                    isProcessing={isProcessing}
+                    modificationIntent={modificationIntent}
+                />
             )}
 
             {/* Error Display */}
