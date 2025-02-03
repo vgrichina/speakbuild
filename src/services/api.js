@@ -42,6 +42,8 @@ class AsyncIterator {
     }
 }
 
+import { truncateWithEllipsis } from '../utils/stringUtils';
+
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const PROMPT_PREVIEW_LENGTH = 5000;  // Characters to show in logs
 const RESPONSE_PREVIEW_LENGTH = 5000;  // Characters to show in logs
@@ -50,7 +52,7 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
     let fullResponse = '';
     
     console.log(`Stream [${model.split('/')[1]}] t=${temperature}`);
-    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0, PROMPT_PREVIEW_LENGTH)}...`).join('\n')}`);
+    console.log(`>> ${messages.map(m => `${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
 
     const eventSource = new EventSource(API_URL, {
         headers: {
@@ -112,7 +114,7 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
                 yield { content, fullResponse, done: false };
             }
         }
-        console.log(`<< ${fullResponse.slice(0, RESPONSE_PREVIEW_LENGTH)}...`);
+        console.log(`<< ${truncateWithEllipsis(fullResponse, RESPONSE_PREVIEW_LENGTH)}`);
     } finally {
         eventSource.close();
     }
@@ -145,7 +147,7 @@ async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haik
     }
 
     const data = await response.json();
-    console.log(`<< ${data.choices[0].message.content.slice(0, RESPONSE_PREVIEW_LENGTH)}...`);
+    console.log(`<< ${truncateWithEllipsis(data.choices[0].message.content, RESPONSE_PREVIEW_LENGTH)}`);
     
     if (!data.choices?.[0]?.message?.content) {
         throw new Error(`Invalid API response: ${JSON.stringify(data)}`);
