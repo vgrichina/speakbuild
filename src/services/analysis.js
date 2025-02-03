@@ -45,10 +45,26 @@ URLs use:
 - Base path: category/component/style/theme
 - Feature flags: with_feature=value
 - Typed parameters: params=name:type
-Parameter types: 
-- Basic: string, number, boolean, color
-- Arrays: string[], number[]
-- Note: All parameters are passed as props to the Component function
+Parameter Types:
+- Basic Types:
+  - string: for text content, labels
+  - number: for sizes, counts, percentages
+  - boolean: for flags, toggles
+  - color: for CSS color values
+  - currency: for monetary values
+  - date: for ISO date strings
+  - time: for 24h format times
+  - email: for email addresses
+  - url: for web URLs
+  - phone: for phone numbers
+
+- Array Types:
+  - string[]: for lists of text
+  - number[]: for lists of numbers
+  - color[]: for lists of colors
+
+Note: All parameters are passed directly as props to the React Native component.
+Example values should match the parameter type (e.g., "#FF0000" for color, 42 for number).
 
 DO NOT include any explanation or additional text.
 ONLY return the JSON object.`
