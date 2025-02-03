@@ -243,12 +243,19 @@ export const VoiceAssistant = () => {
         loadSettings();
     }, []);
     const [textInput, setTextInput] = useState('');
-    const [currentComponent, setCurrentComponent] = useState(null);
-    const [currentComponentCode, setCurrentComponentCode] = useState('');
+    const {
+        history: componentHistory,
+        currentIndex: currentHistoryIndex,
+        current: currentHistoryEntry,
+        addToHistory,
+        setCurrentIndex: setCurrentHistoryIndex,
+        clearHistory
+    } = useComponentHistory();
+    
+    const currentComponent = currentHistoryEntry?.component;
+    const currentComponentCode = currentHistoryEntry?.code;
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
-    const [componentHistory, setComponentHistory] = useState([]);
-    const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
     const spinValue = React.useRef(new RN.Animated.Value(0)).current;
 
     React.useEffect(() => {
