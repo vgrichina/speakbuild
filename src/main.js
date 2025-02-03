@@ -369,14 +369,15 @@ export const VoiceAssistant = () => {
                     }
                 }
             } catch (error) {
-                console.error('Stream error:', error);
-                if (error.message === 'Stream aborted') {
-                    // Clear response stream when aborted
-                    setResponseStream('');
+                if (error.name === 'AbortError' || error.message === 'Stream aborted') {
+                    // Silently handle abort errors
+                    console.log('Stream aborted by user');
                 } else {
+                    console.error('Stream error:', error);
                     setError(`Stream error: ${error.message}`);
                 }
                 setIsProcessing(false);
+                setResponseStream('');
             }
         } catch (error) {
             console.error('API call error:', error);
