@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
-import { generateComponent, streamComponent } from './services/componentGenerator';
+import { streamComponent, componentPrompt } from './services/componentGenerator';
 import { widgetStorage } from './services/widgetStorage';
 
 
