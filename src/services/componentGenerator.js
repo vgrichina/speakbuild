@@ -44,17 +44,11 @@ Key requirements:
 - Start with either 'function Component(props) {' or 'function Component({prop1, prop2}) {'
 - Use ONLY the exact parameter names from the URL's params
 
-Example component pattern:
+Example component patterns:
+
+1. Basic Text Component:
 \`\`\`
 function Component(props) {
-  const [state, setState] = React.useState(null);
-  
-  React.useEffect(() => {
-    return () => {
-      // Cleanup pattern
-    };
-  }, []);
-
   const styles = {
     container: {
       flex: 1,
@@ -66,6 +60,30 @@ function Component(props) {
     RN.View,
     { style: styles.container },
     React.createElement(RN.Text, null, props.text)
+  );
+}
+\`\`\`
+
+2. Image Component:
+\`\`\`
+function Component(props) {
+  const styles = {
+    container: { flex: 1 },
+    image: {
+      width: '100%',
+      height: 200,  // Remote images must specify dimensions
+      borderRadius: 8
+    }
+  };
+
+  return React.createElement(
+    RN.View,
+    { style: styles.container },
+    React.createElement(RN.Image, {
+      style: styles.image,
+      source: { uri: props.imageUrl },
+      resizeMode: 'cover'
+    })
   );
 }
 \`\`\``
