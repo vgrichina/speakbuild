@@ -243,9 +243,10 @@ export const VoiceAssistant = () => {
         setResponseStream('');
 
         try {
+            // Analyze the request
+            let analysis;
             try {
-                // Analyze the request
-                const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
+                analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
                 if (!analysis) {
                     throw new Error('Failed to analyze request');
                 }
