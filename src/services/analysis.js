@@ -61,30 +61,25 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
     const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
     if (!currentApiKey) return null;
 
-    try {
-        const requestHistory = getRequestHistory(history, historyIndex);
-        const response = await api.completion(
-            currentApiKey,
-            analysisPrompt({ text, requestHistory }),
-            { 
-                max_tokens: 200,
-                model: 'anthropic/claude-3.5-haiku',
-                abortController: controller
-            }
-        );
-
-        // Extract just the JSON part from the response
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error('No JSON object found in response');
+    const requestHistory = getRequestHistory(history, historyIndex);
+    const response = await api.completion(
+        currentApiKey,
+        analysisPrompt({ text, requestHistory }),
+        { 
+            max_tokens: 200,
+            model: 'anthropic/claude-3.5-haiku',
+            abortController: controller
         }
-        const parsedJson = JSON.parse(jsonMatch[0]);
-        console.log(`Analysis << ${JSON.stringify(parsedJson)}`);
-        return parsedJson;
-    } catch (error) {
-        console.error('Request analysis error:', error);
-        throw error;
+    );
+
+    // Extract just the JSON part from the response
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+        throw new Error('No JSON object found in response');
     }
+    const parsedJson = JSON.parse(jsonMatch[0]);
+    console.log(`Analysis << ${JSON.stringify(parsedJson)}`);
+    return parsedJson;
 };
 
 // Helper function moved from main
