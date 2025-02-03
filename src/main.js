@@ -15,9 +15,10 @@ import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
-import { Mic, MicOff, Radio, Square } from 'lucide-react-native';
+import { Mic, MicOff, Square } from 'lucide-react-native';
 import { Header } from './components/Header';
 import { ResponseStream } from './components/ResponseStream';
+import { TranscriptionBox } from './components/TranscriptionBox';
 import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -458,41 +459,12 @@ export const VoiceAssistant = () => {
                 </View>
             )}
 
-            {/* Live Transcription */}
-            {isSpeechListening && speechPartialResults && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                    <Radio size={16} color="#EF4444" />
-                    <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
-                        {speechPartialResults}
-                    </Text>
-                </View>
-            )}
-
-            {/* Final Transcription */}
-            {(() => {
-                const requestHistory = getRequestHistory(componentHistory, currentHistoryIndex);
-                return (transcribedText || requestHistory.length > 0) && (
-                <View style={styles.transcriptionBox}>
-                    {requestHistory.map((request, index) => (
-                        <Text key={index} style={{ 
-                            color: '#999',
-                            fontSize: 14,
-                            marginBottom: 4
-                        }}>
-                            {request}
-                        </Text>
-                    ))}
-                    {transcribedText && (
-                        <Text style={{ 
-                            color: '#333',
-                            fontSize: 14
-                        }}>
-                            {transcribedText}
-                        </Text>
-                    )}
-                </View>
-                );
-            })()}
+            <TranscriptionBox
+                isListening={isSpeechListening}
+                partialResults={speechPartialResults}
+                transcribedText={transcribedText}
+                requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
+            />
 
             {(!currentComponent || isProcessing) && (
                 <ResponseStream
