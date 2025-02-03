@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
-import { componentGenerator } from './services/componentGenerator';
+import { generateComponent, streamComponent } from './services/componentGenerator';
 import { widgetStorage } from './services/widgetStorage';
 
 
@@ -494,7 +494,7 @@ export const VoiceAssistant = () => {
             });
             
             try {
-                for await (const { content, fullResponse, done } of componentGenerator.streamComponent(
+                for await (const { content, fullResponse, done } of streamComponent(
                     analysis,
                     currentComponentCode,
                     selectedModel,
