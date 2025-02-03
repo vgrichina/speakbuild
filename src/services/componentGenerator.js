@@ -37,7 +37,7 @@ Key requirements:
 - Use .then() for promises (no async/await)
 - Use only React Native compatible styles
 - Return pure JavaScript code without explanations
-- Start with 'function Component(props) {'
+- Start with either 'function Component(props) {' or 'function Component({prop1, prop2}) {'
 - Use ONLY the exact parameter names from the URL's params
 
 Example component pattern:

@@ -289,8 +289,8 @@ export const VoiceAssistant = () => {
                     const code = codeMatch[1].trim();
                     console.log(`Component << ${code}`);
 
-                    if (!code.includes('function Component(props)')) {
-                        throw new Error('Invalid component code format - must use function Component(props)');
+                    if (!code.match(/function Component\((props|\{[^}]*\})\)/)) {
+                        throw new Error('Invalid component code format - must use function Component(props) or function Component({prop1, prop2})');
                     }
 
                     // Create component function with proper scope access
