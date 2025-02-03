@@ -246,25 +246,13 @@ export const VoiceAssistant = () => {
                     const createComponent = new Function(cachedWidget.code);
                     const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
-                    // Update history and current state
-                    const newHistory = componentHistory.slice(0, currentHistoryIndex + 1);
-                    const newHistoryEntry = {
+                    // Add to history
+                    addToHistory({
                         component: GeneratedComponent,
                         code: cachedWidget.code,
                         request: text,
                         params: analysis.params || {}
-                    };
-                    
-                    console.log('Updating history for cached widget:', {
-                        previousLength: newHistory.length,
-                        newLength: newHistory.length + 1,
-                        truncatedAt: currentHistoryIndex + 1,
-                        params: newHistoryEntry.params
                     });
-                    setComponentHistory([...newHistory, newHistoryEntry]);
-                    setCurrentHistoryIndex(currentHistoryIndex + 1);
-                    setCurrentComponent(() => GeneratedComponent);
-                    setCurrentComponentCode(cachedWidget.code);
                     setError('');
                     setTranscribedText('');
                     setIsProcessing(false);
