@@ -14,7 +14,7 @@ import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, Tou
 import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
+import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { Mic, MicOff, Radio, Loader2, Settings, Square, ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { ExpoModules } from './expo-modules';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -733,9 +733,9 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Error Display */}
-            {error && (
+            {combinedError && (
                 <View style={[styles.transcriptionBox, { backgroundColor: '#FEE2E2' }]}>
-                    <Text style={{ color: '#DC2626' }}>{error}</Text>
+                    <Text style={{ color: '#DC2626' }}>{combinedError}</Text>
                 </View>
             )}
 
