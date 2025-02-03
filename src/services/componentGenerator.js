@@ -77,7 +77,7 @@ const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
         (currentComponentCode ? 
             `Current component code:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\n\n` : 
             '') +
-        'Return ONLY the component code using React.createElement.';
+        'Return ONLY the component code wrapped in a code block:\n\n```jsx\nfunction Component(props) {\n  // your code here\n}\n```';
 
     messages.push({
         role: 'user',
