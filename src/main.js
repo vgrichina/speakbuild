@@ -487,12 +487,6 @@ export const VoiceAssistant = () => {
                 }
             };
 
-            const messages = componentPrompt({ 
-                isModifying: analysis.intent === 'modify', 
-                currentComponentCode,
-                widgetUrl: analysis.widgetUrl
-            });
-            
             try {
                 for await (const { content, fullResponse, done } of streamComponent(
                     analysis,
