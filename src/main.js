@@ -223,6 +223,9 @@ export const VoiceAssistant = () => {
     };
 
     const processWithClaudeStream = async (text) => {
+        // Clear any previous error
+        setError('');
+
         // Abort any existing stream
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -352,6 +355,7 @@ export const VoiceAssistant = () => {
             };
 
             try {
+                setError(''); // Clear error at start of stream
                 for await (const { content, fullResponse, done } of streamComponent(
                     analysis,
                     currentComponentCode,
