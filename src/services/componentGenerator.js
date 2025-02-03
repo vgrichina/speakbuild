@@ -2,29 +2,9 @@ import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
-    const messages = [];
-    
-    if (currentComponentCode) {
-        messages.push({
-            role: 'system',
-            content: `Previous component code for reference:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\nUse this as reference if modifying.`
-        });
-    }
-
-    messages.push({
-        role: 'user',
-        content: `${isModifying ? 
-`Modify the existing component to match this widget specification.` :
-`Generate a React Native component for this widget specification:`}
-
-Widget URL: ${widgetUrl}
-
-Return ONLY the component code using React.createElement.
-Start with 'function Component(props) {'.
-Use ONLY the exact parameter names from the URL's params.
-
-Available APIs:
+const SYSTEM_PROMPT = {
+    role: 'system',
+    content: `You are a React Native component generator. Available APIs:
 
 React Hooks:
 - Direct via React namespace (React.useState, React.useEffect)
@@ -51,8 +31,16 @@ import * as Gesture from 'react-native-gesture-handler';
 import * as Linking from 'react-native/Libraries/Linking/Linking';
 import * as Sensors from 'expo-sensors';
 
-Example component pattern:
+Key requirements:
+- Use React.createElement (no JSX)
+- Handle cleanup in useEffect
+- Use .then() for promises (no async/await)
+- Use only React Native compatible styles
+- Return pure JavaScript code without explanations
+- Start with 'function Component(props) {'
+- Use ONLY the exact parameter names from the URL's params
 
+Example component pattern:
 \`\`\`
 function Component(props) {
   const [state, setState] = React.useState(null);
@@ -76,21 +64,28 @@ function Component(props) {
     React.createElement(RN.Text, null, props.text)
   );
 }
-\`\`\`
+\`\`\``
+};
 
-Key requirements:
-- Use React.createElement (no JSX)
-- Handle cleanup in useEffect
-- Use .then() for promises (no async/await)
-- Use only React Native compatible styles
-- Return pure JavaScript code without explanations
+const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
+    const messages = [SYSTEM_PROMPT];
 
-Start your response with \`\`\` and end with \`\`\`.`
+    const userMessage = `${isModifying ? 
+        'Modify the component to match this widget specification.' :
+        'Generate a React Native component for this widget specification:'}\n\n` +
+        `Widget URL: ${widgetUrl}\n\n` +
+        (currentComponentCode ? 
+            `Current component code:\n\`\`\`jsx\n${currentComponentCode}\n\`\`\`\n\n` : 
+            '') +
+        'Return ONLY the component code using React.createElement.';
+
+    messages.push({
+        role: 'user',
+        content: userMessage
     });
 
     return messages;
 };
-
 
 export async function* streamComponent(analysis, currentComponentCode, selectedModel, abortController) {
     const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
