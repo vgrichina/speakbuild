@@ -244,19 +244,9 @@ export const VoiceAssistant = () => {
 
         try {
             // Analyze the request
-            let analysis;
-            try {
-                analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
-                if (!analysis) {
-                    throw new Error('Failed to analyze request');
-                }
-            } catch (error) {
-                if (error.name === 'AbortError' || error.message === 'Stream aborted') {
-                    console.log('Analysis aborted by user');
-                    setIsProcessing(false);
-                    return;
-                }
-                throw error;
+            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
+            if (!analysis) {
+                throw new Error('Failed to analyze request');
             }
 
             // Check cache for matching widget
