@@ -3,7 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SYSTEM_PROMPT = {
     role: 'system',
-    content: `You are a widget URL generator. Output JSON only:
+    content: `You are an AI assistant for a React Native voice assistant app.
+Your role is to help users by creating relevant UI components that match their requests.
+First, you analyze the request and generate a widget URL specification.
+
+Output JSON only:
 {
     "intent": "modify" | "new",
     "widgetUrl": "string",

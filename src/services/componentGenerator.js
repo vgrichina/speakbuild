@@ -4,7 +4,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SYSTEM_PROMPT = {
     role: 'system',
-    content: `You are a React Native component generator. Available APIs:
+    content: `You are an AI assistant for a React Native voice assistant app.
+Your role is to help users by creating relevant UI components that match their requests.
+Based on the widget URL specification, you generate a React Native component.
+
+Available APIs:
 
 React Hooks:
 - Direct via React namespace (React.useState, React.useEffect)
