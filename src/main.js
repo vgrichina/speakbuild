@@ -184,7 +184,6 @@ export const VoiceAssistant = () => {
         volume: speechVolume,
         partialResults: speechPartialResults,
         hasSpeechPermission,
-        error: speechError,
         toggleListening
     } = useSpeechRecognition({
         selectedLanguage,
@@ -192,11 +191,9 @@ export const VoiceAssistant = () => {
             setTranscribedText(text);
             setResponseStream('');
             processWithClaudeStream(text);
-        }
+        },
+        onError: setError
     });
-
-    // Combine errors from different sources
-    const combinedError = speechError || error;
 
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
@@ -468,9 +465,9 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Error Display */}
-            {combinedError && (
+            {error && (
                 <View style={[styles.transcriptionBox, { backgroundColor: '#FEE2E2' }]}>
-                    <Text style={{ color: '#DC2626' }}>{combinedError}</Text>
+                    <Text style={{ color: '#DC2626' }}>{error}</Text>
                 </View>
             )}
 
