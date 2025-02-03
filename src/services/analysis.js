@@ -73,6 +73,14 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
             }
         );
 
+        // Handle aborted request
+        if (controller?.signal.aborted) {
+            console.log('Analysis request aborted');
+            const abortError = new Error('Stream aborted');
+            abortError.name = 'AbortError';
+            throw abortError;
+        }
+
         // Extract just the JSON part from the response
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
@@ -82,6 +90,10 @@ const analyzeRequest = async (text, controller, history, historyIndex) => {
         console.log(`Analysis << ${JSON.stringify(parsedJson)}`);
         return parsedJson;
     } catch (error) {
+        if (error.name === 'AbortError' || error.message === 'Stream aborted') {
+            console.log('Analysis aborted');
+            throw error; // Re-throw abort errors to be handled by caller
+        }
         console.error('Request analysis error:', error);
         throw error;
     }
