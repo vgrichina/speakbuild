@@ -437,28 +437,6 @@ export const VoiceAssistant = () => {
         }
     };
 
-    const toggleListening = useCallback(async () => {
-        try {
-            if (isSpeechListening) {
-                await ExpoSpeechRecognitionModule.stop();
-            } else {
-                setSpeechPartialResults('');
-                setTranscribedText('');
-                setResponseStream('');
-                await ExpoSpeechRecognitionModule.start({
-                    lang: selectedLanguage,
-                    interimResults: true,
-                    maxAlternatives: 1,
-                    volumeChangeEventOptions: {
-                        enabled: true,
-                        intervalMillis: 300
-                    }
-                });
-            }
-        } catch (error) {
-            setError(`Toggle error: ${error.message}`);
-        }
-    }, [isSpeechListening, selectedLanguage]);
 
     const handleTextSubmit = (e) => {
         e.preventDefault();
