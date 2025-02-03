@@ -109,7 +109,7 @@ DO NOT include any explanation or additional text.
 ONLY return the JSON object.`
 };
 
-const analysisPrompt = ({ text, requestHistory }) => {
+const analysisPrompt = ({ text, requestHistory, currentParams }) => {
     return [
         SYSTEM_PROMPT,
         {
@@ -117,19 +117,22 @@ const analysisPrompt = ({ text, requestHistory }) => {
             content: `Previous requests:
 ${requestHistory.map(req => `- "${req}"`).join('\n')}
 
+Previous component parameters:
+${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component'}
+
 Current request: ${text}`
         }
     ];
 };
 
-const analyzeRequest = async (text, controller, history, historyIndex) => {
+const analyzeRequest = async (text, controller, history, historyIndex, currentParams) => {
     const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
     if (!currentApiKey) return null;
 
     const requestHistory = getRequestHistory(history, historyIndex);
     const response = await api.completion(
         currentApiKey,
-        analysisPrompt({ text, requestHistory }),
+        analysisPrompt({ text, requestHistory, currentParams }),
         { 
             max_tokens: 1000,  // Increased to handle larger JSON responses
             model: 'anthropic/claude-3.5-haiku',

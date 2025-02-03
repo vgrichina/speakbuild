@@ -228,8 +228,11 @@ export const VoiceAssistant = () => {
         setResponseStream('');
 
         try {
-            // Analyze the request
-            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex);
+            // Get current component params if any
+            const currentParams = currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null;
+            
+            // Analyze the request with current params context
+            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex, currentParams);
             if (!analysis) {
                 throw new Error('Failed to analyze request');
             }
