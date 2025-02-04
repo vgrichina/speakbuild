@@ -103,9 +103,9 @@ const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
 };
 
 export async function* streamComponent(analysis, currentComponentCode, selectedModel, abortController) {
-    const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
+    const currentApiKey = process.env.OPENROUTER_API_KEY || await AsyncStorage.getItem('openrouter_api_key');
     if (!currentApiKey) {
-        throw new Error('API key not found');
+        throw new Error('API key not found in environment or AsyncStorage');
     }
 
     const messages = componentPrompt({ 
