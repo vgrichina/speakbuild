@@ -14,9 +14,8 @@ React Hooks:
 - Direct via React namespace (React.useState, React.useEffect)
 
 React Native (RN namespace):
-- Core components: View, Text, Image, ScrollView, TextInput, Pressable, 
-  TouchableOpacity, Alert, Vibration, Share, Platform, 
-  Dimensions, Animated, Appearance
+- Core components: View, Text, Image, ScrollView, TextInput, Pressable, TouchableOpacity
+- Utilities: Alert, Vibration, Share, Dimensions, Animated, Appearance, Platform (use as RN.Platform)
 
 Expo Modules (Expo namespace):
 Available as Expo.ModuleName with these imports:
@@ -44,35 +43,23 @@ Key requirements:
 - Start with either 'function Component(props) {' or 'function Component({prop1, prop2}) {'
 - Use ONLY the exact parameter names from the URL's params
 
-Example component patterns:
-
-1. Basic Text Component:
+Example component pattern:
 \`\`\`
 function Component(props) {
   const styles = {
     container: {
       flex: 1,
-      justifyContent: 'center'
-    }
-  };
-
-  return React.createElement(
-    RN.View,
-    { style: styles.container },
-    React.createElement(RN.Text, null, props.text)
-  );
-}
-\`\`\`
-
-2. Image Component:
-\`\`\`
-function Component(props) {
-  const styles = {
-    container: { flex: 1 },
+      padding: RN.Platform.OS === 'ios' ? 20 : 16
+    },
     image: {
       width: '100%',
       height: 200,
       borderRadius: 8
+    },
+    text: {
+      marginTop: 8,
+      fontFamily: RN.Platform.OS === 'ios' ? 'Helvetica' : 'Roboto',
+      fontSize: props.size || 16
     }
   };
 
@@ -81,9 +68,12 @@ function Component(props) {
     { style: styles.container },
     React.createElement(RN.Image, {
       style: styles.image,
-      source: { uri: props.imageUrl },  // URL must be provided in props
+      source: { uri: props.imageUrl },
       resizeMode: 'cover'
-    })
+    }),
+    React.createElement(RN.Text, {
+      style: styles.text
+    }, props.text)
   );
 }
 \`\`\``
