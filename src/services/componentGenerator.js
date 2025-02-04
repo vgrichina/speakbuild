@@ -28,7 +28,6 @@ Available as third argument (Expo) from these packages:
 - Expo.Location (expo-location) - geolocation
 - Expo.Notifications (expo-notifications) - local notifications
 - Expo.AV (expo-av) - audio/video playback
-- Expo.Maps (react-native-maps) - map views and markers
 - Expo.Reanimated (react-native-reanimated) - advanced animations
 - Expo.Gesture (react-native-gesture-handler) - touch gestures
 - Expo.Linking (react-native/Libraries/Linking/Linking) - deep linking
