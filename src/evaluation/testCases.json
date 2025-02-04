@@ -1,0 +1,40 @@
+{
+  "testCases": [
+    {
+      "intent": "new",
+      "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
+      "params": {
+        "format": "HH:mm:ss",
+        "size": 48
+      }
+    },
+    {
+      "intent": "modify",
+      "widgetUrl": "display/clock/digital/dark?with_date=yes&params=format:string,size:number,dateFormat:string",
+      "params": {
+        "format": "HH:mm:ss",
+        "size": 48,
+        "dateFormat": "MMM DD"
+      },
+      "currentComponentCode": "function Component(props) {\n  const [time, setTime] = React.useState('');\n\n  React.useEffect(() => {\n    const timer = setInterval(() => {\n      const date = new Date();\n      setTime(date.toLocaleTimeString());\n    }, 1000);\n    return () => clearInterval(timer);\n  }, []);\n\n  return React.createElement(\n    RN.Text,\n    { style: { fontSize: props.size } },\n    time\n  );\n}"
+    },
+    {
+      "intent": "new",
+      "widgetUrl": "media/image/gallery/light?params=images:string[],onImagePress:function",
+      "params": {
+        "images": [],
+        "onImagePress": null
+      }
+    },
+    {
+      "intent": "modify",
+      "widgetUrl": "media/image/gallery/light?with_gestures=yes&with_zoom=yes&params=images:string[],onImagePress:function,onZoomChange:function",
+      "params": {
+        "images": [],
+        "onImagePress": null,
+        "onZoomChange": null
+      },
+      "currentComponentCode": "function Component(props) {\n  return React.createElement(\n    RN.ScrollView,\n    { horizontal: true },\n    props.images.map((url, index) =>\n      React.createElement(RN.Image, {\n        key: index,\n        source: { uri: url },\n        style: { width: 200, height: 200 },\n        onPress: () => props.onImagePress(index)\n      })\n    )\n  );\n}"
+    }
+  ]
+}

@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "clean": "rm -rf node_modules/.cache && yarn cache clean"
+    "clean": "rm -rf node_modules/.cache && yarn cache clean",
+    "evaluate": "node scripts/evaluate.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
