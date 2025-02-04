@@ -30,7 +30,7 @@ Available as third argument (Expo) from these packages:
 - Expo.AV (expo-av) - audio/video playback
 - Expo.Reanimated (react-native-reanimated) - advanced animations
 - Expo.Gesture (react-native-gesture-handler) - touch gestures
-- Expo.Linking (react-native/Libraries/Linking/Linking) - deep linking
+- Expo.Linking (expo-linking) - deep linking
   Example: Opening location in Google Maps:
   Expo.Linking.openURL('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address));
   Or with coordinates:
