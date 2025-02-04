@@ -17,22 +17,22 @@ React Native (RN namespace):
 - Core components: View, Text, Image, ScrollView, TextInput, Pressable, TouchableOpacity
 - Utilities: Alert, Vibration, Share, Dimensions, Animated, Appearance, Platform (use as RN.Platform)
 
-Expo Modules (Expo namespace):
-Available as Expo.ModuleName with these imports:
-import * as Haptics from 'expo-haptics';
-import * as Clipboard from 'expo-clipboard';
-import * as ImagePicker from 'expo-image-picker';
-import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications';
-import * as AV from 'expo-av';
-import * as Maps from 'react-native-maps';
-import * as Reanimated from 'react-native-reanimated';
-import * as Gesture from 'react-native-gesture-handler';
-import * as Linking from 'react-native/Libraries/Linking/Linking';
-import * as Sensors from 'expo-sensors';
+Expo Modules:
+Available as third argument (Expo) from these packages:
+- Expo.Haptics (expo-haptics) - vibration and haptic feedback
+- Expo.Clipboard (expo-clipboard) - copy/paste functionality
+- Expo.ImagePicker (expo-image-picker) - image selection
+- Expo.MediaLibrary (expo-media-library) - media access
+- Expo.FileSystem (expo-file-system) - file operations
+- Expo.Sharing (expo-sharing) - native share dialog
+- Expo.Location (expo-location) - geolocation
+- Expo.Notifications (expo-notifications) - local notifications
+- Expo.AV (expo-av) - audio/video playback
+- Expo.Maps (react-native-maps) - map views and markers
+- Expo.Reanimated (react-native-reanimated) - advanced animations
+- Expo.Gesture (react-native-gesture-handler) - touch gestures
+- Expo.Linking (react-native/Libraries/Linking/Linking) - deep linking
+- Expo.Sensors (expo-sensors) - device sensors
 
 Key requirements:
 - Use React.createElement (no JSX)
