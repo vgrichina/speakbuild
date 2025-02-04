@@ -9,7 +9,8 @@ import * as Notifications from 'expo-notifications';
 import * as AV from 'expo-av';
 import * as Reanimated from 'react-native-reanimated';
 import * as Gesture from 'react-native-gesture-handler';
-import * as Linking from 'react-native/Libraries/Linking/Linking';
+import * as Linking from 'expo-linking';
+import * as Sensors from 'expo-sensors';
 
 export const ExpoModules = {
   Haptics,
@@ -26,4 +27,3 @@ export const ExpoModules = {
   Linking,
   Sensors
 };
-import * as Sensors from 'expo-sensors';
