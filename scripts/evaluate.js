@@ -1,7 +1,12 @@
-const { streamComponent } = require('../src/services/componentGenerator');
-const testCases = require('../src/evaluation/testCases.json');
-const fs = require('fs').promises;
-const path = require('path');
+import { streamComponent } from '../src/services/componentGenerator.js';
+import testCases from '../src/evaluation/testCases.json' assert { type: "json" };
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function runEvaluation({ 
     model = 'anthropic/claude-3.5-sonnet',
