@@ -1,6 +1,4 @@
-import RNEventSource from 'react-native-sse';
-
-const EventSource = globalThis.Bun ? globalThis.EventSource : RNEventSource;
+const EventSource = globalThis.EventSource;
 
 // Helper class to convert event listeners to async iterator
 class AsyncIterator {
