@@ -8,7 +8,6 @@ import { useSettings } from './hooks/useSettings';
 
 
 
-import EventSource from 'react-native-sse';
 import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, TouchableOpacity } from 'react-native';
 import { VoiceButton } from './components/VoiceButton';
