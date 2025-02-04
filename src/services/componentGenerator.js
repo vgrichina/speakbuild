@@ -31,6 +31,10 @@ Available as third argument (Expo) from these packages:
 - Expo.Reanimated (react-native-reanimated) - advanced animations
 - Expo.Gesture (react-native-gesture-handler) - touch gestures
 - Expo.Linking (react-native/Libraries/Linking/Linking) - deep linking
+  Example: Opening location in Google Maps:
+  Expo.Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`)
+  Or with coordinates:
+  Expo.Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`)
 - Expo.Sensors (expo-sensors) - device sensors
 
 Key requirements:
