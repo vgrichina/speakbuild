@@ -1,4 +1,4 @@
-import { streamComponent } from '../src/services/componentGenerator.js';
+import { streamComponent } from '../src/services/componentGenerator';
 import testCases from '../src/evaluation/testCases.json' assert { type: "json" };
 import { promises as fs } from 'fs';
 import path from 'path';
