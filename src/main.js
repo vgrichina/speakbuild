@@ -299,7 +299,7 @@ export const VoiceAssistant = () => {
                     const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
                     // Cache the new widget with processed component code
-                    widgetStorage.store(analysis.widgetUrl, GeneratedComponent, componentCode)
+                    widgetStorage.store(analysis.widgetUrl, componentCode)
                         .then(() => {
                             addToHistory({
                                 component: GeneratedComponent,

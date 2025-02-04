@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const WIDGET_STORAGE_KEY = 'cached_widgets';
 
 export const widgetStorage = {
-    async store(widgetUrl, component, code) {
+    async store(widgetUrl, code) {
         const existingData = await AsyncStorage.getItem(WIDGET_STORAGE_KEY);
         const widgets = existingData ? JSON.parse(existingData) : {};
         
