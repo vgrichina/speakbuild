@@ -71,7 +71,7 @@ function Component(props) {
     container: { flex: 1 },
     image: {
       width: '100%',
-      height: 200,  // Remote images must specify dimensions
+      height: 200,
       borderRadius: 8
     }
   };
@@ -81,7 +81,7 @@ function Component(props) {
     { style: styles.container },
     React.createElement(RN.Image, {
       style: styles.image,
-      source: { uri: props.imageUrl },
+      source: { uri: props.imageUrl },  // URL must be provided in props
       resizeMode: 'cover'
     })
   );

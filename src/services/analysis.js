@@ -31,10 +31,21 @@ Example flows:
 "Show me the weather" ->
 {
     "intent": "new",
-    "widgetUrl": "display/weather/card/light?params=location:string,unit:string",
+    "widgetUrl": "display/weather/card/light?params=location:string,unit:string,imageUrl:url",
     "params": {
         "location": "current",
-        "unit": "celsius"
+        "unit": "celsius",
+        "imageUrl": "https://picsum.photos/seed/weather/800/400"
+    }
+}
+
+"Show me a cat picture" ->
+{
+    "intent": "new",
+    "widgetUrl": "display/image/card/light?params=imageUrl:url,caption:string",
+    "params": {
+        "imageUrl": "https://picsum.photos/seed/cat/400/400",
+        "caption": "Random cat image"
     }
 }
 
