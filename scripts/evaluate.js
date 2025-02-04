@@ -40,6 +40,7 @@ async function runEvaluation({
             });
 
         } catch (error) {
+            console.error('Test failed:', error);
             results.push({
                 widgetUrl: testCase.widgetUrl,
                 intent: testCase.intent,
@@ -47,7 +48,7 @@ async function runEvaluation({
                 duration: Date.now() - caseStartTime,
                 response: fullResponse,
                 success: false,
-                error: error.message
+                error: error.stack || error.message
             });
         }
     }
@@ -108,7 +109,7 @@ async function main() {
 
         console.log(`Evaluation report saved to: ${outputPath}`);
     } catch (error) {
-        console.error('Evaluation failed:', error);
+        console.error('Evaluation failed:', error.stack || error);
         process.exit(1);
     }
 }
