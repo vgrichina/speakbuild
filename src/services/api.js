@@ -1,6 +1,88 @@
-const EventSource = globalThis.EventSource;
-
 // Helper class to convert event listeners to async iterator
+class RNEventSource {
+    constructor(url, options = {}) {
+        this.url = url;
+        this.options = options;
+        this.xhr = null;
+        this.eventListeners = {
+            message: [],
+            error: []
+        };
+        this.reconnectTime = 1000;
+        this.lastEventId = '';
+        
+        this.connect();
+    }
+
+    connect() {
+        this.xhr = new XMLHttpRequest();
+        
+        // Set up the request
+        this.xhr.open('POST', this.url);
+        
+        // Set headers
+        Object.entries(this.options.headers || {}).forEach(([key, value]) => {
+            this.xhr.setRequestHeader(key, value);
+        });
+        
+        // Set up event handling
+        let buffer = '';
+        
+        this.xhr.onprogress = () => {
+            const chunk = this.xhr.responseText.substr(buffer.length);
+            buffer = this.xhr.responseText;
+
+            // Process the new chunk
+            const lines = chunk.split('\n');
+            lines.forEach(line => {
+                if (!line.trim() || line.startsWith(':')) return;
+                
+                const event = line.replace(/^data: /, '');
+                
+                if (event === '[DONE]') {
+                    this.close();
+                    return;
+                }
+
+                try {
+                    this.eventListeners.message.forEach(listener => {
+                        listener({ data: event });
+                    });
+                } catch (e) {
+                    console.warn('Failed to parse SSE event:', e);
+                }
+            });
+        };
+
+        this.xhr.onerror = (error) => {
+            this.eventListeners.error.forEach(listener => listener(error));
+            this.close();
+        };
+
+        // Send the request with body if provided
+        this.xhr.send(this.options.body);
+    }
+
+    addEventListener(type, callback) {
+        if (this.eventListeners[type]) {
+            this.eventListeners[type].push(callback);
+        }
+    }
+
+    removeEventListener(type, callback) {
+        if (this.eventListeners[type]) {
+            this.eventListeners[type] = this.eventListeners[type].filter(cb => cb !== callback);
+        }
+    }
+
+    close() {
+        if (this.xhr) {
+            this.xhr.abort();
+            this.xhr = null;
+        }
+    }
+}
+
 class AsyncIterator {
     constructor(setup) {
         this.setup = setup;
@@ -54,7 +136,7 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
     console.log(`Stream [${model.split('/')[1]}] t=${temperature}`);
     console.log(`>> ${messages.map(m => `${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
 
-    const eventSource = new EventSource(API_URL, {
+    const eventSource = new RNEventSource(API_URL, {
         headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
