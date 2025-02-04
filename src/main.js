@@ -298,24 +298,32 @@ export const VoiceAssistant = () => {
                     const createComponent = new Function(componentCode);
                     const GeneratedComponent = createComponent(React, RN, ExpoModules);
 
-                    // Cache the new widget with processed component code
-                    widgetStorage.store(analysis.widgetUrl, componentCode)
-                        .then(() => {
-                            addToHistory({
-                                component: GeneratedComponent,
-                                code: componentCode,
-                                request: text,
-                                params: analysis.params || {}
+                    // Test render before storing
+                    const testParams = analysis.params || {};
+                    try {
+                        React.createElement(GeneratedComponent, testParams);
+                        
+                        // Only store and add to history if render succeeds
+                        widgetStorage.store(analysis.widgetUrl, componentCode)
+                            .then(() => {
+                                addToHistory({
+                                    component: GeneratedComponent,
+                                    code: componentCode,
+                                    request: text,
+                                    params: testParams
+                                });
+                                // Clear states only on success
+                                setError('');
+                                setTranscribedText('');
+                            })
+                            .catch(error => {
+                                console.error('Widget storage error:', error);
+                                setError(`Storage error: ${error.message}`);
                             });
-                        })
-                        .catch(error => {
-                            console.error('Widget storage error:', error);
-                            setError(`Storage error: ${error.message}`);
-                        });
-                    
-                    // Clear other states
-                    setError('');
-                    setTranscribedText('');
+                    } catch (error) {
+                        console.error('Component render error:', error);
+                        setError(`Component error: ${error.message}`);
+                    }
 
                 } catch (error) {
                     console.error('Error creating component:', error);
