@@ -54,8 +54,29 @@ class RNEventSource {
             });
         };
 
+        this.xhr.onload = () => {
+            if (this.xhr.status >= 200 && this.xhr.status < 300) {
+                // Ensure we send [DONE] if server didn't
+                this.eventListeners.message.forEach(listener => {
+                    listener({ data: '[DONE]' });
+                });
+            } else {
+                this.eventListeners.error.forEach(listener => {
+                    listener(new Error(`HTTP error! status: ${this.xhr.status}`));
+                });
+            }
+            this.close();
+        };
+
         this.xhr.onerror = (error) => {
             this.eventListeners.error.forEach(listener => listener(error));
+            this.close();
+        };
+
+        this.xhr.onabort = () => {
+            this.eventListeners.error.forEach(listener => {
+                listener(new Error('Stream aborted'));
+            });
             this.close();
         };
 
