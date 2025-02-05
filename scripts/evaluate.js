@@ -91,9 +91,7 @@ ${summary.results.map(result => `
 - **Duration**: ${(result.duration / 1000).toFixed(1)}s
 ${result.error ? `- **Error**: ${result.error}` : ''}
 
-\`\`\`jsx
 ${result.response}
-\`\`\`
 `).join('\n')}`;
 }
 
