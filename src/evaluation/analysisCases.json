@@ -1,57 +1,171 @@
 {
   "testCases": [
     {
-      "request": "Show me a clock that displays hours and minutes",
-      "expectedIntent": "new",
-      "expectedUrl": "display/clock/digital/light",
-      "expectedParams": {
-        "format": "HH:mm",
-        "size": 48
+      "request": "What time is it?",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "display/clock/digital/light",
+        "params": {
+          "format": "HH:mm",
+          "size": 48
+        }
       }
     },
     {
-      "request": "Make the clock show seconds too",
+      "request": "Can you show seconds as well?",
       "history": [
         {
-          "request": "Show me a clock that displays hours and minutes",
+          "request": "What time is it?",
           "params": {
             "format": "HH:mm",
             "size": 48
           }
         }
       ],
-      "expectedIntent": "modify",
-      "expectedUrl": "display/clock/digital/light",
-      "expectedParams": {
-        "format": "HH:mm:ss",
-        "size": 48
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "display/clock/digital/light",
+        "params": {
+          "format": "HH:mm:ss",
+          "size": 48
+        }
       }
     },
     {
-      "request": "Create a text display showing Hello World",
-      "expectedIntent": "new",
-      "expectedUrl": "display/text/card/light",
-      "expectedParams": {
-        "text": "Hello, World!",
-        "size": 24
+      "request": "Start a 5 minute timer",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "interactive/timer/countdown/light",
+        "params": {
+          "duration": 300,
+          "size": 48,
+          "showControls": true
+        }
       }
     },
     {
-      "request": "Make the text bigger",
+      "request": "Make it count down from 10 minutes instead",
       "history": [
         {
-          "request": "Create a text display showing Hello World",
+          "request": "Start a 5 minute timer",
           "params": {
-            "text": "Hello, World!",
-            "size": 24
+            "duration": 300,
+            "size": 48,
+            "showControls": true
           }
         }
       ],
-      "expectedIntent": "modify",
-      "expectedUrl": "display/text/card/light",
-      "expectedParams": {
-        "text": "Hello, World!",
-        "size": 36
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "interactive/timer/countdown/light",
+        "params": {
+          "duration": 600,
+          "size": 48,
+          "showControls": true
+        }
+      }
+    },
+    {
+      "request": "I need to make a shopping list",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "input/list/editable/light",
+        "params": {
+          "title": "Shopping List",
+          "items": [],
+          "withCheckboxes": true
+        }
+      }
+    },
+    {
+      "request": "Add milk eggs and bread to the list",
+      "history": [
+        {
+          "request": "I need to make a shopping list",
+          "params": {
+            "title": "Shopping List",
+            "items": [],
+            "withCheckboxes": true
+          }
+        }
+      ],
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "input/list/editable/light",
+        "params": {
+          "title": "Shopping List",
+          "items": ["Milk", "Eggs", "Bread"],
+          "withCheckboxes": true
+        }
+      }
+    },
+    {
+      "request": "Show me the weather forecast",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "display/weather/card/light",
+        "params": {
+          "location": "current",
+          "unit": "celsius",
+          "showHourly": false
+        }
+      }
+    },
+    {
+      "request": "Can I see the hourly forecast?",
+      "history": [
+        {
+          "request": "Show me the weather forecast",
+          "params": {
+            "location": "current",
+            "unit": "celsius",
+            "showHourly": false
+          }
+        }
+      ],
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "display/weather/card/light",
+        "params": {
+          "location": "current",
+          "unit": "celsius",
+          "showHourly": true,
+          "hours": 24
+        }
+      }
+    },
+    {
+      "request": "Take a quick note",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "input/note/editable/light",
+        "params": {
+          "title": "Quick Note",
+          "content": "",
+          "timestamp": true
+        }
+      }
+    },
+    {
+      "request": "Write down: remember to call mom tomorrow",
+      "history": [
+        {
+          "request": "Take a quick note",
+          "params": {
+            "title": "Quick Note",
+            "content": "",
+            "timestamp": true
+          }
+        }
+      ],
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "input/note/editable/light",
+        "params": {
+          "title": "Quick Note",
+          "content": "Remember to call mom tomorrow",
+          "timestamp": true
+        }
       }
     }
   ]
