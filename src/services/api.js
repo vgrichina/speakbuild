@@ -8,31 +8,27 @@ class RNEventSource {
             message: [],
             error: []
         };
-        this.reconnectTime = 1000;
-        this.lastEventId = '';
+        this.isClosing = false;
         
         this.connect();
     }
 
     connect() {
         this.xhr = new XMLHttpRequest();
-        
-        // Set up the request
         this.xhr.open('POST', this.url);
         
-        // Set headers
         Object.entries(this.options.headers || {}).forEach(([key, value]) => {
             this.xhr.setRequestHeader(key, value);
         });
         
-        // Set up event handling
         let buffer = '';
         
         this.xhr.onprogress = () => {
+            if (this.isClosing) return;
+            
             const chunk = this.xhr.responseText.substr(buffer.length);
             buffer = this.xhr.responseText;
 
-            // Process the new chunk
             const lines = chunk.split('\n');
             lines.forEach(line => {
                 if (!line.trim() || line.startsWith(':')) return;
@@ -40,14 +36,20 @@ class RNEventSource {
                 const event = line.replace(/^data: /, '');
                 
                 if (event === '[DONE]') {
-                    this.close();
+                    this.isClosing = true;
+                    this.eventListeners.message.forEach(listener => {
+                        listener({ data: '[DONE]' });
+                    });
+                    this.cleanupXHR();
                     return;
                 }
 
                 try {
-                    this.eventListeners.message.forEach(listener => {
-                        listener({ data: event });
-                    });
+                    if (!this.isClosing) {
+                        this.eventListeners.message.forEach(listener => {
+                            listener({ data: event });
+                        });
+                    }
                 } catch (e) {
                     console.warn('Failed to parse SSE event:', e);
                 }
@@ -55,32 +57,36 @@ class RNEventSource {
         };
 
         this.xhr.onload = () => {
-            if (this.xhr.status >= 200 && this.xhr.status < 300) {
-                // Ensure we send [DONE] if server didn't
-                this.eventListeners.message.forEach(listener => {
-                    listener({ data: '[DONE]' });
-                });
-            } else {
-                this.eventListeners.error.forEach(listener => {
-                    listener(new Error(`HTTP error! status: ${this.xhr.status}`));
-                });
+            if (!this.isClosing) {
+                if (this.xhr.status >= 200 && this.xhr.status < 300) {
+                    this.eventListeners.message.forEach(listener => {
+                        listener({ data: '[DONE]' });
+                    });
+                } else {
+                    this.eventListeners.error.forEach(listener => {
+                        listener(new Error(`HTTP error! status: ${this.xhr.status}`));
+                    });
+                }
+                this.cleanupXHR();
             }
-            this.close();
         };
 
         this.xhr.onerror = (error) => {
-            this.eventListeners.error.forEach(listener => listener(error));
-            this.close();
+            if (!this.isClosing) {
+                this.eventListeners.error.forEach(listener => listener(error));
+                this.cleanupXHR();
+            }
         };
 
         this.xhr.onabort = () => {
-            this.eventListeners.error.forEach(listener => {
-                listener(new Error('Stream aborted'));
-            });
-            this.close();
+            if (!this.isClosing) {
+                this.eventListeners.error.forEach(listener => {
+                    listener(new Error('Stream aborted'));
+                });
+                this.cleanupXHR();
+            }
         };
 
-        // Send the request with body if provided
         this.xhr.send(this.options.body);
     }
 
@@ -96,10 +102,17 @@ class RNEventSource {
         }
     }
 
+    cleanupXHR() {
+        if (this.xhr) {
+            this.xhr = null;
+        }
+    }
+
     close() {
+        this.isClosing = true;
         if (this.xhr) {
             this.xhr.abort();
-            this.xhr = null;
+            this.cleanupXHR();
         }
     }
 }
