@@ -24,7 +24,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "display/clock/digital/light",
+        "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
         "params": {
           "format": "HH:mm:ss",
           "size": 48
@@ -35,7 +35,7 @@
       "request": "Start a 5 minute timer",
       "expected": {
         "intent": "new",
-        "widgetUrl": "interactive/timer/countdown/light",
+        "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:number,size:number,showControls:boolean",
         "params": {
           "duration": 300,
           "size": 48,
@@ -57,7 +57,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "interactive/timer/countdown/light",
+        "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:number,size:number,showControls:boolean",
         "params": {
           "duration": 600,
           "size": 48,
@@ -69,7 +69,7 @@
       "request": "I need to make a shopping list",
       "expected": {
         "intent": "new",
-        "widgetUrl": "input/list/editable/light",
+        "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:string,items:string[],withCheckboxes:boolean",
         "params": {
           "title": "Shopping List",
           "items": [],
@@ -91,7 +91,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "input/list/editable/light",
+        "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:string,items:string[],withCheckboxes:boolean",
         "params": {
           "title": "Shopping List",
           "items": ["Milk", "Eggs", "Bread"],
@@ -103,7 +103,7 @@
       "request": "Show me the weather forecast",
       "expected": {
         "intent": "new",
-        "widgetUrl": "display/weather/card/light",
+        "widgetUrl": "display/weather/card/light?params=location:string,unit:string,showHourly:boolean",
         "params": {
           "location": "current",
           "unit": "celsius",
@@ -125,7 +125,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "display/weather/card/light",
+        "widgetUrl": "display/weather/card/light?params=location:string,unit:string,showHourly:boolean,hours:number",
         "params": {
           "location": "current",
           "unit": "celsius",
@@ -138,7 +138,7 @@
       "request": "Take a quick note",
       "expected": {
         "intent": "new",
-        "widgetUrl": "input/note/editable/light",
+        "widgetUrl": "input/note/editable/light?params=title:string,content:string,timestamp:boolean",
         "params": {
           "title": "Quick Note",
           "content": "",
@@ -160,11 +160,97 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "input/note/editable/light",
+        "widgetUrl": "input/note/editable/light?params=title:string,content:string,timestamp:boolean",
         "params": {
           "title": "Quick Note",
           "content": "Remember to call mom tomorrow",
           "timestamp": true
+        }
+      }
+    },
+    {
+      "request": "Show me a calculator",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "interactive/calculator/basic/light?params=theme:string,showHistory:boolean,precision:number",
+        "params": {
+          "theme": "default",
+          "showHistory": true,
+          "precision": 2
+        }
+      }
+    },
+    {
+      "request": "I want to track my daily steps",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "display/fitness/steps/light?with_progress=yes&params=goal:number,current:number,unit:string",
+        "params": {
+          "goal": 10000,
+          "current": 0,
+          "unit": "steps"
+        }
+      }
+    },
+    {
+      "request": "Set my daily goal to 8000 steps",
+      "history": [
+        {
+          "request": "I want to track my daily steps",
+          "params": {
+            "goal": 10000,
+            "current": 0,
+            "unit": "steps"
+          }
+        }
+      ],
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "display/fitness/steps/light?with_progress=yes&params=goal:number,current:number,unit:string",
+        "params": {
+          "goal": 8000,
+          "current": 0,
+          "unit": "steps"
+        }
+      }
+    },
+    {
+      "request": "Create a todo list for today",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:string,items:object[],showDates:boolean",
+        "params": {
+          "title": "Today's Tasks",
+          "items": [],
+          "showDates": true
+        }
+      }
+    },
+    {
+      "request": "Add task: buy groceries at 5pm",
+      "history": [
+        {
+          "request": "Create a todo list for today",
+          "params": {
+            "title": "Today's Tasks",
+            "items": [],
+            "showDates": true
+          }
+        }
+      ],
+      "expected": {
+        "intent": "modify",
+        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:string,items:object[],showDates:boolean",
+        "params": {
+          "title": "Today's Tasks",
+          "items": [
+            {
+              "text": "Buy groceries",
+              "time": "17:00",
+              "done": false
+            }
+          ],
+          "showDates": true
         }
       }
     }
