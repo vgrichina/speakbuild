@@ -28,18 +28,14 @@ async function runEvaluation({
             );
 
             const success = analysis &&
-                analysis.intent === testCase.expectedIntent &&
-                analysis.widgetUrl === testCase.expectedUrl &&
-                JSON.stringify(analysis.params) === JSON.stringify(testCase.expectedParams);
+                analysis.intent === testCase.expected.intent &&
+                analysis.widgetUrl === testCase.expected.widgetUrl &&
+                JSON.stringify(analysis.params) === JSON.stringify(testCase.expected.params);
 
             results.push({
                 request: testCase.request,
                 history: testCase.history,
-                expected: {
-                    intent: testCase.expectedIntent,
-                    widgetUrl: testCase.expectedUrl,
-                    params: testCase.expectedParams
-                },
+                expected: testCase.expected,
                 actual: analysis,
                 duration: Date.now() - caseStartTime,
                 success,
