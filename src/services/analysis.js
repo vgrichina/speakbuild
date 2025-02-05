@@ -93,8 +93,15 @@ URLs use:
   - interactive: for user actions (timer, player, calculator)
   - feedback: for system responses (progress, loading, alerts)
   - media: for rich content (images, video, audio)
-- Feature flags: with_feature=value
-- Typed parameters: params=name:type
+- Generation features: with_feature=yes
+  These flags indicate widget capabilities at generation time:
+  - with_controls: add play/pause/reset controls
+  - with_dates: add date/time handling
+  - with_progress: add progress tracking
+  - with_checkboxes: add checkbox toggles
+  - with_hourly: add hourly breakdown
+- Runtime parameters: params=name:type
+  These are values passed to the component at runtime
 Parameter Types:
 - Basic Types:
   - string: for text content, labels
