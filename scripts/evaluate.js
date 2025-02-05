@@ -20,14 +20,21 @@ async function runEvaluation({
         let fullResponse = '';
         
         try {
-            for await (const chunk of streamComponent(
+            let lastFullResponse = '';
+            for await (const { content, fullResponse: currentFullResponse, done } of streamComponent(
                 testCase,
                 testCase.currentComponentCode || null,
                 model,
                 new AbortController()
             )) {
-                fullResponse += chunk;
+                if (content) {
+                    process.stdout.write(content); // Show progress
+                }
+                if (done) {
+                    lastFullResponse = currentFullResponse;
+                }
             }
+            fullResponse = lastFullResponse;
 
             results.push({
                 widgetUrl: testCase.widgetUrl,
