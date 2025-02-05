@@ -63,10 +63,10 @@ Example flows:
 "Start a 5 minute timer" ->
 {
     "intent": "new",
-    "widgetUrl": "interactive/timer/countdown/dark?with_controls=yes&params=duration:number,size:number",
+    "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:number,size:number",
     "params": {
         "duration": 300,
-        "size": 32
+        "size": 48
     }
 }
 
