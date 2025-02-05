@@ -1,162 +1,100 @@
-// Helper class to convert event listeners to async iterator
-class RNEventSource {
-    constructor(url, options = {}) {
-        this.url = url;
-        this.options = options;
-        this.xhr = null;
-        this.eventListeners = {
-            message: [],
-            error: []
-        };
-        this.isClosing = false;
-        
-        this.connect();
+const isReactNative = typeof navigator !== 'undefined' && navigator.product === 'ReactNative';
+const isNode = typeof process !== 'undefined' && process.versions?.node;
+
+// Platform-specific fetch for SSE support
+const createSSEFetch = (url, options) => {
+    if (isNode || !isReactNative) {
+        return fetch(url, options);
     }
 
-    connect() {
-        this.xhr = new XMLHttpRequest();
-        this.xhr.open('POST', this.url);
+    return new Promise((resolve, reject) => {
+        console.log('XHR: Creating SSE request');
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = 'text';
+        xhr.open(options.method || 'GET', url);
         
-        Object.entries(this.options.headers || {}).forEach(([key, value]) => {
-            this.xhr.setRequestHeader(key, value);
+        Object.entries(options.headers || {}).forEach(([key, value]) => {
+            xhr.setRequestHeader(key, value);
         });
-        
+        xhr.setRequestHeader('Cache-Control', 'no-cache');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
         let buffer = '';
-        
-        this.xhr.onprogress = () => {
-            if (this.isClosing) return;
-            
-            const chunk = this.xhr.responseText.substr(buffer.length);
-            buffer = this.xhr.responseText;
+        let resolveRead = null;
+        let reading = true;
 
-            const lines = chunk.split('\n');
-            lines.forEach(line => {
-                if (!line.trim() || line.startsWith(':')) return;
+        const reader = {
+            async read() {
+                if (!reading) {
+                    return { done: true };
+                }
                 
-                const event = line.replace(/^data: /, '');
-                
-                if (event === '[DONE]') {
-                    this.isClosing = true;
-                    this.eventListeners.message.forEach(listener => {
-                        listener({ data: '[DONE]' });
-                    });
-                    this.cleanupXHR();
-                    return;
+                if (buffer.length > 0) {
+                    const value = new TextEncoder().encode(buffer);
+                    buffer = '';
+                    return { value, done: false };
                 }
 
-                try {
-                    if (!this.isClosing) {
-                        this.eventListeners.message.forEach(listener => {
-                            listener({ data: event });
-                        });
-                    }
-                } catch (e) {
-                    console.warn('Failed to parse SSE event:', e);
-                }
-            });
-        };
-
-        this.xhr.onload = () => {
-            if (!this.isClosing) {
-                if (this.xhr.status >= 200 && this.xhr.status < 300) {
-                    this.eventListeners.message.forEach(listener => {
-                        listener({ data: '[DONE]' });
-                    });
-                } else {
-                    this.eventListeners.error.forEach(listener => {
-                        listener(new Error(`HTTP error! status: ${this.xhr.status}`));
-                    });
-                }
-                this.cleanupXHR();
-            }
-        };
-
-        this.xhr.onerror = (error) => {
-            if (!this.isClosing) {
-                this.eventListeners.error.forEach(listener => listener(error));
-                this.cleanupXHR();
-            }
-        };
-
-        this.xhr.onabort = () => {
-            if (!this.isClosing) {
-                this.eventListeners.error.forEach(listener => {
-                    listener(new Error('Stream aborted'));
+                return new Promise(resolve => {
+                    resolveRead = resolve;
                 });
-                this.cleanupXHR();
+            },
+            releaseLock() {
+                reading = false;
+                xhr.abort();
+                if (resolveRead) {
+                    resolveRead({ done: true });
+                }
+            }
+        };
+
+        xhr.onprogress = () => {
+            const chunk = xhr.responseText.substr(buffer.length);
+            if (chunk.length > 0) {
+                console.log('XHR: Received chunk:', chunk.length, 'bytes');
+                buffer += chunk;
+                if (resolveRead) {
+                    const value = new TextEncoder().encode(buffer);
+                    buffer = '';
+                    resolveRead({ value, done: false });
+                    resolveRead = null;
+                }
+            }
+        };
+
+        xhr.onload = () => {
+            console.log('XHR: Load complete, status:', xhr.status);
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve({
+                    ok: true,
+                    status: xhr.status,
+                    headers: new Headers({
+                        'Content-Type': 'text/event-stream',
+                        'Transfer-Encoding': 'chunked'
+                    }),
+                    body: { getReader: () => reader }
+                });
+            } else {
+                reject(new Error(`HTTP ${xhr.status}`));
             }
         };
 
-        this.xhr.send(this.options.body);
-    }
-
-    addEventListener(type, callback) {
-        if (this.eventListeners[type]) {
-            this.eventListeners[type].push(callback);
-        }
-    }
-
-    removeEventListener(type, callback) {
-        if (this.eventListeners[type]) {
-            this.eventListeners[type] = this.eventListeners[type].filter(cb => cb !== callback);
-        }
-    }
-
-    cleanupXHR() {
-        if (this.xhr) {
-            this.xhr = null;
-        }
-    }
-
-    close() {
-        this.isClosing = true;
-        if (this.xhr) {
-            this.xhr.abort();
-            this.cleanupXHR();
-        }
-    }
-}
-
-class AsyncIterator {
-    constructor(setup) {
-        this.setup = setup;
-    }
-
-    async *[Symbol.asyncIterator]() {
-        const queue = [];
-        let error = null;
-        let done = false;
-        let resolve = null;
-
-        const push = (value) => {
-            queue.push(value);
-            if (resolve) resolve();
+        xhr.onerror = (error) => {
+            console.error('XHR: Error:', error);
+            reject(new Error('Network error'));
         };
 
-        const stop = (err) => {
-            error = err;
-            done = true;
-            if (resolve) resolve();
-        };
-
-        const cleanup = this.setup(push, stop);
-
-        try {
-            while (!done || queue.length > 0) {
-                if (queue.length === 0) {
-                    await new Promise(r => resolve = r);
-                    resolve = null;
-                }
-                if (error) throw error;
-                if (queue.length > 0) {
-                    yield queue.shift();
-                }
-            }
-        } finally {
-            cleanup?.();
+        if (options.signal) {
+            options.signal.addEventListener('abort', () => {
+                console.log('XHR: Abort signal received');
+                xhr.abort();
+            });
         }
-    }
-}
+
+        console.log('XHR: Sending request');
+        xhr.send(options.body);
+    });
+};
 
 import { truncateWithEllipsis } from '../utils/stringUtils';
 
