@@ -21,7 +21,7 @@ Example flows:
 "What time is it?" ->
 {
     "intent": "new",
-    "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
+    "widgetUrl": "display/clock/digital/light?params=format:caption,size:integer",
     "params": {
         "format": "HH:mm",
         "size": 48
@@ -31,7 +31,7 @@ Example flows:
 "Show me the weather" ->
 {
     "intent": "new",
-    "widgetUrl": "display/weather/card/light?params=location:string,unit:string,imageUrl:url",
+    "widgetUrl": "display/weather/card/light?params=location:caption,unit:caption,imageUrl:url",
     "params": {
         "location": "current",
         "unit": "celsius",
@@ -42,17 +42,17 @@ Example flows:
 "Show me a cat picture" ->
 {
     "intent": "new",
-    "widgetUrl": "display/image/card/light?params=imageUrl:url,caption:string",
+    "widgetUrl": "display/image/card/light?params=imageUrl:url,caption:caption",
     "params": {
         "imageUrl": "https://picsum.photos/seed/cat/400/400",
-        "caption": "Random cat image"
+        "caption": "Random Cat"
     }
 }
 
 "Make it show hourly forecast" ->
 {
     "intent": "modify",
-    "widgetUrl": "display/weather/card/light?with_hourly=yes&params=location:string,unit:string,hours:number",
+    "widgetUrl": "display/weather/card/light?with_hourly=yes&params=location:caption,unit:caption,hours:count",
     "params": {
         "location": "current",
         "unit": "celsius",
@@ -63,20 +63,22 @@ Example flows:
 "Start a 5 minute timer" ->
 {
     "intent": "new",
-    "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:number,size:number",
+    "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
     "params": {
         "duration": 300,
-        "size": 48
+        "size": 48,
+        "showControls": true
     }
 }
 
 "Add a shopping list" ->
 {
     "intent": "new",
-    "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:string,items:string[]",
+    "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:title,items:caption[],enableChecks:boolean",
     "params": {
         "title": "Shopping List",
-        "items": []
+        "items": [],
+        "enableChecks": true
     }
 }
 
@@ -102,26 +104,58 @@ URLs use:
   - with_hourly: add hourly breakdown
 - Runtime parameters: params=name:type
   These are values passed to the component at runtime
-Parameter Types:
-- Basic Types:
-  - string: for text content, labels
-  - number: for sizes, counts, percentages
-  - boolean: for flags, toggles
-  - color: for CSS color values
-  - currency: for monetary values
-  - date: for ISO date strings
-  - time: for 24h format times
-  - email: for email addresses
-  - url: for web URLs
-  - phone: for phone numbers
+Parameter Types and Naming:
+- Text Types:
+  - caption:string: short labels (1-3 words)
+    Examples: "Shopping List", "Quick Note", "Timer"
+  - title:string: headings with context (3-7 words)
+    Examples: "Daily Step Counter", "Today's Shopping List"
+  - sentence:string: single complete thought
+    Examples: "Remember to call mom tomorrow", "Buy groceries at 5pm"
+  - paragraph:string: multiple sentences
+    Examples: "Meeting notes from today's standup. Discussed project timeline."
+  - story:string: long-form content
+    Examples: detailed notes, blog posts, articles
+  - url:string: web URLs
+    Examples: imageUrl:"https://example.com/image.jpg"
+
+- Number Types:
+  Base Types:
+  - integer: whole numbers
+    Examples: count:42, index:1
+  - decimal: numbers with fractional parts
+    Examples: price:9.99, progress:75.5
+
+  Semantic Types (all extend integer or decimal):
+  - size:integer: UI element dimensions (16-64)
+    Examples: fontSize:16, buttonSize:48
+  - duration:integer: time in seconds
+    Examples: duration:300 (5 minutes)
+  - count:integer: quantity of items (0+)
+    Examples: limit:10, maxItems:100
+  - percentage:decimal: ratio from 0 to 100
+    Examples: progress:75.5, opacity:50
+  - interval:integer: time between events in ms
+    Examples: interval:1000, refreshRate:500
+  - goal:integer: target value for tracking
+    Examples: stepGoal:10000, calorieGoal:2000
+  - currency:decimal: monetary values
+    Examples: price:9.99, balance:100.00
+
+- Boolean Types:
+  - boolean: for feature flags and toggles
+    Examples: showControls:true, recordTimestamp:true, enableHistory:true, allowEditing:true
 
 - Array Types:
-  - string[]: for lists of text
-  - number[]: for lists of numbers
-  - color[]: for lists of colors
+  - caption[]: for lists of short items
+    Examples: items:["Milk", "Eggs"]
+  - sentence[]: for lists of tasks/notes
+    Examples: items:["Call mom at 5pm", "Buy groceries"]
+  - object[]: for structured data
+    Examples: items:[{text:"Buy milk", done:false}]
 
 Note: All parameters are passed directly as props to the React Native component.
-Example values should match the parameter type (e.g., "#FF0000" for color, 42 for number).
+Parameters should use the most specific type available.
 
 DO NOT include any explanation or additional text.
 ONLY return the JSON object.`
