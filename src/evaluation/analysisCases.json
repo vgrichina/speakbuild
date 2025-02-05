@@ -4,7 +4,7 @@
       "request": "What time is it?",
       "expected": {
         "intent": "new",
-        "widgetUrl": "display/clock/digital/light",
+        "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
         "params": {
           "format": "HH:mm",
           "size": 48
