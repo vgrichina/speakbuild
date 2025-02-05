@@ -102,20 +102,26 @@ const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const PROMPT_PREVIEW_LENGTH = 5000;  // Characters to show in logs
 const RESPONSE_PREVIEW_LENGTH = 5000;  // Characters to show in logs
 
-async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3.5-sonnet', temperature = 0.7, abortController } = {}) {
-    let fullResponse = '';
+async function* streamCompletion(apiKey, messages, { 
+    model = 'anthropic/claude-3.5-sonnet', 
+    temperature = 0.7, 
+    abortController 
+} = {}) {
+    if (!apiKey) throw new Error('API key required');
     
+    let fullResponse = '';
     console.log(`Stream [${model.split('/')[1]}] t=${temperature}`);
     console.log(`>> ${messages.map(m => `${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
 
-    const eventSource = new RNEventSource(API_URL, {
+    const response = await createSSEFetch(API_URL, {
+        method: 'POST',
+        signal: abortController?.signal,
         headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'Accept': 'text/event-stream',
             'X-Title': 'Voice Assistant Web App',
         },
-        method: 'POST',
         body: JSON.stringify({
             model,
             messages,
@@ -124,54 +130,49 @@ async function* streamCompletion(apiKey, messages, { model = 'anthropic/claude-3
         })
     });
 
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
     try {
-        // Use an async iterator to handle EventSource events
-        const events = new AsyncIterator((push, stop) => {
-            // Handle abort controller
-            if (abortController) {
-                abortController.signal.addEventListener('abort', () => {
-                    eventSource.close();
-                    stop(new Error('Stream aborted'));
-                });
-            }
-
-            eventSource.addEventListener('message', (event) => {
-                push(event);
-            });
-
-            eventSource.addEventListener('error', (error) => {
-                console.error('EventSource error:', error);
-                stop(error);
-            });
-
-            // Return cleanup function
-            return () => {
-                eventSource.close();
-            };
-        });
-
-        // Process events as they arrive
-        for await (const event of events) {
-            if (event.data === '[DONE]') {
-                yield { content: '', fullResponse, done: true };
-                break;
-            }
-
-            // Early exit if aborted
-            if (abortController?.signal.aborted) break;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
             
-            const data = JSON.parse(event.data);
-            const content = data.choices?.[0]?.delta?.content;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
             
-            if (content) {
-                fullResponse += content;
-                yield { content, fullResponse, done: false };
+            // Keep the last partial line in buffer
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (!line.trim() || line.startsWith(':')) continue;
+                
+                const event = line.replace(/^data: /, '');
+                if (event === '[DONE]') {
+                    yield { content: '', fullResponse, done: true };
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(event);
+                    const content = data.choices?.[0]?.delta?.content;
+                    if (!content) continue;
+                    
+                    fullResponse += content;
+                    yield { content, fullResponse, done: false };
+                } catch (e) {
+                    console.warn('Failed to parse SSE event:', e);
+                }
             }
         }
-        console.log(`<< ${truncateWithEllipsis(fullResponse, RESPONSE_PREVIEW_LENGTH)}`);
     } finally {
-        eventSource.close();
+        reader.releaseLock();
     }
+
+    console.log(`<< ${truncateWithEllipsis(fullResponse, RESPONSE_PREVIEW_LENGTH)}`);
 }
 
 async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens, abortController } = {}) {
