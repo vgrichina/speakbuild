@@ -137,8 +137,8 @@ Current request: ${text}`
 };
 
 const analyzeRequest = async (text, controller, history, historyIndex, currentParams) => {
-    const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
-    if (!currentApiKey) return null;
+    const currentApiKey = process.env.OPENROUTER_API_KEY || await AsyncStorage.getItem('openrouter_api_key');
+    if (!currentApiKey) throw new Error('API key required');
 
     const requestHistory = getRequestHistory(history, historyIndex);
     const response = await api.completion(
