@@ -24,7 +24,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
+        "widgetUrl": "display/clock/digital/light?params=format:caption,size:integer",
         "params": {
           "format": "HH:mm:ss",
           "size": 48
@@ -35,11 +35,11 @@
       "request": "Start a 5 minute timer",
       "expected": {
         "intent": "new",
-        "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,enableControls:boolean",
+        "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
         "params": {
           "duration": 300,
           "size": 48,
-          "enableControls": true
+          "showControls": true
         }
       }
     },
@@ -69,11 +69,11 @@
       "request": "I need to make a shopping list",
       "expected": {
         "intent": "new",
-        "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:string,items:string[],withCheckboxes:boolean",
+        "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:caption,items:caption[],enableChecks:boolean",
         "params": {
           "title": "Shopping List",
           "items": [],
-          "withCheckboxes": true
+          "enableChecks": true
         }
       }
     },
@@ -103,7 +103,7 @@
       "request": "Show me the weather forecast",
       "expected": {
         "intent": "new",
-        "widgetUrl": "display/weather/card/light?params=location:string,unit:string,showHourly:boolean",
+        "widgetUrl": "display/weather/card/light?params=location:caption,unit:caption,showHourly:boolean",
         "params": {
           "location": "current",
           "unit": "celsius",
@@ -125,7 +125,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "display/weather/card/light?params=location:string,unit:string,showHourly:boolean,hours:number",
+        "widgetUrl": "display/weather/card/light?params=location:caption,unit:caption,showHourly:boolean,hours:integer",
         "params": {
           "location": "current",
           "unit": "celsius",
@@ -138,7 +138,7 @@
       "request": "Take a quick note",
       "expected": {
         "intent": "new",
-        "widgetUrl": "input/note/editable/light?params=title:string,content:string,timestamp:boolean",
+        "widgetUrl": "input/note/editable/light?params=title:caption,content:sentence,timestamp:boolean",
         "params": {
           "title": "Quick Note",
           "content": "",
@@ -172,7 +172,7 @@
       "request": "Show me a calculator",
       "expected": {
         "intent": "new",
-        "widgetUrl": "interactive/calculator/basic/light?params=theme:string,showHistory:boolean,precision:number",
+        "widgetUrl": "interactive/calculator/basic/light?params=theme:caption,showHistory:boolean,precision:integer",
         "params": {
           "theme": "default",
           "showHistory": true,
@@ -184,7 +184,7 @@
       "request": "I want to track my daily steps",
       "expected": {
         "intent": "new",
-        "widgetUrl": "display/fitness/steps/light?with_progress=yes&params=goal:number,current:number,unit:string",
+        "widgetUrl": "display/fitness/steps/light?with_progress=yes&params=goal:integer,current:integer,unit:caption",
         "params": {
           "goal": 10000,
           "current": 0,
@@ -218,7 +218,7 @@
       "request": "Create a todo list for today",
       "expected": {
         "intent": "new",
-        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:string,items:object[],showDates:boolean",
+        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:caption,items:object[],showDates:boolean",
         "params": {
           "title": "Today's Tasks",
           "items": [],
