@@ -49,36 +49,59 @@ Example flows:
     }
 }
 
-"Make it show hourly forecast" ->
+"Remind me to call Mom tomorrow at 5pm" ->
 {
-    "intent": "modify",
-    "widgetUrl": "display/weather/card/light?with_hourly=yes&params=location:caption,unit:caption,hours:count",
+    "intent": "new",
+    "widgetUrl": "input/reminder/card/light?with_alarm=yes&params=title:caption,dueDate:string,dueTime:string,content:sentence",
     "params": {
-        "location": "current",
-        "unit": "celsius",
-        "hours": 24
+        "title": "Call Mom",
+        "dueDate": "2024-02-06",
+        "dueTime": "17:00",
+        "content": "Remember to call Mom"
     }
 }
 
-"Start a 5 minute timer" ->
+"Make the text a bit bigger" ->
+{
+    "intent": "modify",
+    "widgetUrl": "display/text/card/light?params=content:sentence,size:integer",
+    "params": {
+        "content": "Hello World",
+        "size": 52  // Previous size 48 + 10%
+    }
+}
+
+"Add milk and eggs to my shopping list" ->
+{
+    "intent": "modify",
+    "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:title,items:caption[],enableChecks:boolean",
+    "params": {
+        "title": "Shopping List",
+        "items": ["Milk", "Eggs"],  // Capitalized
+        "enableChecks": true
+    }
+}
+
+"Start a timer for a few minutes" ->
 {
     "intent": "new",
     "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
     "params": {
-        "duration": 300,
+        "duration": 180,  // "a few" = 3 minutes = 180 seconds
         "size": 48,
         "showControls": true
     }
 }
 
-"Add a shopping list" ->
+"Show me the weather for next week" ->
 {
     "intent": "new",
-    "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:title,items:caption[],enableChecks:boolean",
+    "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,startDate:string,days:count",
     "params": {
-        "title": "Shopping List",
-        "items": [],
-        "enableChecks": true
+        "location": "current",
+        "unit": "celsius",
+        "startDate": "2024-02-06",  // Tomorrow's date
+        "days": 7
     }
 }
 
