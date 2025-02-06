@@ -4,7 +4,7 @@
       "request": "What time is it?",
       "expected": {
         "intent": "new",
-        "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
+        "widgetUrl": "display/clock/digital/light?params=format:caption,size:integer",
         "params": {
           "format": "HH:mm",
           "size": 48
@@ -35,11 +35,11 @@
       "request": "Start a 5 minute timer",
       "expected": {
         "intent": "new",
-        "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:number,size:number,showControls:boolean",
+        "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,enableControls:boolean",
         "params": {
           "duration": 300,
           "size": 48,
-          "showControls": true
+          "enableControls": true
         }
       }
     },
