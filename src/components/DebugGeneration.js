@@ -61,7 +61,13 @@ function DebugGeneration({ onClose }) {
   const styles = {
     container: {
       flex: 1,
-      backgroundColor: '#fff'
+      backgroundColor: '#fff',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000
     },
     header: {
       flexDirection: 'row',

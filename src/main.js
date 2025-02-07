@@ -480,11 +480,18 @@ export const VoiceAssistant = () => {
                 selectedModel={selectedModel}
                 onSave={saveSettings}
             />
-            {showDebugGeneration && 
-                React.createElement(DebugGeneration, {
-                    onClose: () => setShowDebugGeneration(false)
-                })
-            }
+            <RN.Modal
+                visible={showDebugGeneration}
+                animationType="slide"
+                presentationStyle="fullScreen"
+                onRequestClose={() => setShowDebugGeneration(false)}
+            >
+                <RN.SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+                    <DebugGeneration
+                        onClose={() => setShowDebugGeneration(false)}
+                    />
+                </RN.SafeAreaView>
+            </RN.Modal>
 
 
             {/* Current Generated Component */}
