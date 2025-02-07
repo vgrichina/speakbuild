@@ -8,8 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "clean": "rm -rf node_modules/.cache && yarn cache clean",
-    "evaluate": "bun scripts/evaluate.js",
-    "evaluate-analysis": "bun scripts/evaluate-analysis.js"
+    "evaluate-analysis": "bun scripts/evaluate-analysis.js",
+    "evaluate-generation": "bun scripts/evaluate-generation.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
