@@ -3,6 +3,28 @@ import * as RN from 'react-native';
 import { widgetStorage } from '../services/widgetStorage';
 import { streamComponent } from '../services/componentGenerator';
 import testCases from '../evaluation/generationTestCases.json';
+import { ExpoModules } from '../expo-modules';
+
+const createComponentFromCode = (code, params = {}) => {
+  try {
+    const componentCode = `
+      const React = arguments[0];
+      const RN = arguments[1];
+      const Expo = arguments[2];
+      const { useState } = React;
+      ${code}
+      return Component;
+    `;
+    const createComponent = new Function(componentCode);
+    const GeneratedComponent = createComponent(React, RN, ExpoModules);
+    return React.createElement(GeneratedComponent, params);
+  } catch (error) {
+    console.error('Component render error:', error);
+    return React.createElement(RN.Text, {
+      style: { color: '#DC2626' }
+    }, `Error rendering component: ${error.message}`);
+  }
+};
 
 function DebugGeneration({ onClose }) {
   const [widgets, setWidgets] = useState([]);
@@ -163,6 +185,16 @@ function DebugGeneration({ onClose }) {
           ),
           widget.stored ? 
             React.createElement(RN.View, null,
+              React.createElement(RN.View, { 
+                style: {
+                  backgroundColor: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 8,
+                  marginBottom: 8
+                }
+              },
+                createComponentFromCode(widget.stored.code, widget.params)
+              ),
               React.createElement(RN.TouchableOpacity, {
                 onPress: () => setSelectedWidget(widget)
               },
