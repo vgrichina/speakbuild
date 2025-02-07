@@ -1,40 +1,84 @@
 {
   "testCases": [
     {
+      "description": "Digital clock",
       "intent": "new",
-      "widgetUrl": "display/clock/digital/light?params=format:string,size:number",
+      "widgetUrl": "display/clock/digital/light?params=format:caption,size:integer",
       "params": {
-        "format": "HH:mm:ss",
+        "format": "HH:mm",
         "size": 48
       }
     },
     {
-      "intent": "modify",
-      "widgetUrl": "display/clock/digital/dark?with_date=yes&params=format:string,size:number,dateFormat:string",
-      "params": {
-        "format": "HH:mm:ss",
-        "size": 48,
-        "dateFormat": "MMM DD"
-      },
-      "currentComponentCode": "function Component(props) {\n  const [time, setTime] = React.useState('');\n\n  React.useEffect(() => {\n    const timer = setInterval(() => {\n      const date = new Date();\n      setTime(date.toLocaleTimeString());\n    }, 1000);\n    return () => clearInterval(timer);\n  }, []);\n\n  return React.createElement(\n    RN.Text,\n    { style: { fontSize: props.size } },\n    time\n  );\n}"
-    },
-    {
+      "description": "Countdown timer with controls",
       "intent": "new",
-      "widgetUrl": "media/image/gallery/light?params=images:string[],onImagePress:function",
+      "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
       "params": {
-        "images": [],
-        "onImagePress": null
+        "duration": 180,
+        "size": 48,
+        "showControls": true
       }
     },
     {
-      "intent": "modify",
-      "widgetUrl": "media/image/gallery/light?with_gestures=yes&with_zoom=yes&params=images:string[],onImagePress:function,onZoomChange:function",
+      "description": "Shopping list with checkboxes",
+      "intent": "new",
+      "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:caption,items:caption[],enableChecks:boolean",
       "params": {
-        "images": [],
-        "onImagePress": null,
-        "onZoomChange": null
-      },
-      "currentComponentCode": "function Component(props) {\n  return React.createElement(\n    RN.ScrollView,\n    { horizontal: true },\n    props.images.map((url, index) =>\n      React.createElement(RN.Image, {\n        key: index,\n        source: { uri: url },\n        style: { width: 200, height: 200 },\n        onPress: () => props.onImagePress(index)\n      })\n    )\n  );\n}"
+        "title": "Shopping List",
+        "items": ["Milk", "Eggs"],
+        "enableChecks": true
+      }
+    },
+    {
+      "description": "Weather forecast with daily view",
+      "intent": "new",
+      "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,date:string,days:integer",
+      "params": {
+        "location": "current",
+        "unit": "celsius",
+        "date": "2024-02-06",
+        "days": 7
+      }
+    },
+    {
+      "description": "Quick note with timestamp",
+      "intent": "new",
+      "widgetUrl": "input/note/editable/light?params=title:caption,content:sentence,timestamp:boolean",
+      "params": {
+        "title": "Quick Note",
+        "content": "",
+        "timestamp": true
+      }
+    },
+    {
+      "description": "Basic calculator",
+      "intent": "new", 
+      "widgetUrl": "interactive/calculator/basic/light?params=theme:caption,showHistory:boolean,precision:integer",
+      "params": {
+        "theme": "default",
+        "showHistory": true,
+        "precision": 2
+      }
+    },
+    {
+      "description": "Step counter with progress",
+      "intent": "new",
+      "widgetUrl": "display/fitness/steps/light?with_progress=yes&params=goal:integer,current:integer,unit:caption",
+      "params": {
+        "goal": 10000,
+        "current": 0,
+        "unit": "steps"
+      }
+    },
+    {
+      "description": "Todo list with dates",
+      "intent": "new",
+      "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:caption,items:object[],showDates:boolean",
+      "params": {
+        "title": "Today's Tasks",
+        "items": [],
+        "showDates": true
+      }
     }
   ]
 }
