@@ -28,36 +28,41 @@ Example flows:
     }
 }
 
-"Show me the weather" ->
+// Converting "a few minutes" to 180 seconds (3 minutes)
+"Start a timer for a few minutes" ->
 {
     "intent": "new",
-    "widgetUrl": "display/weather/card/light?params=location:caption,unit:caption,imageUrl:url",
+    "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
     "params": {
-        "location": "current",
-        "unit": "celsius",
-        "imageUrl": "https://picsum.photos/seed/weather/800/400"
+        "duration": 180,
+        "size": 48,
+        "showControls": true
     }
 }
 
-"Show me a cat picture" ->
-{
-    "intent": "new",
-    "widgetUrl": "display/image/card/light?params=imageUrl:url,caption:caption",
-    "params": {
-        "imageUrl": "https://picsum.photos/seed/cat/400/400",
-        "caption": "Random Cat"
-    }
-}
-
+// Using ISO date format for tomorrow, 5pm
 "Remind me to call Mom tomorrow at 5pm" ->
 {
     "intent": "new",
-    "widgetUrl": "input/reminder/card/light?with_alarm=yes&params=title:caption,dueDate:string,dueTime:string,content:sentence",
+    "widgetUrl": "input/reminder/card/light?with_alarm=yes&params=title:caption,date:string,time:string,content:sentence",
     "params": {
         "title": "Call Mom",
-        "dueDate": "2024-02-06",
-        "dueTime": "17:00",
+        "date": "2024-02-06",
+        "time": "17:00",
         "content": "Remember to call Mom"
+    }
+}
+
+// Using ISO date for 7-day forecast starting tomorrow
+"Show me the weather for next week" ->
+{
+    "intent": "new",
+    "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,date:string,days:integer",
+    "params": {
+        "location": "current",
+        "unit": "celsius",
+        "date": "2024-02-06",
+        "days": 7
     }
 }
 
