@@ -144,6 +144,17 @@ export const Header = ({
                             <Pressable
                                 style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
                                 onPress={() => {
+                                    onDebugGeneration();
+                                    setShowDebugMenu(false);
+                                }}
+                            >
+                                <Text style={styles.menuItemText}>
+                                    Component Generation
+                                </Text>
+                            </Pressable>
+                            <Pressable
+                                style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
+                                onPress={() => {
                                     onClearHistory();
                                     setShowDebugMenu(false);
                                 }}
