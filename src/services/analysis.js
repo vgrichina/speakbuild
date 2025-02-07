@@ -87,25 +87,14 @@ Example flows:
     }
 }
 
-"Start a timer for a few minutes" ->
-{
-    "intent": "new",
-    "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
-    "params": {
-        "duration": 180,  // "a few" = 3 minutes = 180 seconds
-        "size": 48,
-        "showControls": true
-    }
-}
-
 "Show me the weather for next week" ->
 {
     "intent": "new",
-    "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,startDate:string,days:count",
+    "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,date:string,days:integer",
     "params": {
         "location": "current",
         "unit": "celsius",
-        "startDate": "2024-02-06",  // Tomorrow's date
+        "date": "2024-02-06",
         "days": 7
     }
 }
