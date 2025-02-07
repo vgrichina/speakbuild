@@ -167,8 +167,29 @@ function DebugGeneration({ onClose }) {
   return React.createElement(RN.View, { style: styles.container },
     React.createElement(RN.View, { style: styles.header },
       React.createElement(RN.Text, { style: styles.title }, "Generated Widgets"),
-      React.createElement(RN.TouchableOpacity, { onPress: onClose },
-        React.createElement(RN.Text, { style: styles.closeButton }, "×")
+      React.createElement(RN.View, { style: { flexDirection: 'row', alignItems: 'center', gap: 12 } },
+        React.createElement(RN.TouchableOpacity, {
+          style: [styles.generateButton, { opacity: generating ? 0.5 : 1 }],
+          onPress: async () => {
+            if (generating) return;
+            const ungenerated = widgets.filter(w => !w.stored);
+            if (ungenerated.length === 0) {
+              RN.Alert.alert('No widgets to generate', 'All widgets have already been generated.');
+              return;
+            }
+            for (const widget of ungenerated) {
+              await generateWidget(widget);
+            }
+          },
+          disabled: generating
+        },
+          React.createElement(RN.Text, { style: styles.buttonText },
+            generating ? "Generating..." : "Generate All"
+          )
+        ),
+        React.createElement(RN.TouchableOpacity, { onPress: onClose },
+          React.createElement(RN.Text, { style: styles.closeButton }, "×")
+        )
       )
     ),
     React.createElement(RN.ScrollView, { style: styles.list },
