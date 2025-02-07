@@ -177,6 +177,7 @@ export const VoiceAssistant = () => {
     const currentComponentCode = currentHistoryEntry?.code;
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
+    const [showDebugGeneration, setShowDebugGeneration] = useState(false);
 
     const {
         isListening: isSpeechListening,
@@ -410,6 +411,7 @@ export const VoiceAssistant = () => {
                     setResponseStream('');
                     RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
                 }}
+                onDebugGeneration={() => setShowDebugGeneration(true)}
                 onToggleSourceCode={() => setShowSourceCode(!showSourceCode)}
                 showSourceCode={showSourceCode}
                 stopGeneration={stopGeneration}
@@ -477,6 +479,11 @@ export const VoiceAssistant = () => {
                 selectedModel={selectedModel}
                 onSave={saveSettings}
             />
+            {showDebugGeneration && 
+                React.createElement(DebugGeneration, {
+                    onClose: () => setShowDebugGeneration(false)
+                })
+            }
 
 
             {/* Current Generated Component */}
