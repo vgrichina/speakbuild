@@ -169,7 +169,10 @@ function DebugGeneration({ onClose }) {
       React.createElement(RN.Text, { style: styles.title }, "Generated Widgets"),
       React.createElement(RN.View, { style: { flexDirection: 'row', alignItems: 'center', gap: 12 } },
         React.createElement(RN.TouchableOpacity, {
-          style: [styles.generateButton, { opacity: generating ? 0.5 : 1 }],
+          style: [
+            styles.generateButton, 
+            generating && { opacity: 0.5 }
+          ],
           onPress: async () => {
             if (generating) return;
             const ungenerated = widgets.filter(w => !w.stored);
@@ -180,8 +183,7 @@ function DebugGeneration({ onClose }) {
             for (const widget of ungenerated) {
               await generateWidget(widget);
             }
-          },
-          disabled: generating
+          }
         },
           React.createElement(RN.Text, { style: styles.buttonText },
             generating ? "Generating..." : "Generate All"
