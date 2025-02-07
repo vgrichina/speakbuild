@@ -4,6 +4,7 @@ import { widgetStorage } from '../services/widgetStorage';
 import { streamComponent } from '../services/componentGenerator';
 import testCases from '../evaluation/generationTestCases.json';
 import { ExpoModules } from '../expo-modules';
+import { ViewCode } from './ViewCode';
 
 const createComponentFromCode = (code, params = {}) => {
   try {
@@ -260,29 +261,12 @@ function DebugGeneration({ onClose }) {
         )
       )
     ),
-    selectedWidget && React.createElement(RN.Modal, {
-      visible: true,
-      animationType: "slide",
-      onRequestClose: () => setSelectedWidget(null)
-    },
-      React.createElement(RN.View, { style: styles.modalContainer },
-        React.createElement(RN.View, { style: styles.modalHeader },
-          React.createElement(RN.Text, { style: styles.title },
-            selectedWidget.description
-          ),
-          React.createElement(RN.TouchableOpacity, {
-            onPress: () => setSelectedWidget(null)
-          },
-            React.createElement(RN.Text, { style: styles.closeButton }, "×")
-          )
-        ),
-        React.createElement(RN.ScrollView, { style: styles.modalContent },
-          React.createElement(RN.Text, { style: styles.code },
-            selectedWidget.stored.code
-          )
-        )
-      )
-    )
+    selectedWidget && React.createElement(ViewCode, {
+      isVisible: true,
+      onClose: () => setSelectedWidget(null),
+      code: selectedWidget.stored.code,
+      title: selectedWidget.description
+    })
   );
 }
 
