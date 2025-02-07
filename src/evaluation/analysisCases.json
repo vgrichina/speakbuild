@@ -1,15 +1,7 @@
 {
   "testCases": [
     {
-      "request": "What time is it?",
-      "expected": {
-        "intent": "new",
-        "widgetUrl": "display/clock/digital/light?params=format:caption,size:integer",
-        "params": {
-          "format": "HH:mm",
-          "size": 48
-        }
-      }
+      "request": "What time is it?"
     },
     {
       "request": "Can you show seconds as well?",

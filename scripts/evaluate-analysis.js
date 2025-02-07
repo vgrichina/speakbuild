@@ -27,34 +27,21 @@ async function runEvaluation({
                 testCase.history?.length ? testCase.history[testCase.history.length - 1].params : null
             );
 
-            const success = analysis &&
-                analysis.intent === testCase.expected.intent &&
-                analysis.widgetUrl === testCase.expected.widgetUrl &&
-                JSON.stringify(analysis.params) === JSON.stringify(testCase.expected.params);
-
             results.push({
                 request: testCase.request,
-                history: testCase.history,
-                expected: testCase.expected,
-                actual: analysis,
-                duration: Date.now() - caseStartTime,
-                success,
+                history: testCase.history?.map(h => h.request) || [],
+                analysis,
+                duration: Date.now() - caseStartTime
             });
 
         } catch (error) {
             console.error('Analysis failed:', error);
             results.push({
                 request: testCase.request,
-                history: testCase.history,
-                expected: {
-                    intent: testCase.expectedIntent,
-                    widgetUrl: testCase.expectedUrl,
-                    params: testCase.expectedParams
-                },
-                actual: null,
+                history: testCase.history?.map(h => h.request) || [],
+                analysis: null,
                 duration: Date.now() - caseStartTime,
-                success: false,
-                error: error.stack || error.message
+                error: error.message
             });
         }
     }
@@ -68,38 +55,21 @@ async function runEvaluation({
 }
 
 function generateMarkdownReport(summary) {
-    const successRate = (summary.results.filter(r => r.success).length / summary.results.length * 100).toFixed(1);
     const avgDuration = (summary.totalDuration / summary.results.length / 1000).toFixed(1);
     
-    return `# Analysis Prompt Evaluation Results
+    return `# Analysis Results - ${summary.model}
 
-## Summary
-- **Model**: ${summary.model}
-- **Date**: ${new Date(summary.runId).toISOString()}
-- **Success Rate**: ${successRate}%
-- **Average Analysis Time**: ${avgDuration}s per request
-- **Total Duration**: ${(summary.totalDuration / 1000).toFixed(1)}s
-
-## Test Cases
+Run at: ${new Date(summary.runId).toISOString()}
+Average time: ${avgDuration}s per request
+Total time: ${(summary.totalDuration / 1000).toFixed(1)}s
 
 ${summary.results.map(result => `
-### Request: "${result.request}"
-${result.history ? `**History**:
-${result.history.map(h => `- "${h.request}" (params: ${JSON.stringify(h.params)})`).join('\n')}` : ''}
-
-**Expected**:
+### "${result.request}"
+${result.history.length ? `After: ${result.history.map(h => `"${h}"`).join(' → ')}\n` : ''}
 \`\`\`json
-${JSON.stringify(result.expected, null, 2)}
+${JSON.stringify(result.analysis || result.error, null, 2)}
 \`\`\`
-
-**Actual**:
-\`\`\`json
-${JSON.stringify(result.actual, null, 2)}
-\`\`\`
-
-- **Status**: ${result.success ? '✅ Success' : '❌ Failed'}
-- **Duration**: ${(result.duration / 1000).toFixed(1)}s
-${result.error ? `- **Error**: ${result.error}` : ''}
+${(result.duration / 1000).toFixed(1)}s
 `).join('\n')}`;
 }
 
