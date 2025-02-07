@@ -5,6 +5,7 @@ import { streamComponent, componentPrompt } from './services/componentGenerator'
 import { widgetStorage } from './services/widgetStorage';
 import { useComponentHistory } from './hooks/useComponentHistory';
 import { useSettings } from './hooks/useSettings';
+import DebugGeneration from './components/DebugGeneration';
 
 
 

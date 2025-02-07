@@ -59,6 +59,7 @@ export const Header = ({
     onNavigateForward,
     onOpenSettings,
     onClearHistory,
+    onDebugGeneration,
     onToggleSourceCode,
     showSourceCode,
     stopGeneration
