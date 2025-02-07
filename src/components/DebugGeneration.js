@@ -228,10 +228,27 @@ function DebugGeneration({ onClose }) {
               )
             ) :
             React.createElement(RN.TouchableOpacity, {
-              style: styles.generateButton,
-              onPress: () => generateWidget(widget),
-              disabled: generating === widget.widgetUrl
+              style: [
+                styles.generateButton, 
+                { 
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8
+                },
+                generating === widget.widgetUrl && { opacity: 0.5 }
+              ],
+              onPress: async () => {
+                if (generating === widget.widgetUrl) return;
+                await generateWidget(widget);
+                // Refresh widgets list after generation
+                await loadWidgets();
+              }
             },
+              generating === widget.widgetUrl && 
+                React.createElement(RN.ActivityIndicator, { 
+                  size: "small",
+                  color: "#fff"
+                }),
               React.createElement(RN.Text, { style: styles.buttonText },
                 generating === widget.widgetUrl ? 
                   "Generating..." : 
