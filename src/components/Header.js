@@ -173,7 +173,6 @@ export const Header = ({
                         </View>
                     )}
                 </View>
-            </View>
         </View>
     );
 };
