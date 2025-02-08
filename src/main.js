@@ -507,7 +507,7 @@ export const VoiceAssistant = () => {
                     shadowRadius: 4,
                     elevation: 3
                 }}>
-                    {currentComponent && !isProcessing ? (
+                    {currentComponent ? (
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 try {
@@ -526,7 +526,7 @@ export const VoiceAssistant = () => {
                                 }
                             })()}
                         </ScrollView>
-                    ) : !isProcessing && (
+                    ) : (
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                             <EmptyState />
                         </View>
