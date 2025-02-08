@@ -57,9 +57,12 @@ export const ResponseStream = ({
     isProcessing,
     modificationIntent
 }) => {
+    console.log('ResponseStream', { responseStream, isProcessing, modificationIntent });
     const scrollViewRef = React.useRef(null);
 
     if (!responseStream && !isProcessing) return null;
+
+    console.log('rendering', { responseStream });
 
     return (
         <View style={[
