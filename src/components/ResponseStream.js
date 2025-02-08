@@ -79,17 +79,11 @@ export const ResponseStream = ({
                     </Text>
                     {isProcessing && <LoadingSpinner />}
                 </View>
-                <ScrollView 
-                    style={{ flex: 1 }}
-                    ref={scrollViewRef}
-                    onContentSizeChange={() => {
-                        if (scrollViewRef.current) {
-                            scrollViewRef.current.scrollToEnd({ animated: true });
-                        }
-                    }}
-                >
-                    <Text>{responseStream}</Text>
-                </ScrollView>
+                <View style={{ minHeight: 100 }}>
+                    <Text>DEBUG: Start of content</Text>
+                    <Text style={{ color: '#000' }}>{responseStream || 'No content'}</Text>
+                    <Text>DEBUG: End of content</Text>
+                </View>
             </View>
         </View>
     );
