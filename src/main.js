@@ -495,7 +495,7 @@ export const VoiceAssistant = () => {
             </RN.Modal>
 
 
-            {/* Empty State or Current Component */}
+            {/* Component Container */}
             <View style={{ flex: 1, width: '100%' }}>
                 <View style={{ 
                     backgroundColor: '#ffffff',
@@ -505,12 +505,10 @@ export const VoiceAssistant = () => {
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.1,
                     shadowRadius: 4,
-                    elevation: 3,
-                    justifyContent: 'center',
-                    alignItems: 'center'
+                    elevation: 3
                 }}>
                     {currentComponent && !isProcessing ? (
-                        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 try {
                                     const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
@@ -529,7 +527,9 @@ export const VoiceAssistant = () => {
                             })()}
                         </ScrollView>
                     ) : !isProcessing && (
-                        <EmptyState />
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <EmptyState />
+                        </View>
                     )}
                 </View>
             </View>
