@@ -220,10 +220,15 @@ function DebugGeneration({ onClose }) {
             React.createElement(RN.View, null,
               React.createElement(RN.View, { 
                 style: {
-                  backgroundColor: '#2a2a2a',
+                  backgroundColor: '#ffffff',
                   padding: 16,
                   borderRadius: 8,
-                  marginBottom: 8
+                  marginBottom: 8,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3
                 }
               },
                 createComponentFromCode(widget.stored.code, widget.params)
