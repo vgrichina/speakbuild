@@ -168,10 +168,11 @@ function DebugGeneration({ onClose }) {
   return React.createElement(RN.View, { style: styles.container },
     React.createElement(RN.View, { style: styles.header },
       React.createElement(RN.Text, { style: styles.title }, "Generated Widgets"),
-      React.createElement(RN.View, { style: { flexDirection: 'row', alignItems: 'center', gap: 12 } },
+      React.createElement(RN.View, { style: { flexDirection: 'row', alignItems: 'center', height: '100%', gap: 12 } },
         React.createElement(RN.TouchableOpacity, {
           style: [
-            styles.generateButton, 
+            styles.generateButton,
+            { alignSelf: 'center' },
             generating && { opacity: 0.5 }
           ],
           onPress: async () => {
@@ -190,7 +191,10 @@ function DebugGeneration({ onClose }) {
             generating ? "Generating..." : "Generate All"
           )
         ),
-        React.createElement(RN.TouchableOpacity, { onPress: onClose },
+        React.createElement(RN.TouchableOpacity, { 
+          style: { height: '100%', justifyContent: 'center' },
+          onPress: onClose 
+        },
           React.createElement(RN.Text, { style: styles.closeButton }, "×")
         )
       )
