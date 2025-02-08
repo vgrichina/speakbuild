@@ -96,7 +96,8 @@ function DebugGeneration({ onClose }) {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 16,
+      paddingHorizontal: 16,
+      height: 56,
       borderBottomWidth: 1,
       borderBottomColor: '#eee'
     },
