@@ -26,7 +26,7 @@ export function EmptyState() {
                 React.createElement(RN.View,
                     { 
                         key: index,
-                        style: { flexDirection: 'row', alignItems: 'center', gap: 12 }
+                        style: { flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%' }
                     },
                     React.createElement(RN.View,
                         { 
@@ -40,7 +40,14 @@ export function EmptyState() {
                         }
                     ),
                     React.createElement(RN.Text,
-                        { style: { color: '#333', flex: 1, fontSize: 16 } },
+                        { 
+                            style: { 
+                                color: '#333', 
+                                flex: 1, 
+                                fontSize: 16,
+                                flexWrap: 'wrap'
+                            } 
+                        },
                         `"${example}"`
                     )
                 )
