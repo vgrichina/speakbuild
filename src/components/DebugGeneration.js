@@ -225,9 +225,17 @@ function DebugGeneration({ onClose }) {
                 createComponentFromCode(widget.stored.code, widget.params)
               ),
               React.createElement(RN.TouchableOpacity, {
+                style: [
+                  styles.generateButton,
+                  { 
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8
+                  }
+                ],
                 onPress: () => setSelectedWidget(widget)
               },
-                React.createElement(RN.Text, { style: styles.generateButton },
+                React.createElement(RN.Text, { style: styles.buttonText },
                   "View Code"
                 )
               ),
