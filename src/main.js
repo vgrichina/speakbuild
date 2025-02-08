@@ -496,7 +496,7 @@ export const VoiceAssistant = () => {
 
             {/* Current Generated Component */}
             {currentComponent && !isProcessing && (
-                <View style={{ flex: 1, minHeight: 200, width: '100%' }}>
+                <View style={{ flex: 1, width: '100%' }}>
                     <View style={{ 
                         backgroundColor: 'white',
                         flex: 1
