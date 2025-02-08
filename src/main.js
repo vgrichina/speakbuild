@@ -6,6 +6,7 @@ import { widgetStorage } from './services/widgetStorage';
 import { useComponentHistory } from './hooks/useComponentHistory';
 import { useSettings } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
+import { EmptyState } from './components/EmptyState';
 
 
 
@@ -494,19 +495,21 @@ export const VoiceAssistant = () => {
             </RN.Modal>
 
 
-            {/* Current Generated Component */}
-            {currentComponent && !isProcessing && (
-                <View style={{ flex: 1, width: '100%' }}>
-                    <View style={{ 
-                        backgroundColor: '#ffffff',
-                        flex: 1,
-                        borderRadius: 8,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 4,
-                        elevation: 3
-                    }}>
+            {/* Empty State or Current Component */}
+            <View style={{ flex: 1, width: '100%' }}>
+                <View style={{ 
+                    backgroundColor: '#ffffff',
+                    flex: 1,
+                    borderRadius: 8,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 3,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}>
+                    {currentComponent && !isProcessing ? (
                         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 try {
@@ -525,9 +528,11 @@ export const VoiceAssistant = () => {
                                 }
                             })()}
                         </ScrollView>
-                    </View>
+                    ) : !isProcessing && (
+                        <EmptyState />
+                    )}
                 </View>
-            )}
+            </View>
 
             {/* Modals at root level */}
             <ViewCode 
