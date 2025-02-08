@@ -520,13 +520,15 @@ export const VoiceAssistant = () => {
                             })()}
                         </ScrollView>
                     </View>
-                    <ViewCode 
-                        isVisible={showSourceCode}
-                        onClose={() => setShowSourceCode(false)}
-                        code={currentComponentCode}
-                    />
                 </View>
             )}
+
+            {/* Modals at root level */}
+            <ViewCode 
+                isVisible={showSourceCode}
+                onClose={() => setShowSourceCode(false)}
+                code={currentComponentCode}
+            />
         </View>
     );
 };
