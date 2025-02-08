@@ -486,7 +486,7 @@ export const VoiceAssistant = () => {
                 presentationStyle="fullScreen"
                 onRequestClose={() => setShowDebugGeneration(false)}
             >
-                <RN.SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+                <RN.SafeAreaView style={{ flex: 1, backgroundColor: '#1a1a1a' }}>
                     <DebugGeneration
                         onClose={() => setShowDebugGeneration(false)}
                     />

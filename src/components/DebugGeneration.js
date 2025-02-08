@@ -84,7 +84,7 @@ function DebugGeneration({ onClose }) {
   const styles = {
     container: {
       flex: 1,
-      backgroundColor: '#fff',
+      backgroundColor: '#1a1a1a',
       position: 'absolute',
       top: 0,
       left: 0,
@@ -99,15 +99,18 @@ function DebugGeneration({ onClose }) {
       paddingHorizontal: 16,
       height: 56,
       borderBottomWidth: 1,
-      borderBottomColor: '#eee'
+      borderBottomColor: '#333'
     },
     title: {
       fontSize: 18,
-      fontWeight: '500'
+      fontWeight: '500',
+      color: '#fff'
     },
     closeButton: {
       fontSize: 24,
-      padding: 8
+      padding: 8,
+      color: '#fff',
+      opacity: 0.8
     },
     list: {
       flex: 1
@@ -115,15 +118,16 @@ function DebugGeneration({ onClose }) {
     item: {
       padding: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#eee'
+      borderBottomColor: '#333'
     },
     description: {
       fontSize: 16,
-      marginBottom: 4
+      marginBottom: 4,
+      color: '#fff'
     },
     url: {
       fontSize: 12,
-      color: '#666',
+      color: '#999',
       marginBottom: 8
     },
     generateButton: {
@@ -138,7 +142,7 @@ function DebugGeneration({ onClose }) {
     },
     timestamp: {
       fontSize: 12,
-      color: '#666',
+      color: '#999',
       marginTop: 4
     },
     modalContainer: {
@@ -216,7 +220,7 @@ function DebugGeneration({ onClose }) {
             React.createElement(RN.View, null,
               React.createElement(RN.View, { 
                 style: {
-                  backgroundColor: '#f5f5f5',
+                  backgroundColor: '#2a2a2a',
                   padding: 16,
                   borderRadius: 8,
                   marginBottom: 8
