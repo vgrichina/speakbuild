@@ -116,8 +116,7 @@ export const Header = ({
                 )}
             </View>
 
-            {currentComponent && (
-                <View style={{ overflow: 'visible' }}>
+            <View style={{ overflow: 'visible' }}>
                     <Pressable
                         onPress={() => setShowDebugMenu(!showDebugMenu)}
                         style={{
@@ -132,13 +131,20 @@ export const Header = ({
                     {showDebugMenu && (
                         <View style={styles.debugMenu}>
                             <Pressable
-                                style={styles.menuItem}
+                                style={[
+                                    styles.menuItem,
+                                    !currentComponent && { opacity: 0.5 }
+                                ]}
                                 onPress={() => {
+                                    if (!currentComponent) return;
                                     onToggleSourceCode();
                                     setShowDebugMenu(false);
                                 }}
                             >
-                                <Text style={styles.menuItemText}>
+                                <Text style={[
+                                    styles.menuItemText,
+                                    !currentComponent && { color: '#999' }
+                                ]}>
                                     {showSourceCode ? 'Hide source' : 'View source'}
                                 </Text>
                             </Pressable>
@@ -167,7 +173,7 @@ export const Header = ({
                         </View>
                     )}
                 </View>
-            )}
+            </View>
         </View>
     );
 };
