@@ -80,9 +80,7 @@ export const ResponseStream = ({
                     {isProcessing && <LoadingSpinner />}
                 </View>
                 <View style={{ minHeight: 100 }}>
-                    <Text>DEBUG: Start of content</Text>
-                    <Text style={{ color: '#000' }}>{responseStream || 'No content'}</Text>
-                    <Text>DEBUG: End of content</Text>
+                    <Text style={{ color: '#000' }}>{responseStream || ''}</Text>
                 </View>
             </View>
         </View>
