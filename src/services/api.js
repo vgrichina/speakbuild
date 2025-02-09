@@ -54,37 +54,13 @@ const createSSEFetch = (url, options) => {
             if (newData.length > 0) {
                 console.log('XHR: New data chunk:', newData.length, 'bytes');
                 lastProcessedIndex = xhr.responseText.length;
-
-                const lines = (buffer + newData).split('\n');
-                buffer = lines.pop() || '';  // Keep incomplete line for next time
-
-                for (const line of lines) {
-                    if (!line.trim() || line.startsWith(':')) continue;
-                    
-                    if (line.startsWith('data: ')) {
-                        const eventData = line.slice(6);
-                        if (eventData === '[DONE]') {
-                            if (resolveRead) {
-                                resolveRead({ value: new TextEncoder().encode(''), done: true });
-                                resolveRead = null;
-                            }
-                            continue;
-                        }
-
-                        try {
-                            const parsed = JSON.parse(eventData);
-                            const content = parsed.choices?.[0]?.delta?.content;
-                            if (content && resolveRead) {
-                                resolveRead({ 
-                                    value: new TextEncoder().encode(content), 
-                                    done: false 
-                                });
-                                resolveRead = null;
-                            }
-                        } catch (e) {
-                            console.warn('Failed to parse SSE event:', e);
-                        }
-                    }
+                
+                if (resolveRead) {
+                    resolveRead({ 
+                        value: new TextEncoder().encode(newData), 
+                        done: false 
+                    });
+                    resolveRead = null;
                 }
             }
         };
