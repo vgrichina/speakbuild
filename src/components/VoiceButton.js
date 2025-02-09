@@ -32,7 +32,7 @@ const PulsatingCircle = ({ isActive, volume }) => {
                 borderRadius: 32,
                 backgroundColor: '#EF4444',
                 opacity: 0.3,
-                transform: [{ scale: animation }],
+                transform: [{ scale: pulseAnimation }],
             }}
         />
     );
