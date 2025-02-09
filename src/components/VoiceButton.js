@@ -2,23 +2,24 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, Animated } from 'react-native';
 import { Square, MicOff, Mic, Loader2 } from 'lucide-react-native';
 
+// Animation value outside component to prevent recreation
+const pulseAnimation = new Animated.Value(1);
+
 const PulsatingCircle = ({ isActive, volume }) => {
-    const animation = React.useRef(new Animated.Value(1)).current;
+    const animConfig = React.useMemo(() => ({
+        toValue: 1 + (volume * 0.5),
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+    }), [volume]);
 
     React.useEffect(() => {
         if (isActive) {
-            // Scale based on volume (1.0 to 1.5)
-            const targetScale = 1 + (volume * 0.5);
-            Animated.spring(animation, {
-                toValue: targetScale,
-                friction: 3,
-                tension: 40,
-                useNativeDriver: true,
-            }).start();
+            Animated.spring(pulseAnimation, animConfig).start();
         } else {
-            animation.setValue(1);
+            pulseAnimation.setValue(1);
         }
-    }, [isActive, volume]);
+    }, [isActive, animConfig]);
 
     if (!isActive) return null;
 
