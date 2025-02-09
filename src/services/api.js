@@ -62,20 +62,21 @@ const createSSEFetch = (url, options) => {
             }
         };
 
-        xhr.onload = () => {
-            console.log('XHR: Load complete, status:', xhr.status);
-            if (xhr.status >= 200 && xhr.status < 300) {
-                resolve({
-                    ok: true,
-                    status: xhr.status,
-                    headers: new Headers({
-                        'Content-Type': 'text/event-stream',
-                        'Transfer-Encoding': 'chunked'
-                    }),
-                    body: { getReader: () => reader }
-                });
-            } else {
-                reject(new Error(`HTTP ${xhr.status}`));
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve({
+                        ok: true,
+                        status: xhr.status,
+                        headers: new Headers({
+                            'Content-Type': 'text/event-stream',
+                            'Transfer-Encoding': 'chunked'
+                        }),
+                        body: { getReader: () => reader }
+                    });
+                } else {
+                    reject(new Error(`HTTP ${xhr.status}`));
+                }
             }
         };
 
