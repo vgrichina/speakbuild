@@ -333,6 +333,7 @@ export const VoiceAssistant = () => {
                 } finally {
                     setIsProcessing(false);
                     setModificationIntent(null);
+                    setResponseStream(''); // Clear response stream when done
                 }
             };
 
