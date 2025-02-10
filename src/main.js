@@ -7,6 +7,7 @@ import { useComponentHistory } from './hooks/useComponentHistory';
 import { useSettings } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
+import { createComponent, renderComponent } from './utils/componentUtils';
 
 
 
