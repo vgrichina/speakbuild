@@ -9,7 +9,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 
 import { createComponent, renderComponent } from '../utils/componentUtils';
 
-function DebugGeneration({ onClose }) {
+function DebugGeneration({ onClose, selectedModel }) {
   const [widgets, setWidgets] = useState([]);
   const [generating, setGenerating] = useState(null);
   const [selectedWidget, setSelectedWidget] = useState(null);
@@ -40,7 +40,7 @@ function DebugGeneration({ onClose }) {
       for await (const chunk of streamComponent(
         testCase,
         null,
-        'anthropic/claude-3.5-sonnet',
+        selectedModel,
         new AbortController()
       )) {
         if (chunk.done && chunk.code) {

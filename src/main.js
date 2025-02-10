@@ -451,6 +451,7 @@ export const VoiceAssistant = () => {
                 <RN.SafeAreaView style={{ flex: 1, backgroundColor: '#1a1a1a' }}>
                     <DebugGeneration
                         onClose={() => setShowDebugGeneration(false)}
+                        selectedModel={selectedModel}
                     />
                 </RN.SafeAreaView>
             </RN.Modal>
