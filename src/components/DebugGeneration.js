@@ -5,6 +5,7 @@ import { streamComponent } from '../services/componentGenerator';
 import testCases from '../evaluation/generationTestCases.json';
 import { ExpoModules } from '../expo-modules';
 import { ViewCode } from './ViewCode';
+import { ErrorBoundary } from './ErrorBoundary';
 
 const createComponentFromCode = (code, params = {}) => {
   try {
@@ -12,13 +13,17 @@ const createComponentFromCode = (code, params = {}) => {
       const React = arguments[0];
       const RN = arguments[1];
       const Expo = arguments[2];
-      const { useState } = React;
+      const { useState, useErrorBoundary } = React;
       ${code}
       return Component;
     `;
     const createComponent = new Function(componentCode);
     const GeneratedComponent = createComponent(React, RN, ExpoModules);
-    return React.createElement(GeneratedComponent, params);
+    return React.createElement(ErrorBoundary, {
+      onError: (error) => {
+        console.error('Generated component error:', error);
+      }
+    }, React.createElement(GeneratedComponent, params));
   } catch (error) {
     console.error('Component render error:', error);
     return React.createElement(RN.Text, {
