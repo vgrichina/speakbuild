@@ -91,9 +91,9 @@
     {
       "description": "Component with async error",
       "intent": "new",
-      "widgetUrl": "test/error/async/light?params=triggerError:boolean,delay:integer",
+      "widgetUrl": "test/error/useErrorBoundaryHook/light?params=throwError:boolean,delay:integer",
       "params": {
-        "triggerError": true,
+        "throwError": true,
         "delay": 1000
       }
     }
