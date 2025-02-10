@@ -291,7 +291,7 @@ export const VoiceAssistant = () => {
                         const React = arguments[0];
                         const RN = arguments[1];
                         const Expo = arguments[2];
-                        const { useState } = React;
+                        const { useState, useErrorBoundary } = React;
                         ${code}
                         return Component;
                     `;

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ErrorBoundaryProvider } from '../hooks/useErrorBoundary';
 import { ErrorDetails } from './ErrorDetails';
 
 class ErrorBoundaryClass extends React.Component {
@@ -62,9 +61,7 @@ class ErrorBoundaryClass extends React.Component {
 export function ErrorBoundary({ children, onError }) {
   return (
     <ErrorBoundaryClass onError={onError}>
-      <ErrorBoundaryProvider onError={onError}>
-        {children}
-      </ErrorBoundaryProvider>
+      {children}
     </ErrorBoundaryClass>
   );
 }
