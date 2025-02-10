@@ -512,20 +512,9 @@ export const VoiceAssistant = () => {
                     {currentComponent ? (
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
-                                try {
-                                    const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
-                                    console.log('Rendering component with params:', params);
-                                    return React.createElement(currentComponent, params);
-                                } catch (error) {
-                                    console.error('Component render error:', error);
-                                    return (
-                                        <View style={{ padding: 16, backgroundColor: '#FEE2E2' }}>
-                                            <Text style={{ color: '#DC2626' }}>
-                                                Failed to render component: {error.message}
-                                            </Text>
-                                        </View>
-                                    );
-                                }
+                                const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
+                                console.log('Rendering component with params:', params);
+                                return renderComponent(currentComponent, params);
                             })()}
                         </ScrollView>
                     ) : (

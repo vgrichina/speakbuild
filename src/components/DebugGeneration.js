@@ -7,30 +7,7 @@ import { ExpoModules } from '../expo-modules';
 import { ViewCode } from './ViewCode';
 import { ErrorBoundary } from './ErrorBoundary';
 
-const createComponentFromCode = (code, params = {}) => {
-  try {
-    const componentCode = `
-      const React = arguments[0];
-      const RN = arguments[1];
-      const Expo = arguments[2];
-      const { useState, useErrorBoundary } = React;
-      ${code}
-      return Component;
-    `;
-    const createComponent = new Function(componentCode);
-    const GeneratedComponent = createComponent(React, RN, ExpoModules);
-    return React.createElement(ErrorBoundary, {
-      onError: (error) => {
-        console.error('Generated component error:', error);
-      }
-    }, React.createElement(GeneratedComponent, params));
-  } catch (error) {
-    console.error('Component render error:', error);
-    return React.createElement(RN.Text, {
-      style: { color: '#DC2626' }
-    }, `Error rendering component: ${error.message}`);
-  }
-};
+import { createComponent, renderComponent } from '../utils/componentUtils';
 
 function DebugGeneration({ onClose }) {
   const [widgets, setWidgets] = useState([]);
@@ -236,7 +213,17 @@ function DebugGeneration({ onClose }) {
                   elevation: 3
                 }
               },
-                createComponentFromCode(widget.stored.code, widget.params)
+                (() => {
+                  try {
+                    const GeneratedComponent = createComponent(widget.stored.code);
+                    return renderComponent(GeneratedComponent, widget.params);
+                  } catch (error) {
+                    console.error('Component creation error:', error);
+                    return React.createElement(RN.Text, {
+                      style: { color: '#DC2626' }
+                    }, `Error creating component: ${error.message}`);
+                  }
+                })()
               ),
               React.createElement(RN.TouchableOpacity, {
                 style: [
