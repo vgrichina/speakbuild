@@ -79,6 +79,23 @@
         "items": [],
         "showDates": true
       }
+    },
+    {
+      "description": "Component with render error",
+      "intent": "new",
+      "widgetUrl": "test/error/render/light?params=triggerError:boolean",
+      "params": {
+        "triggerError": true
+      }
+    },
+    {
+      "description": "Component with async error",
+      "intent": "new",
+      "widgetUrl": "test/error/async/light?params=triggerError:boolean,delay:integer",
+      "params": {
+        "triggerError": true,
+        "delay": 1000
+      }
     }
   ]
 }
