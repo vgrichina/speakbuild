@@ -46,9 +46,13 @@ Key requirements:
 - Start with either 'function Component(props) {' or 'function Component({prop1, prop2}) {'
 - Use ONLY the exact parameter names from the URL's params
 
-Example component pattern:
+Example component patterns:
+
+1. Basic Component with Error Button:
 \`\`\`
 function Component(props) {
+  const throwError = useErrorBoundary();
+  
   const styles = {
     container: {
       flex: 1,
@@ -63,6 +67,16 @@ function Component(props) {
       marginTop: 8,
       fontFamily: RN.Platform.OS === 'ios' ? 'Helvetica' : 'Roboto',
       fontSize: props.size || 16
+    },
+    errorButton: {
+      backgroundColor: '#EF4444',
+      padding: 8,
+      borderRadius: 4,
+      marginTop: 8
+    },
+    buttonText: {
+      color: 'white',
+      textAlign: 'center'
     }
   };
 
@@ -76,7 +90,15 @@ function Component(props) {
     }),
     React.createElement(RN.Text, {
       style: styles.text
-    }, props.text)
+    }, props.text),
+    React.createElement(RN.TouchableOpacity, {
+      style: styles.errorButton,
+      onPress: () => throwError(new Error('Button error triggered'))
+    },
+      React.createElement(RN.Text, { style: styles.buttonText }, 
+        'Trigger Error'
+      )
+    )
   );
 }
 \`\`\``
