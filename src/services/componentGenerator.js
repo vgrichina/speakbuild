@@ -1,3 +1,6 @@
+import React from 'react';
+import * as RN from 'react-native';
+import { ExpoModules } from '../expo-modules';
 import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -136,10 +139,58 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
         widgetUrl: analysis.widgetUrl
     });
 
+    let fullResponse = '';
+
     for await (const chunk of api.streamCompletion(currentApiKey, messages, {
         abortController,
         model: selectedModel
     })) {
-        yield chunk;
+        if (chunk.content) {
+            fullResponse += chunk.content;
+            yield { content: chunk.content };
+        }
+        
+        if (chunk.done) {
+            // Extract and validate code
+            const codeMatch = fullResponse.match(/```(?:jsx|javascript|)?\s*([\s\S]*?)```/);
+            if (!codeMatch) {
+                throw new Error('No code block found in response');
+            }
+            const rawCode = codeMatch[1].trim();
+            
+            // Validate component format
+            if (!rawCode.match(/function Component\((props|\{[^}]*\})\)/)) {
+                throw new Error('Invalid component code format - must use function Component(props) or function Component({prop1, prop2})');
+            }
+
+            // Create component function with proper scope access
+            const componentCode = `
+                const React = arguments[0];
+                const RN = arguments[1];
+                const Expo = arguments[2];
+                const { useState, useErrorBoundary } = React;
+                ${rawCode}
+                return Component;
+            `;
+
+            // Test component creation and rendering
+            try {
+                const createComponent = new Function(componentCode);
+                const GeneratedComponent = createComponent(React, RN, ExpoModules);
+                
+                // Test render with params if provided
+                const testParams = analysis.params || {};
+                React.createElement(GeneratedComponent, testParams);
+
+                yield { 
+                    content: '', 
+                    done: true,
+                    component: GeneratedComponent,
+                    code: componentCode
+                };
+            } catch (error) {
+                throw new Error(`Component creation failed: ${error.message}`);
+            }
+        }
     }
 }

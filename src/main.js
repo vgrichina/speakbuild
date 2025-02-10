@@ -274,58 +274,17 @@ export const VoiceAssistant = () => {
                 try {
                     console.log('Full response:', response);
 
-                    // Extract code from markdown code block with more flexible pattern
-                    const codeMatch = response.match(/```(?:jsx|javascript|)?\s*([\s\S]*?)```/);
-                    if (!codeMatch) {
-                        console.error('Response content:', response);
-                        throw new Error('No code block found in response');
-                    }
-                    const code = codeMatch[1].trim();
-                    console.log(`Component << ${code}`);
-
-                    if (!code.match(/function Component\((props|\{[^}]*\})\)/)) {
-                        throw new Error('Invalid component code format - must use function Component(props) or function Component({prop1, prop2})');
-                    }
-
-                    // Create component function with proper scope access
-                    const componentCode = `
-                        const React = arguments[0];
-                        const RN = arguments[1];
-                        const Expo = arguments[2];
-                        const { useState, useErrorBoundary } = React;
-                        ${code}
-                        return Component;
-                    `;
-
-                    // Create and execute the function with React and RN components in scope
-                    const createComponent = new Function(componentCode);
-                    const GeneratedComponent = createComponent(React, RN, ExpoModules);
-
-                    // Test render before storing
-                    const testParams = analysis.params || {};
-                    try {
-                        React.createElement(GeneratedComponent, testParams);
+                    if (chunk.done && chunk.component && chunk.code) {
+                        await widgetStorage.store(analysis.widgetUrl, chunk.code);
+                        addToHistory({
+                            component: chunk.component,
+                            code: chunk.code,
+                            request: text,
+                            params: analysis.params || {}
+                        });
                         
-                        // Only store and add to history if render succeeds
-                        widgetStorage.store(analysis.widgetUrl, componentCode)
-                            .then(() => {
-                                addToHistory({
-                                    component: GeneratedComponent,
-                                    code: componentCode,
-                                    request: text,
-                                    params: testParams
-                                });
-                                // Clear states only on success
-                                setError('');
-                                setTranscribedText('');
-                            })
-                            .catch(error => {
-                                console.error('Widget storage error:', error);
-                                setError(`Storage error: ${error.message}`);
-                            });
-                    } catch (error) {
-                        console.error('Component render error:', error);
-                        setError(`Component error: ${error.message}`);
+                        setError('');
+                        setTranscribedText('');
                     }
 
                 } catch (error) {

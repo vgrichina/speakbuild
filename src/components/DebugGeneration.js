@@ -37,26 +37,17 @@ function DebugGeneration({ onClose }) {
   const generateWidget = async (testCase) => {
     setGenerating(testCase.widgetUrl);
     try {
-      let componentCode = '';
       for await (const chunk of streamComponent(
         testCase,
         null,
         'anthropic/claude-3.5-sonnet',
         new AbortController()
       )) {
-        if (chunk.content) {
-          componentCode += chunk.content;
+        if (chunk.done && chunk.code) {
+          await widgetStorage.store(testCase.widgetUrl, chunk.code);
+          break;
         }
       }
-
-      // Extract code from markdown code block
-      const codeMatch = componentCode.match(/```(?:jsx|javascript|)?\s*([\s\S]*?)```/);
-      if (!codeMatch) {
-        throw new Error('No code block found in response');
-      }
-      const code = codeMatch[1].trim();
-
-      await widgetStorage.store(testCase.widgetUrl, code);
       await loadWidgets();
     } finally {
       setGenerating(null);
