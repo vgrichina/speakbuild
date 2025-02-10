@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ErrorDetails } from './ErrorDetails';
 
-class ErrorBoundaryClass extends React.Component {
+export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { 
@@ -56,14 +56,6 @@ class ErrorBoundaryClass extends React.Component {
 
     return this.props.children;
   }
-}
-
-export function ErrorBoundary({ children, onError }) {
-  return (
-    <ErrorBoundaryClass onError={onError}>
-      {children}
-    </ErrorBoundaryClass>
-  );
 }
 
 const styles = StyleSheet.create({
