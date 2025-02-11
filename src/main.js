@@ -284,11 +284,12 @@ export const VoiceAssistant = () => {
                         setResponseStream(prev => prev + content);
                     }
                     
-                    if (done && component && code) {
+                    if (done && code) {
+                        const GeneratedComponent = createComponent(code);
                         widgetStorage.store(analysis.widgetUrl, code)
                             .then(() => {
                                 addToHistory({
-                                    component,
+                                    component: GeneratedComponent,
                                     code,
                                     request: text,
                                     params: analysis.params || {}
