@@ -270,42 +270,9 @@ export const VoiceAssistant = () => {
             setModificationIntent(analysis.intent);
             console.log('Making OpenRouter API request...');
             
-            const processCompleteResponse = (response) => {
-                try {
-                    console.log('Full response:', response);
-
-                    if (chunk.done && chunk.component && chunk.code) {
-                        widgetStorage.store(analysis.widgetUrl, chunk.code)
-                            .then(() => {
-                                addToHistory({
-                                    component: chunk.component,
-                                    code: chunk.code,
-                                    request: text,
-                                    params: analysis.params || {}
-                                });
-                                
-                                setError('');
-                                setTranscribedText('');
-                            })
-                            .catch(error => {
-                                console.error('Storage error:', error);
-                                setError(`Storage error: ${error.message}`);
-                            });
-                    }
-
-                } catch (error) {
-                    console.error('Error creating component:', error);
-                    setError(`Failed to create component: ${error.message}`);
-                } finally {
-                    setIsProcessing(false);
-                    setModificationIntent(null);
-                    setResponseStream(''); // Clear response stream when done
-                }
-            };
-
             try {
                 setError(''); // Clear error at start of stream
-                for await (const { content, fullResponse, done } of streamComponent(
+                for await (const { content, component, code, done } of streamComponent(
                     analysis,
                     currentComponentCode,
                     selectedModel,
@@ -317,8 +284,28 @@ export const VoiceAssistant = () => {
                     if (content) {
                         setResponseStream(prev => prev + content);
                     }
-                    if (done) {
-                        processCompleteResponse(fullResponse);
+                    
+                    if (done && component && code) {
+                        widgetStorage.store(analysis.widgetUrl, code)
+                            .then(() => {
+                                addToHistory({
+                                    component,
+                                    code,
+                                    request: text,
+                                    params: analysis.params || {}
+                                });
+                                
+                                setError('');
+                                setTranscribedText('');
+                            })
+                            .catch(error => {
+                                console.error('Storage error:', error);
+                                setError(`Storage error: ${error.message}`);
+                            });
+                            
+                        setIsProcessing(false);
+                        setModificationIntent(null);
+                        setResponseStream(''); // Clear response stream when done
                     }
                 }
             } catch (error) {
