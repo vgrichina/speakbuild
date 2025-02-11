@@ -34,9 +34,7 @@ cd voice-assistant
 yarn install
 ```
 
-3. Install the Expo Go app on your mobile device
-
-4. Configure environment:
+3. Configure environment:
 - Set up OpenRouter API key in app settings
 - Configure required permissions:
   - Microphone access
@@ -45,22 +43,20 @@ yarn install
 
 ### Running the App
 
-```bash
-# Start the Expo development server
-yarn start
+This app requires a native build due to dependencies on native modules (speech recognition, etc). It cannot run in Expo Go.
 
-# Run on iOS
+```bash
+# Build and run on iOS simulator/device
 yarn ios
 
-# Run on Android
+# Build and run on Android emulator/device
 yarn android
 
-# Run on web
-yarn web
-
-# Clean cache if needed
+# Clean build cache if needed
 yarn clean
 ```
+
+Note: Web platform support is limited due to native module dependencies.
 
 ## How It Works
 
