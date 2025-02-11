@@ -1,10 +1,6 @@
-import React from 'react';
-import * as RN from 'react-native';
-import { ExpoModules } from '../expo-modules';
 import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createComponent } from '../utils/componentUtils';
 
 const SYSTEM_PROMPT = {
     role: 'system',
@@ -204,23 +200,23 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
                 throw new Error('Invalid component code format - must use function Component(props) or function Component({prop1, prop2})');
             }
 
-            // Create and test component
-            try {
-                const GeneratedComponent = createComponent(rawCode);
-                
-                // Test render with params if provided
-                const testParams = analysis.params || {};
-                React.createElement(GeneratedComponent, testParams);
+            // Create component code
+            const componentCode = `
+                const React = arguments[0];
+                const RN = arguments[1];
+                const Expo = arguments[2];
+                const { useState } = React;
+                const useErrorBoundary = arguments[3];
+                ${rawCode}
+                return Component;
+            `;
 
-                yield { 
-                    content: '', 
-                    done: true,
-                    component: GeneratedComponent,
-                    code: rawCode
-                };
-            } catch (error) {
-                throw new Error(`Component creation failed: ${error.message}`);
-            }
+            yield { 
+                content: '', 
+                done: true,
+                code: rawCode,
+                componentCode
+            };
         }
     }
 }
