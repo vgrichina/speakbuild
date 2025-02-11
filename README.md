@@ -106,7 +106,9 @@ Number Types:
 Arrays:
 - `caption[]`: Lists of short items
 - `sentence[]`: Lists of tasks/notes
-- `object[]`: Structured data
+- `{text:string,done:boolean}[]`: Basic todo items
+- `{text:string,done:boolean,time:string}[]`: Scheduled todo items
+- `{text:string,selected:boolean,value:string}[]`: Selection list items
 
 ## Technical Architecture
 

@@ -168,8 +168,12 @@ Parameter Types and Naming:
     Examples: items:["Milk", "Eggs"]
   - sentence[]: for lists of tasks/notes
     Examples: items:["Call mom at 5pm", "Buy groceries"]
-  - object[]: for structured data
+  - {text:string,done:boolean}[]: for basic todo items
     Examples: items:[{text:"Buy milk", done:false}]
+  - {text:string,done:boolean,time:string}[]: for scheduled todos
+    Examples: items:[{text:"Buy groceries", done:false, time:"17:00"}]
+  - {text:string,selected:boolean,value:string}[]: for selection lists
+    Examples: items:[{text:"Option 1", selected:false, value:"opt1"}]
 
 Note: All parameters are passed directly as props to the React Native component.
 Parameters should use the most specific type available.
