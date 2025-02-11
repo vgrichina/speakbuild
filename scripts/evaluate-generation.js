@@ -20,8 +20,8 @@ async function runEvaluation({
         let fullResponse = '';
         
         try {
-            let lastFullResponse = '';
-            for await (const { content, fullResponse: currentFullResponse, done } of streamComponent(
+            let generatedCode = '';
+            for await (const { content, code, done } of streamComponent(
                 testCase,
                 testCase.currentComponentCode || null,
                 model,
@@ -30,11 +30,11 @@ async function runEvaluation({
                 if (content) {
                     process.stdout.write(content); // Show progress
                 }
-                if (done) {
-                    lastFullResponse = currentFullResponse;
+                if (done && code) {
+                    generatedCode = code;
                 }
             }
-            fullResponse = lastFullResponse;
+            fullResponse = generatedCode;
 
             results.push({
                 widgetUrl: testCase.widgetUrl,
