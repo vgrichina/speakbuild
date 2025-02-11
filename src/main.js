@@ -275,16 +275,22 @@ export const VoiceAssistant = () => {
                     console.log('Full response:', response);
 
                     if (chunk.done && chunk.component && chunk.code) {
-                        await widgetStorage.store(analysis.widgetUrl, chunk.code);
-                        addToHistory({
-                            component: chunk.component,
-                            code: chunk.code,
-                            request: text,
-                            params: analysis.params || {}
-                        });
-                        
-                        setError('');
-                        setTranscribedText('');
+                        widgetStorage.store(analysis.widgetUrl, chunk.code)
+                            .then(() => {
+                                addToHistory({
+                                    component: chunk.component,
+                                    code: chunk.code,
+                                    request: text,
+                                    params: analysis.params || {}
+                                });
+                                
+                                setError('');
+                                setTranscribedText('');
+                            })
+                            .catch(error => {
+                                console.error('Storage error:', error);
+                                setError(`Storage error: ${error.message}`);
+                            });
                     }
 
                 } catch (error) {
