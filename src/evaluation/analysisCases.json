@@ -245,6 +245,28 @@
           "showDates": true
         }
       }
+    },
+    {
+      "request": "Tell me about the Roman Empire",
+      "expected": {
+        "intent": "new",
+        "widgetUrl": "content/article/expandable/light?with_sections=yes&params=title:title,summary:paragraph,sections:{title:string,content:story}[],showTableOfContents:boolean",
+        "params": {
+          "title": "The Roman Empire",
+          "summary": "The Roman Empire was one of the largest and most influential civilizations in world history...",
+          "sections": [
+            {
+              "title": "Rise of the Empire",
+              "content": "The Roman Empire emerged from the Roman Republic..."
+            },
+            {
+              "title": "Peak and Golden Age",
+              "content": "Under the reign of Augustus and his successors..."
+            }
+          ],
+          "showTableOfContents": true
+        }
+      }
     }
   ]
 }

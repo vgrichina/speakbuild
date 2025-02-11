@@ -54,6 +54,27 @@ Example flows:
 }
 
 // Using ISO date for 7-day forecast starting tomorrow
+"Tell me about the Roman Empire" ->
+{
+    "intent": "new",
+    "widgetUrl": "content/article/expandable/light?with_sections=yes&params=title:title,summary:paragraph,sections:{title:string,content:story}[],showTableOfContents:boolean",
+    "params": {
+        "title": "The Roman Empire",
+        "summary": "The Roman Empire was one of the largest and most influential civilizations in world history...",
+        "sections": [
+            {
+                "title": "Rise of the Empire",
+                "content": "The Roman Empire emerged from the Roman Republic..."
+            },
+            {
+                "title": "Peak and Golden Age",
+                "content": "Under the reign of Augustus and his successors..."
+            }
+        ],
+        "showTableOfContents": true
+    }
+}
+
 "Show me the weather for next week" ->
 {
     "intent": "new",
@@ -112,6 +133,7 @@ URLs use:
   - interactive: for user actions (timer, player, calculator)
   - feedback: for system responses (progress, loading, alerts)
   - media: for rich content (images, video, audio)
+  - content: for educational/informational content (articles, explanations, facts)
 - Generation features: with_feature=yes
   These flags indicate widget capabilities at generation time:
   - with_controls: add play/pause/reset controls
