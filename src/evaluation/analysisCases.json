@@ -210,7 +210,7 @@
       "request": "Create a todo list for today",
       "expected": {
         "intent": "new",
-        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:caption,items:object[],showDates:boolean",
+        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:caption,items:{text:string,done:boolean,time:string}[],showDates:boolean",
         "params": {
           "title": "Today's Tasks",
           "items": [],
@@ -232,7 +232,7 @@
       ],
       "expected": {
         "intent": "modify",
-        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:string,items:object[],showDates:boolean",
+        "widgetUrl": "input/todo/list/light?with_dates=yes&params=title:string,items:{text:string,done:boolean,time:string}[],showDates:boolean",
         "params": {
           "title": "Today's Tasks",
           "items": [
