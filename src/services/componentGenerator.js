@@ -4,6 +4,7 @@ import { ExpoModules } from '../expo-modules';
 import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createComponent } from '../utils/componentUtils';
 
 const SYSTEM_PROMPT = {
     role: 'system',
@@ -163,21 +164,9 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
                 throw new Error('Invalid component code format - must use function Component(props) or function Component({prop1, prop2})');
             }
 
-            // Create component function with proper scope access
-            const componentCode = `
-                const React = arguments[0];
-                const RN = arguments[1];
-                const Expo = arguments[2];
-                const useErrorBoundary = arguments[3];
-                const { useState } = React;
-                ${rawCode}
-                return Component;
-            `;
-
-            // Test component creation and rendering
+            // Create and test component
             try {
-                const createComponent = new Function(componentCode);
-                const GeneratedComponent = createComponent(React, RN, ExpoModules, useErrorBoundary);
+                const GeneratedComponent = createComponent(rawCode);
                 
                 // Test render with params if provided
                 const testParams = analysis.params || {};
