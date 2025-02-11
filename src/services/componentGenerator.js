@@ -168,7 +168,8 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
                 const React = arguments[0];
                 const RN = arguments[1];
                 const Expo = arguments[2];
-                const { useState, useErrorBoundary } = React;
+                const useErrorBoundary = arguments[3];
+                const { useState } = React;
                 ${rawCode}
                 return Component;
             `;
@@ -176,7 +177,7 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
             // Test component creation and rendering
             try {
                 const createComponent = new Function(componentCode);
-                const GeneratedComponent = createComponent(React, RN, ExpoModules);
+                const GeneratedComponent = createComponent(React, RN, ExpoModules, useErrorBoundary);
                 
                 // Test render with params if provided
                 const testParams = analysis.params || {};
