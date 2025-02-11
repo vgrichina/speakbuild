@@ -176,7 +176,7 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
                     content: '', 
                     done: true,
                     component: GeneratedComponent,
-                    code: componentCode
+                    code: rawCode
                 };
             } catch (error) {
                 throw new Error(`Component creation failed: ${error.message}`);
