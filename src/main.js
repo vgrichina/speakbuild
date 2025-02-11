@@ -245,9 +245,8 @@ export const VoiceAssistant = () => {
             if (cachedWidget) {
                 console.log('Found cached widget:', analysis.widgetUrl);
                 try {
-                    // Create and execute the function with React and RN components in scope
-                    const createComponent = new Function(cachedWidget.code);
-                    const GeneratedComponent = createComponent(React, RN, ExpoModules);
+                    // Create component using our utility function
+                    const GeneratedComponent = createComponent(cachedWidget.code);
 
                     // Add to history
                     addToHistory({
