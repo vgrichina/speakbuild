@@ -167,23 +167,17 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
                         <View style={{ gap: 8 }}>
                             <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
                             <View style={{ maxHeight: 150 }}>
-                                {isLoadingLanguages ? (
-                                    <View style={{ padding: 20, alignItems: 'center' }}>
-                                        <ActivityIndicator size="small" color="#3B82F6" />
-                                        <Text style={{ marginTop: 8, color: '#666' }}>Loading languages...</Text>
-                                    </View>
-                                ) : (
-                                    <FlatList
-                                        data={languages}
-                                        keyExtractor={item => item.code}
-                                        style={{ maxHeight: 150 }}
-                                        getItemLayout={(data, index) => ({
-                                            length: 44, // Fixed height for each item
-                                            offset: 44 * index,
-                                            index,
-                                        })}
-                                        initialScrollIndex={languages.findIndex(l => l.code === selectedLanguage)}
-                                        renderItem={({ item }) => (
+                                <FlatList
+                                    data={LANGUAGES}
+                                    keyExtractor={item => item.code}
+                                    style={{ maxHeight: 150 }}
+                                    getItemLayout={(data, index) => ({
+                                        length: 44, // Fixed height for each item
+                                        offset: 44 * index,
+                                        index,
+                                    })}
+                                    initialScrollIndex={LANGUAGES.findIndex(l => l.code === selectedLanguage)}
+                                    renderItem={({ item }) => (
                                             <Pressable
                                                 style={[
                                                     styles.languageOption,
@@ -230,7 +224,7 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
                         </View>
 
                         <Pressable
-                            style={[styles.button, !draftKey && styles.buttonDisabled]}
+                            style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
                             onPress={() => {
                                 if (draftUltravoxKey && draftOpenrouterKey) {
                                     onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
