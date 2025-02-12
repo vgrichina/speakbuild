@@ -1,80 +1,73 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
+import { UltravoxClient } from '../services/ultravox';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTrackVolume } from '@livekit/react-native';
+import { SYSTEM_PROMPT } from '../services/analysis';
 
-export function useSpeechRecognition({ onTranscription, selectedLanguage, onError }) {
+export function useSpeechRecognition({ onTranscription, onAnalysis, onError, selectedModel }) {
+    const [client, setClient] = useState(null);
     const [isListening, setIsListening] = useState(false);
-    const [volume, setVolume] = useState(0);
     const [partialResults, setPartialResults] = useState('');
-    const [hasSpeechPermission, setHasSpeechPermission] = useState(false);
+    const [localTrack, setLocalTrack] = useState(null);
+
+    // Use LiveKit's volume hook
+    const volume = useTrackVolume(localTrack);
 
     useEffect(() => {
-        const checkPermissions = async () => {
-            const result = await ExpoSpeechRecognitionModule.getPermissionsAsync();
-            if (result.granted) {
-                setHasSpeechPermission(true);
-            } else if (result.canAskAgain) {
-                const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-                setHasSpeechPermission(granted);
-            }
-        };
-        checkPermissions();
-    }, []);
-
-    useSpeechRecognitionEvent("start", () => setIsListening(true));
-    useSpeechRecognitionEvent("end", () => {
-        setIsListening(false);
-        setVolume(0);
-    });
-
-    useSpeechRecognitionEvent("result", (event) => {
-        if (event.results?.[0]) {
-            if (event.isFinal) {
-                onTranscription(event.results[0].transcript);
-                setVolume(0);
+        const ultravoxClient = new UltravoxClient();
+        
+        ultravoxClient.onTranscript((transcript) => {
+            if (transcript.isFinal) {
+                onTranscription?.(transcript.text);
             } else {
-                setPartialResults(event.results[0].transcript);
+                setPartialResults(transcript.text);
             }
-        }
-    });
+        });
 
-    useSpeechRecognitionEvent("volumechange", (event) => {
-        if (typeof event.value === 'number') {
-            const normalizedVolume = Math.max(0, Math.min(1, (event.value + 2) / 12));
-            setVolume(normalizedVolume);
-        }
-    });
+        ultravoxClient.onStatusChange((status) => {
+            setIsListening(status === 'listening');
+        });
 
-    useSpeechRecognitionEvent("error", (event) => {
-        onError?.(`Recognition error: ${event.error}`);
-        setIsListening(false);
-    });
+        ultravoxClient.onTrackCreated((track) => {
+            setLocalTrack(track);
+        });
+
+        setClient(ultravoxClient);
+
+        return () => {
+            ultravoxClient.disconnect();
+        };
+    }, []);
 
     const toggleListening = useCallback(async () => {
         try {
             if (isListening) {
-                await ExpoSpeechRecognitionModule.stop();
+                await client?.disconnect();
+                setIsListening(false);
+                setLocalTrack(null);
             } else {
-                setPartialResults('');
-                await ExpoSpeechRecognitionModule.start({
-                    lang: selectedLanguage,
-                    interimResults: true,
-                    maxAlternatives: 1,
-                    volumeChangeEventOptions: {
-                        enabled: true,
-                        intervalMillis: 300
-                    }
+                const ultravoxKey = await AsyncStorage.getItem('ultravox_api_key');
+                if (!ultravoxKey) {
+                    throw new Error('Ultravox API key not found');
+                }
+
+                await client?.createAndJoinCall(ultravoxKey, {
+                    systemPrompt: SYSTEM_PROMPT.content,
+                    model: selectedModel
                 });
+                setIsListening(true);
             }
         } catch (error) {
-            onError?.(`Toggle error: ${error.message}`);
+            onError?.(error.message);
+            setIsListening(false);
         }
-    }, [isListening, selectedLanguage]);
+    }, [isListening, client, selectedModel]);
 
     return {
         isListening,
         volume,
         partialResults,
-        hasSpeechPermission,
+        hasSpeechPermission: true, // Always true since we handle permissions in LiveKit
         toggleListening
     };
 }
