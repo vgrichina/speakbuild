@@ -17,6 +17,11 @@ export class UltravoxClient {
     this._localAudioTrack = null;
     this._onTranscript = null;
     this._onStatusChange = null;
+    this._onTrackCreated = null;
+  }
+
+  onTrackCreated(callback) {
+    this._onTrackCreated = callback;
   }
 
   get status() { return this._status; }
@@ -66,6 +71,7 @@ export class UltravoxClient {
       ]);
 
       this._localAudioTrack = track;
+      this._onTrackCreated?.(track);
       await this._room.localParticipant.publishTrack(track);
       
       this._setStatus(UltravoxStatus.IDLE);
