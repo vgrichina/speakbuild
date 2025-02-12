@@ -68,8 +68,9 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, onSave, selectedModel }) => {
-    const [draftKey, setDraftKey] = useState('');
+export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKey, onSave, selectedModel }) => {
+    const [draftUltravoxKey, setDraftUltravoxKey] = useState('');
+    const [draftOpenrouterKey, setDraftOpenrouterKey] = useState('');
     const [draftModel, setDraftModel] = useState(selectedModel);
 
     useEffect(() => {
@@ -81,12 +82,12 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, onSave, selecte
 
     // Reset drafts when modal opens
     React.useEffect(() => {
-        if (isOpen && apiKey !== null && selectedLanguage !== null && selectedModel !== null) {
-            setDraftKey(apiKey);
-            setDraftLanguage(selectedLanguage);
-            setDraftModel(selectedModel);
+        if (isOpen) {
+            setDraftUltravoxKey(ultravoxApiKey || '');
+            setDraftOpenrouterKey(openrouterApiKey || '');
+            setDraftModel(selectedModel || '');
         }
-    }, [isOpen, apiKey, selectedLanguage, selectedModel]);
+    }, [isOpen, ultravoxApiKey, openrouterApiKey, selectedModel]);
 
     return (
         <Modal
@@ -121,22 +122,42 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, onSave, selecte
                 </View>
                 <View style={{ flex: 1, padding: 16 }}>
                     <View style={{ gap: 24, flex: 1 }}>
-                        <View style={{ gap: 16 }}>
-                            <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
-                            <TextInput
-                                secureTextEntry
-                                value={draftKey}
-                                onChangeText={setDraftKey}
-                                style={styles.input}
-                                placeholder="ultravox-..."
-                            />
-                            <Pressable 
-                                onPress={() => Linking.openURL('https://ultravox.ai/dashboard')}
-                                style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                            >
-                                <Key size={12} color="#3B82F6" />
-                                <Text style={{ color: '#3B82F6' }}>Get your API key</Text>
-                            </Pressable>
+                        <View style={{ gap: 24 }}>
+                            <View style={{ gap: 16 }}>
+                                <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
+                                <TextInput
+                                    secureTextEntry
+                                    value={draftUltravoxKey}
+                                    onChangeText={setDraftUltravoxKey}
+                                    style={styles.input}
+                                    placeholder="ultravox-..."
+                                />
+                                <Pressable 
+                                    onPress={() => Linking.openURL('https://ultravox.ai/dashboard')}
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                >
+                                    <Key size={12} color="#3B82F6" />
+                                    <Text style={{ color: '#3B82F6' }}>Get Ultravox API key</Text>
+                                </Pressable>
+                            </View>
+
+                            <View style={{ gap: 16 }}>
+                                <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
+                                <TextInput
+                                    secureTextEntry
+                                    value={draftOpenrouterKey}
+                                    onChangeText={setDraftOpenrouterKey}
+                                    style={styles.input}
+                                    placeholder="sk-or-..."
+                                />
+                                <Pressable 
+                                    onPress={() => Linking.openURL('https://openrouter.ai/keys')}
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                >
+                                    <Key size={12} color="#3B82F6" />
+                                    <Text style={{ color: '#3B82F6' }}>Get OpenRouter API key</Text>
+                                </Pressable>
+                            </View>
                         </View>
 
                         <View style={{ gap: 8 }}>
@@ -207,23 +228,12 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, onSave, selecte
                         <Pressable
                             style={[styles.button, !draftKey && styles.buttonDisabled]}
                             onPress={() => {
-                                if (draftKey) {
-                                    Promise.all([
-                                        AsyncStorage.setItem('openrouter_api_key', draftKey),
-                                        AsyncStorage.setItem('recognition_language', draftLanguage),
-                                        AsyncStorage.setItem('selected_model', draftModel)
-                                    ]).then(() => {
-                                        onSave(draftKey, draftLanguage, draftModel);
-                                        onClose();
-                                    }).catch(error => {
-                                        console.error('Error saving settings:', error);
-                                        // Still save to state even if storage fails
-                                        onSave(draftKey, draftLanguage, draftModel);
-                                        onClose();
-                                    });
+                                if (draftUltravoxKey && draftOpenrouterKey) {
+                                    onSave(draftUltravoxKey, draftOpenrouterKey, draftModel);
+                                    onClose();
                                 }
                             }}
-                            disabled={!draftKey}
+                            disabled={!draftUltravoxKey || !draftOpenrouterKey}
                         >
                             <Text style={styles.buttonText}>Save Settings</Text>
                         </Pressable>

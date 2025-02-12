@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export function useSettings() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [ultravoxApiKey, setUltravoxApiKey] = useState(null);
+    const [openrouterApiKey, setOpenrouterApiKey] = useState(null);
     const [selectedModel, setSelectedModel] = useState(null);
     const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
     const [error, setError] = useState('');
@@ -11,13 +12,15 @@ export function useSettings() {
     useEffect(() => {
         const loadSettings = async () => {
             try {
-                const [savedUltravoxKey, savedModel] = await Promise.all([
+                const [savedUltravoxKey, savedOpenrouterKey, savedModel] = await Promise.all([
                     AsyncStorage.getItem('ultravox_api_key'),
+                    AsyncStorage.getItem('openrouter_api_key'),
                     AsyncStorage.getItem('selected_model')
                 ]);
 
-                // Set API key
+                // Set API keys
                 setUltravoxApiKey(savedUltravoxKey || '');
+                setOpenrouterApiKey(savedOpenrouterKey || '');
                 
                 // Set model with default
                 const modelToUse = savedModel || 'anthropic/claude-3.5-sonnet';
@@ -40,10 +43,14 @@ export function useSettings() {
         loadSettings();
     }, []);
 
-    const saveSettings = async (newKey, newLanguage, newModel) => {
-        await AsyncStorage.setItem('openrouter_api_key', newKey);
-        setApiKey(newKey);
-        setSelectedLanguage(newLanguage);
+    const saveSettings = async (ultravoxKey, openrouterKey, newModel) => {
+        await Promise.all([
+            AsyncStorage.setItem('ultravox_api_key', ultravoxKey),
+            AsyncStorage.setItem('openrouter_api_key', openrouterKey),
+            AsyncStorage.setItem('selected_model', newModel)
+        ]);
+        setUltravoxApiKey(ultravoxKey);
+        setOpenrouterApiKey(openrouterKey);
         setSelectedModel(newModel);
         setError(''); // Clear any previous errors
     };
@@ -51,8 +58,8 @@ export function useSettings() {
     return {
         isSettingsOpen,
         setIsSettingsOpen,
-        apiKey,
-        selectedLanguage,
+        ultravoxApiKey,
+        openrouterApiKey,
         selectedModel,
         isSettingsLoaded,
         error,
