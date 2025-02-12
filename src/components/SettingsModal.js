@@ -194,7 +194,6 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
                                             </Pressable>
                                         )}
                                     />
-                                )}
                             </View>
                         </View>
 
