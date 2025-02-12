@@ -13,8 +13,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.voiceassistant.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone for speech recognition",
-        "NSSpeechRecognitionUsageDescription": "Allow Voice Assistant to securely recognize your speech",
+        "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone",
         "UIBackgroundModes": ["audio"]
       }
     },

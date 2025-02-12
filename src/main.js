@@ -160,7 +160,6 @@ export const VoiceAssistant = () => {
         isSettingsOpen,
         setIsSettingsOpen,
         apiKey,
-        selectedLanguage,
         selectedModel,
         isSettingsLoaded,
         error: settingsError,

@@ -3,8 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function useSettings() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [apiKey, setApiKey] = useState(null);
-    const [selectedLanguage, setSelectedLanguage] = useState(null);
+    const [ultravoxApiKey, setUltravoxApiKey] = useState(null);
     const [selectedModel, setSelectedModel] = useState(null);
     const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
     const [error, setError] = useState('');
@@ -12,17 +11,13 @@ export function useSettings() {
     useEffect(() => {
         const loadSettings = async () => {
             try {
-                const [savedKey, savedLanguage, savedModel] = await Promise.all([
-                    AsyncStorage.getItem('openrouter_api_key'),
-                    AsyncStorage.getItem('recognition_language'),
+                const [savedUltravoxKey, savedModel] = await Promise.all([
+                    AsyncStorage.getItem('ultravox_api_key'),
                     AsyncStorage.getItem('selected_model')
                 ]);
 
                 // Set API key
-                setApiKey(savedKey || '');
-                
-                // Set language with default
-                setSelectedLanguage(savedLanguage || 'en-US');
+                setUltravoxApiKey(savedUltravoxKey || '');
                 
                 // Set model with default
                 const modelToUse = savedModel || 'anthropic/claude-3.5-sonnet';

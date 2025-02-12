@@ -69,12 +69,9 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, selectedModel }) => {
+export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, onSave, selectedModel }) => {
     const [draftKey, setDraftKey] = useState('');
-    const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const [draftModel, setDraftModel] = useState(selectedModel);
-    const [languages, setLanguages] = useState([]);
-    const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
     useEffect(() => {
         if (isOpen) {
@@ -155,16 +152,16 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                 <View style={{ flex: 1, padding: 16 }}>
                     <View style={{ gap: 24, flex: 1 }}>
                         <View style={{ gap: 16 }}>
-                            <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
+                            <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
                             <TextInput
                                 secureTextEntry
                                 value={draftKey}
                                 onChangeText={setDraftKey}
                                 style={styles.input}
-                                placeholder="sk-or-..."
+                                placeholder="ultravox-..."
                             />
                             <Pressable 
-                                onPress={() => Linking.openURL('https://openrouter.ai/keys')}
+                                onPress={() => Linking.openURL('https://ultravox.ai/dashboard')}
                                 style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                             >
                                 <Key size={12} color="#3B82F6" />
