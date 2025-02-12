@@ -40,13 +40,8 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-speech-recognition",
-        {
-          "microphonePermission": "Allow Voice Assistant to use the microphone.",
-          "speechRecognitionPermission": "Allow Voice Assistant to use speech recognition."
-        }
-      ],
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc",
       [
         "expo-build-properties",
         {
