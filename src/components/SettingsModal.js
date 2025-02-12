@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView, FlatList } from 'react-native';
 import { Key } from 'lucide-react-native';
-import { getSupportedLocales } from 'expo-speech-recognition';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Language name mapping for common locales
@@ -75,37 +74,8 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, onSave, selecte
 
     useEffect(() => {
         if (isOpen) {
-            setIsLoadingLanguages(true);
-            getSupportedLocales({
-                androidRecognitionServicePackage: "com.google.android.as"
-            })
-            .then((supportedLocales) => {
-                // Combine both online and installed locales
-                const allLocales = [...new Set([
-                    ...supportedLocales.locales,
-                    ...supportedLocales.installedLocales
-                ])].sort();
-
-                // Format locales with readable names
-                const formattedLocales = allLocales.map(locale => {
-                    const [lang, region] = locale.split('-');
-                    const baseName = LANGUAGE_NAMES[lang] || lang;
-                    return {
-                        code: locale,
-                        name: region ? `${baseName} (${region})` : baseName
-                    };
-                });
-
-                setLanguages(formattedLocales);
-            })
-            .catch((error) => {
-                console.error('Error getting supported locales:', error);
-                // Fallback to basic language list
-                setLanguages([{ code: 'en-US', name: 'English (US)' }]);
-            })
-            .finally(() => {
-                setIsLoadingLanguages(false);
-            });
+            setIsLoadingLanguages(false);
+            setLanguages([{ code: 'en-US', name: 'English (US)' }]);
         }
     }, [isOpen]);
 
