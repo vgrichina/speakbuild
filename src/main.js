@@ -159,8 +159,10 @@ export const VoiceAssistant = () => {
     const {
         isSettingsOpen,
         setIsSettingsOpen,
-        apiKey,
+        ultravoxApiKey,
+        openrouterApiKey,
         selectedModel,
+        selectedLanguage,
         isSettingsLoaded,
         error: settingsError,
         saveSettings
@@ -429,7 +431,8 @@ export const VoiceAssistant = () => {
             <SettingsModal 
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
-                apiKey={apiKey}
+                ultravoxApiKey={ultravoxApiKey}
+                openrouterApiKey={openrouterApiKey}
                 selectedLanguage={selectedLanguage}
                 selectedModel={selectedModel}
                 onSave={saveSettings}

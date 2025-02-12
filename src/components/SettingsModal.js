@@ -77,17 +77,12 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKey, onSave, selectedModel }) => {
+export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKey, selectedLanguage, selectedModel, onSave }) => {
     const [draftUltravoxKey, setDraftUltravoxKey] = useState('');
     const [draftOpenrouterKey, setDraftOpenrouterKey] = useState('');
+    const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const [draftModel, setDraftModel] = useState(selectedModel);
 
-    useEffect(() => {
-        if (isOpen) {
-            setIsLoadingLanguages(false);
-            setLanguages([{ code: 'en-US', name: 'English (US)' }]);
-        }
-    }, [isOpen]);
 
     // Reset drafts when modal opens
     React.useEffect(() => {
@@ -238,7 +233,7 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
                             style={[styles.button, !draftKey && styles.buttonDisabled]}
                             onPress={() => {
                                 if (draftUltravoxKey && draftOpenrouterKey) {
-                                    onSave(draftUltravoxKey, draftOpenrouterKey, draftModel);
+                                    onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
                                     onClose();
                                 }
                             }}

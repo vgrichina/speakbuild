@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTrackVolume } from '@livekit/react-native';
 import { SYSTEM_PROMPT } from '../services/analysis';
 
-export function useSpeechRecognition({ onTranscription, onAnalysis, onError, selectedModel }) {
+export function useSpeechRecognition({ onTranscription, onAnalysis, onError, selectedModel, selectedLanguage }) {
     const [client, setClient] = useState(null);
     const [isListening, setIsListening] = useState(false);
     const [partialResults, setPartialResults] = useState('');
@@ -53,7 +53,8 @@ export function useSpeechRecognition({ onTranscription, onAnalysis, onError, sel
 
                 await client?.createAndJoinCall(ultravoxKey, {
                     systemPrompt: SYSTEM_PROMPT.content,
-                    model: selectedModel
+                    model: selectedModel,
+                    languageHint: selectedLanguage
                 });
                 setIsListening(true);
             }
