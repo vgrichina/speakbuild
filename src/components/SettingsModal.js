@@ -9,25 +9,34 @@ const MODELS = [
     { code: 'deepseek/deepseek-r1', name: 'DeepSeek R1' }
 ];
 
-const LANGUAGE_NAMES = {
-    'en': 'English',
-    'es': 'Spanish',
-    'fr': 'French',
-    'de': 'German',
-    'it': 'Italian',
-    'ja': 'Japanese',
-    'ko': 'Korean',
-    'zh': 'Chinese',
-    'ru': 'Russian',
-    'pt': 'Portuguese',
-    'nl': 'Dutch',
-    'pl': 'Polish',
-    'tr': 'Turkish',
-    'ar': 'Arabic',
-    'hi': 'Hindi',
-    'th': 'Thai',
-    'vi': 'Vietnamese'
-};
+const LANGUAGES = [
+    { code: 'ar', name: 'Arabic' },
+    { code: 'bg', name: 'Bulgarian' },
+    { code: 'zh', name: 'Chinese' },
+    { code: 'cs', name: 'Czech' },
+    { code: 'da', name: 'Danish' },
+    { code: 'nl', name: 'Dutch' },
+    { code: 'en', name: 'English' },
+    { code: 'fi', name: 'Finnish' },
+    { code: 'fr', name: 'French' },
+    { code: 'de', name: 'German' },
+    { code: 'el', name: 'Greek' },
+    { code: 'hi', name: 'Hindi' },
+    { code: 'hu', name: 'Hungarian' },
+    { code: 'it', name: 'Italian' },
+    { code: 'ja', name: 'Japanese' },
+    { code: 'pl', name: 'Polish' },
+    { code: 'pt', name: 'Portuguese' },
+    { code: 'ro', name: 'Romanian' },
+    { code: 'ru', name: 'Russian' },
+    { code: 'sk', name: 'Slovak' },
+    { code: 'es', name: 'Spanish' },
+    { code: 'sv', name: 'Swedish' },
+    { code: 'ta', name: 'Tamil' },
+    { code: 'tr', name: 'Turkish' },
+    { code: 'uk', name: 'Ukrainian' },
+    { code: 'vi', name: 'Vietnamese' }
+];
 
 const styles = StyleSheet.create({
     input: {
