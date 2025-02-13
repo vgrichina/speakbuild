@@ -51,6 +51,7 @@ export class UltravoxClient {
         console.log('Room created:', this._room);
       } catch (error) {
         console.error('Error creating Room:', error);
+        console.error('Stack trace:', error.stack);
         throw error;
       }
       
@@ -83,10 +84,12 @@ export class UltravoxClient {
         this._setStatus(UltravoxStatus.IDLE);
       } catch (error) {
         console.error('Error connecting to LiveKit:', error);
+        console.error('Stack trace:', error.stack);
         throw error;
       }
     } catch (error) {
       console.error('Error joining call:', error);
+      console.error('Stack trace:', error.stack);
       await this.disconnect();
       throw error;
     }
