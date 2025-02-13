@@ -77,7 +77,7 @@ export function useSpeechRecognition({
                         languageHint: selectedLanguage,
                         initialMessages: [
                             {
-                                role: 'MESSAGE_ROLE_SYSTEM',
+                                role: 'MESSAGE_ROLE_AGENT',
                                 text: messages[0].content
                             },
                             {
