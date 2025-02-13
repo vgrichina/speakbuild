@@ -137,7 +137,7 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
                                     placeholder="ultravox-..."
                                 />
                                 <Pressable 
-                                    onPress={() => Linking.openURL('https://ultravox.ai/dashboard')}
+                                    onPress={() => Linking.openURL('https://app.ultravox.ai')}
                                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                 >
                                     <Key size={12} color="#3B82F6" />
