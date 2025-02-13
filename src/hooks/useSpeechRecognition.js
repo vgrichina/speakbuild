@@ -4,7 +4,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTrackVolume } from '@livekit/react-native';
 import { SYSTEM_PROMPT } from '../services/analysis';
 
-export function useSpeechRecognition({ onTranscription, onAnalysis, onError, selectedModel, selectedLanguage }) {
+export function useSpeechRecognition({ 
+    onTranscription, 
+    onAnalysis, 
+    onError, 
+    selectedModel, 
+    selectedLanguage,
+    componentHistory,
+    currentHistoryIndex 
+}) {
     const [client, setClient] = useState(null);
     const [isListening, setIsListening] = useState(false);
     const [partialResults, setPartialResults] = useState('');

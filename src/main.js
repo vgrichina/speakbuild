@@ -190,13 +190,16 @@ export const VoiceAssistant = () => {
         hasSpeechPermission,
         toggleListening
     } = useSpeechRecognition({
-        selectedLanguage,
         onTranscription: (text) => {
             setTranscribedText(text);
             setResponseStream('');
             processWithClaudeStream(text);
         },
-        onError: setError
+        onError: setError,
+        selectedModel,
+        selectedLanguage,
+        componentHistory,
+        currentHistoryIndex
     });
 
     const stopGeneration = () => {
