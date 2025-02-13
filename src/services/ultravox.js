@@ -1,4 +1,8 @@
 import { Room, RoomEvent, createLocalAudioTrack } from 'livekit-client';
+import { registerGlobals } from '@livekit/react-native-webrtc';
+
+// Register WebRTC globals
+registerGlobals();
 
 export const UltravoxStatus = {
   DISCONNECTED: 'disconnected',
