@@ -74,11 +74,15 @@ export class UltravoxClient {
         ]);
         console.log('Connected and track created:', track);
 
-      this._localAudioTrack = track;
-      this._onTrackCreated?.(track);
-      await this._room.localParticipant.publishTrack(track);
-      
-      this._setStatus(UltravoxStatus.IDLE);
+        this._localAudioTrack = track;
+        this._onTrackCreated?.(track);
+        await this._room.localParticipant.publishTrack(track);
+        
+        this._setStatus(UltravoxStatus.IDLE);
+      } catch (error) {
+        console.error('Error connecting to LiveKit:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('Error joining call:', error);
       await this.disconnect();
