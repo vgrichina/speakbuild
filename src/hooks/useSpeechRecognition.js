@@ -72,7 +72,6 @@ export function useSpeechRecognition({
                         'X-API-Key': ultravoxKey
                     },
                     body: JSON.stringify({
-                        systemPrompt: messages[0].content,
                         model: selectedModel,
                         languageHint: selectedLanguage,
                         initialMessages: [
