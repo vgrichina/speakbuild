@@ -33,8 +33,8 @@ export function useSettings() {
                 // Mark settings as loaded
                 setIsSettingsLoaded(true);
 
-                // Show settings modal if no API key
-                if (!savedKey) {
+                // Show settings modal if no API keys
+                if (!savedUltravoxKey || !savedOpenrouterKey) {
                     setIsSettingsOpen(true);
                 }
             } catch (error) {
