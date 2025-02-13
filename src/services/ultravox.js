@@ -43,9 +43,16 @@ export class UltravoxClient {
     this._setStatus(UltravoxStatus.CONNECTING);
     
     try {
-      // Setup LiveKit room
-      this._room = new Room();
+      console.log('Creating LiveKit room...');
+      try {
+        this._room = new Room();
+        console.log('Room created:', this._room);
+      } catch (error) {
+        console.error('Error creating Room:', error);
+        throw error;
+      }
       
+      console.log('Setting up room event handlers...');
       this._room.on(RoomEvent.TrackSubscribed, (track) => {
         console.log('Track subscribed:', track.kind);
       });
@@ -59,11 +66,13 @@ export class UltravoxClient {
         }
       });
 
-      // Connect directly to Ultravox's LiveKit server
-      const [track] = await Promise.all([
-        createLocalAudioTrack(),
-        this._room.connect(joinUrl)
-      ]);
+      console.log('Connecting to LiveKit server:', joinUrl);
+      try {
+        const [track] = await Promise.all([
+          createLocalAudioTrack(),
+          this._room.connect(joinUrl)
+        ]);
+        console.log('Connected and track created:', track);
 
       this._localAudioTrack = track;
       this._onTrackCreated?.(track);
