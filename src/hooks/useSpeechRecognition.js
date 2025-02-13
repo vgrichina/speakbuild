@@ -65,6 +65,7 @@ export function useSpeechRecognition({
                     currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
                 });
 
+                console.log('Creating Ultravox call...');
                 const response = await fetch('https://api.ultravox.ai/api/calls', {
                     method: 'POST',
                     headers: {
@@ -91,7 +92,20 @@ export function useSpeechRecognition({
                     })
                 });
 
-                const { joinUrl } = await response.json();
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Ultravox API error:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers: Object.fromEntries([...response.headers.entries()]),
+                        error: errorText
+                    });
+                    throw new Error(`Ultravox API error: ${response.status} ${response.statusText}\n${errorText}`);
+                }
+
+                const responseData = await response.json();
+                console.log('Ultravox response:', responseData);
+                const { joinUrl } = responseData;
                 await client?.joinCall(joinUrl);
                 setIsListening(true);
             }
