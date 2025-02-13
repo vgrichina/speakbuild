@@ -59,11 +59,41 @@ export function useSpeechRecognition({
                     throw new Error('Ultravox API key not found');
                 }
 
-                await client?.createAndJoinCall(ultravoxKey, {
-                    systemPrompt: SYSTEM_PROMPT.content,
-                    model: selectedModel,
-                    languageHint: selectedLanguage
+                const messages = analysisPrompt({
+                    text: '',  // Will be filled by voice input
+                    requestHistory: componentHistory?.map(entry => entry.request) || [],
+                    currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
                 });
+
+                const response = await fetch('https://api.ultravox.ai/api/calls', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': ultravoxKey
+                    },
+                    body: JSON.stringify({
+                        systemPrompt: messages[0].content,
+                        model: selectedModel,
+                        languageHint: selectedLanguage,
+                        initialMessages: [
+                            {
+                                role: 'MESSAGE_ROLE_SYSTEM',
+                                text: messages[0].content
+                            },
+                            {
+                                role: 'MESSAGE_ROLE_USER',
+                                text: messages[1].content
+                            }
+                        ],
+                        medium: { webRtc: {} },
+                        firstSpeaker: 'FIRST_SPEAKER_USER',
+                        transcriptOptional: false,
+                        recordingEnabled: false
+                    })
+                });
+
+                const { joinUrl } = await response.json();
+                await client?.joinCall(joinUrl);
                 setIsListening(true);
             }
         } catch (error) {
