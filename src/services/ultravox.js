@@ -1,5 +1,4 @@
-import { Room } from '@livekit/react-native';
-import { RoomEvent } from 'livekit-client';
+import { Room, RoomEvent } from 'livekit-client';
 import { createLocalAudioTrack } from '@livekit/react-native-webrtc';
 
 export const UltravoxStatus = {
