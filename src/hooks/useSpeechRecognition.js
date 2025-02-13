@@ -73,7 +73,7 @@ export function useSpeechRecognition({
                         'X-API-Key': ultravoxKey
                     },
                     body: JSON.stringify({
-                        model: selectedModel,
+                        model: 'fixie-ai/ultravox',  // Use Ultravox's default model
                         languageHint: selectedLanguage,
                         initialMessages: [
                             {
