@@ -1,5 +1,4 @@
-import { Room, RoomEvent } from 'livekit-client';
-import { createLocalAudioTrack } from '@livekit/react-native-webrtc';
+import { Room, RoomEvent, createLocalAudioTrack } from 'livekit-client';
 
 export const UltravoxStatus = {
   DISCONNECTED: 'disconnected',
