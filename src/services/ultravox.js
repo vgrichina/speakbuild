@@ -47,12 +47,14 @@ export class UltravoxClient {
     try {
       console.log('Creating LiveKit room...');
       try {
+        console.log('Room class:', Room);
+        console.log('Room constructor:', Room?.constructor);
         this._room = new Room({
           adaptiveStream: true,
           dynacast: true,
           stopLocalTrackOnUnpublish: true
         });
-        console.log('Room created with options:', this._room);
+        console.log('Room instance:', this._room);
       } catch (error) {
         console.error('Error creating Room:', error);
         console.error('Stack trace:', error.stack);
