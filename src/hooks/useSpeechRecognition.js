@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { UltravoxClient } from '../services/ultravox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTrackVolume } from '@livekit/react-native';
-import { SYSTEM_PROMPT } from '../services/analysis';
+import { analysisPrompt } from '../services/analysis';
 
 export function useSpeechRecognition({ 
     onTranscription, 
