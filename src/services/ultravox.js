@@ -45,10 +45,13 @@ export class UltravoxClient {
     this._onStatusChange = callback;
   }
 
-  joinCall(joinUrl) {
+  async joinCall(joinUrl) {
     if (this._status !== UltravoxStatus.DISCONNECTED) {
       throw new Error('Cannot join a new call while already in a call');
     }
+
+    // Start audio session before connecting
+    await AudioSession.startAudioSession();
 
     // Add required URL parameters
     const url = new URL(joinUrl);
