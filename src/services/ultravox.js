@@ -1,5 +1,6 @@
 import { Room, RoomEvent, createLocalAudioTrack, setLogExtension } from 'livekit-client';
 import { registerGlobals } from '@livekit/react-native-webrtc';
+import { AudioSession } from '@livekit/react-native';
 
 // Register WebRTC globals
 registerGlobals();
@@ -68,6 +69,8 @@ export class UltravoxClient {
   }
 
   async disconnect() {
+    // Stop audio session
+    await AudioSession.stopAudioSession();
     this._setStatus(UltravoxStatus.DISCONNECTED);
     if (this._localAudioTrack) {
       this._localAudioTrack.stop();
