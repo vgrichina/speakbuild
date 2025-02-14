@@ -1,9 +1,5 @@
 import { createLocalAudioTrack, setLogExtension, setLogLevel } from 'livekit-client';
-import { registerGlobals } from '@livekit/react-native-webrtc';
 import { AudioSession } from '@livekit/react-native';
-
-// Register WebRTC globals
-registerGlobals();
 
 // Setup LiveKit logging
 setLogLevel('trace');
