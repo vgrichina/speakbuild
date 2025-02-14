@@ -1,9 +1,14 @@
-import { createLocalAudioTrack } from 'livekit-client';
+import { createLocalAudioTrack, setLogExtension } from 'livekit-client';
 import { registerGlobals } from '@livekit/react-native-webrtc';
 import { AudioSession } from '@livekit/react-native';
 
 // Register WebRTC globals
 registerGlobals();
+
+// Setup LiveKit logging
+setLogExtension((level, msg, context) => {
+  console.log(`LiveKit [${level}]:`, msg, context);
+});
 
 export const UltravoxStatus = {
   DISCONNECTED: 'disconnected',
