@@ -71,9 +71,10 @@ export function useVoiceRoom({
             const responseData = await response.json();
             console.log('Ultravox response:', responseData);
             
-            const { joinUrl, token } = responseData;
-            console.log('Setting room connection with:', { url: joinUrl, token });
-            setRoomConnection({ url: joinUrl, token });
+            const { joinUrl } = responseData;
+            // Use the Ultravox API key as the token
+            console.log('Setting room connection with URL:', joinUrl);
+            setRoomConnection({ url: joinUrl, token: ultravoxKey });
         } catch (error) {
             console.error('Error starting call:', error);
             onError?.(error.message);
