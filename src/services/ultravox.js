@@ -61,6 +61,10 @@ export class UltravoxClient {
     this.socket = new WebSocket(joinUrl);
     this.socket.onmessage = this._handleSocketMessage.bind(this);
     this.socket.onclose = this._handleSocketClose.bind(this);
+    this.socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      this.disconnect();
+    };
   }
 
   async disconnect() {
@@ -118,6 +122,11 @@ export class UltravoxClient {
     await this._room.localParticipant.publishTrack(track);
     
     this._setStatus(UltravoxStatus.IDLE);
+  }
+
+  async _handleSocketClose(event) {
+    console.log('WebSocket closed:', event);
+    await this.disconnect();
   }
 
   _handleDataMessage(msg) {
