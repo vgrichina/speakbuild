@@ -96,7 +96,7 @@ export function useVoiceRoom({
 
             ws.onclose = () => {
                 console.log('WebSocket connection closed');
-                if (!msg) {
+                if (!roomConnection) {
                     onError?.('Connection closed before receiving LiveKit details');
                 }
             };
