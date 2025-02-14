@@ -1,8 +1,13 @@
-import { Room, RoomEvent, createLocalAudioTrack } from 'livekit-client';
+import { Room, RoomEvent, createLocalAudioTrack, setLogExtension } from 'livekit-client';
 import { registerGlobals } from '@livekit/react-native-webrtc';
 
 // Register WebRTC globals
 registerGlobals();
+
+// Setup LiveKit logging
+setLogExtension((level, msg, context) => {
+  console.log('LiveKit:', msg, context);
+});
 
 export const UltravoxStatus = {
   DISCONNECTED: 'disconnected',
@@ -54,7 +59,8 @@ export class UltravoxClient {
         this._room = new Room({
           adaptiveStream: true,
           dynacast: true,
-          stopLocalTrackOnUnpublish: true
+          stopLocalTrackOnUnpublish: true,
+          logLevel: 1  // debug level
         });
         console.log('Room instance:', this._room);
       } catch (error) {
