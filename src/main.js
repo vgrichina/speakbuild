@@ -398,6 +398,7 @@ export const VoiceAssistant = () => {
                             onStartCall={startCall}
                             onEndCall={endCall}
                             isConnecting={isConnecting}
+                            isConnected={true}
                         />
                     </LiveKitRoom>
                 ) : (
@@ -409,6 +410,7 @@ export const VoiceAssistant = () => {
                         onStartCall={startCall}
                         onEndCall={endCall}
                         isConnecting={isConnecting}
+                        isConnected={false}
                     />
                 )}
             </View>

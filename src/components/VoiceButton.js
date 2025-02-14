@@ -46,20 +46,22 @@ export const VoiceButton = ({
     onStopGeneration,
     onStartCall,
     onEndCall,
-    isConnecting
+    isConnecting,
+    isConnected
 }) => {
     const [isPressed, setIsPressed] = useState(false);
-    const { localParticipant } = useLocalParticipant();
+    // Only use LiveKit hooks when we're inside LiveKitRoom
+    const { localParticipant } = isConnected ? useLocalParticipant() : { localParticipant: null };
 
     const handlePress = useCallback(() => {
         if (isGenerating) {
             onStopGeneration();
-        } else if (localParticipant) {
+        } else if (isConnected) {
             onEndCall();
         } else {
             onStartCall();
         }
-    }, [isGenerating, localParticipant, onStartCall, onEndCall]);
+    }, [isGenerating, isConnected, onStartCall, onEndCall]);
 
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
