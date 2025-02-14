@@ -44,69 +44,23 @@ export class UltravoxClient {
     this._onStatusChange = callback;
   }
 
-  async joinCall(joinUrl) {
+  joinCall(joinUrl) {
     if (this._status !== UltravoxStatus.DISCONNECTED) {
-      throw new Error('Already in a call');
+      throw new Error('Cannot join a new call while already in a call');
     }
+
+    // Add required URL parameters
+    const url = new URL(joinUrl);
+    url.searchParams.set('clientVersion', 'react-native_1.0.0');
+    url.searchParams.set('apiVersion', '1');
+    joinUrl = url.toString();
 
     this._setStatus(UltravoxStatus.CONNECTING);
+    console.log('Connecting WebSocket to:', joinUrl);
     
-    try {
-      console.log('Creating LiveKit room...');
-      try {
-        console.log('Room class:', Room);
-        console.log('Room constructor:', Room?.constructor);
-        this._room = new Room({
-          adaptiveStream: true,
-          dynacast: true,
-          stopLocalTrackOnUnpublish: true,
-          logLevel: 1  // debug level
-        });
-        console.log('Room instance:', this._room);
-      } catch (error) {
-        console.error('Error creating Room:', error);
-        console.error('Stack trace:', error.stack);
-        throw error;
-      }
-      
-      console.log('Setting up room event handlers...');
-      this._room.on(RoomEvent.TrackSubscribed, (track) => {
-        console.log('Track subscribed:', track.kind);
-      });
-      
-      this._room.on(RoomEvent.DataReceived, (payload) => {
-        try {
-          const msg = JSON.parse(new TextDecoder().decode(payload));
-          this._handleDataMessage(msg);
-        } catch (error) {
-          console.error('Error handling data message:', error);
-        }
-      });
-
-      console.log('Connecting to LiveKit server:', joinUrl);
-      try {
-        const [track] = await Promise.all([
-          createLocalAudioTrack(),
-          this._room.connect(joinUrl)
-        ]);
-        console.log('Connected and track created:', track);
-
-        this._localAudioTrack = track;
-        this._onTrackCreated?.(track);
-        await this._room.localParticipant.publishTrack(track);
-        
-        this._setStatus(UltravoxStatus.IDLE);
-      } catch (error) {
-        console.error('Error connecting to LiveKit:', error);
-        console.error('Stack trace:', error.stack);
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error joining call:', error);
-      console.error('Stack trace:', error.stack);
-      await this.disconnect();
-      throw error;
-    }
+    this.socket = new WebSocket(joinUrl);
+    this.socket.onmessage = this._handleSocketMessage.bind(this);
+    this.socket.onclose = this._handleSocketClose.bind(this);
   }
 
   async disconnect() {
@@ -132,6 +86,38 @@ export class UltravoxClient {
     if (this._status === status) return;
     this._status = status;
     this._onStatusChange?.(status);
+  }
+
+  async _handleSocketMessage(event) {
+    const msg = JSON.parse(event.data);
+    console.log('WebSocket message:', msg);
+
+    // Create LiveKit room after getting connection details
+    this._room = new Room({ webAudioMix: false });
+    
+    this._room.on(RoomEvent.TrackSubscribed, (track) => {
+      console.log('Track subscribed:', track.kind);
+    });
+    
+    this._room.on(RoomEvent.DataReceived, (payload) => {
+      try {
+        const msg = JSON.parse(new TextDecoder().decode(payload));
+        this._handleDataMessage(msg);
+      } catch (error) {
+        console.error('Error handling data message:', error);
+      }
+    });
+
+    const [track, _] = await Promise.all([
+      createLocalAudioTrack(),
+      this._room.connect(msg.roomUrl, msg.token)
+    ]);
+
+    this._localAudioTrack = track;
+    this._onTrackCreated?.(track);
+    await this._room.localParticipant.publishTrack(track);
+    
+    this._setStatus(UltravoxStatus.IDLE);
   }
 
   _handleDataMessage(msg) {
