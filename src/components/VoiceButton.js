@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Pressable, Animated } from 'react-native';
-import { Square, MicOff, Mic, Loader2 } from 'lucide-react-native';
+import { Square, MicOff, Mic } from 'lucide-react-native';
+import { useLocalParticipant } from '@livekit/react-native';
 
 // Animation value outside component to prevent recreation
 const pulseAnimation = new Animated.Value(1);
@@ -38,14 +39,20 @@ const PulsatingCircle = ({ isActive, volume }) => {
     );
 };
 
-export const VoiceButton = ({ isListening, onClick, disabled, volume, isGenerating, onStopGeneration }) => {
+export const VoiceButton = ({ disabled, volume, isGenerating, onStopGeneration }) => {
     const [isPressed, setIsPressed] = useState(false);
+    const { localParticipant, isMicrophoneEnabled } = useLocalParticipant();
+
+    const toggleMute = useCallback(async () => {
+        if (!localParticipant) return;
+        await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+    }, [localParticipant, isMicrophoneEnabled]);
 
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {!isGenerating && <PulsatingCircle isActive={isListening} volume={volume} />}
+            {!isGenerating && <PulsatingCircle isActive={isMicrophoneEnabled} volume={volume} />}
             <Pressable
-                onPress={isGenerating ? onStopGeneration : onClick}
+                onPress={isGenerating ? onStopGeneration : toggleMute}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
                 disabled={disabled}
@@ -56,7 +63,7 @@ export const VoiceButton = ({ isListening, onClick, disabled, volume, isGenerati
                         borderRadius: 32,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: isGenerating ? '#EF4444' : (isListening ? '#EF4444' : '#3B82F6'),
+                        backgroundColor: isGenerating ? '#EF4444' : (isMicrophoneEnabled ? '#EF4444' : '#3B82F6'),
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
                     disabled && { opacity: 0.5 }
@@ -64,7 +71,7 @@ export const VoiceButton = ({ isListening, onClick, disabled, volume, isGenerati
             >
                 {isGenerating ? 
                     <Square size={24} color="white" /> :
-                    (isListening ? 
+                    (isMicrophoneEnabled ? 
                         <MicOff size={32} color="white" /> : 
                         <Mic size={32} color="white" />
                     )
@@ -72,10 +79,10 @@ export const VoiceButton = ({ isListening, onClick, disabled, volume, isGenerati
             </Pressable>
             <Text style={{ 
                 marginTop: 8,
-                color: (isGenerating || isListening) ? '#EF4444' : '#666',
+                color: (isGenerating || isMicrophoneEnabled) ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isGenerating ? 'Stop generating' : (isListening ? 'Tap to stop' : 'Tap to speak')}
+                {isGenerating ? 'Stop generating' : (isMicrophoneEnabled ? 'Tap to stop' : 'Tap to speak')}
             </Text>
         </View>
     );
