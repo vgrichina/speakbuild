@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, Animated } from 'react-native';
-import { Square, MicOff, Mic } from 'lucide-react-native';
+import { View, Text, Pressable, Animated, ActivityIndicator } from 'react-native';
+import { Square, Phone, PhoneOff } from 'lucide-react-native';
 import { useLocalParticipant } from '@livekit/react-native';
 
 // Animation value outside component to prevent recreation
@@ -39,18 +39,31 @@ const PulsatingCircle = ({ isActive, volume }) => {
     );
 };
 
-export const VoiceButton = ({ disabled, volume, isGenerating, onStopGeneration }) => {
+export const VoiceButton = ({ 
+    disabled,
+    volume,
+    isGenerating,
+    onStopGeneration,
+    onStartCall,
+    onEndCall,
+    isConnecting
+}) => {
     const [isPressed, setIsPressed] = useState(false);
-    const { localParticipant, isMicrophoneEnabled } = useLocalParticipant();
+    const { localParticipant } = useLocalParticipant();
 
-    const toggleMute = useCallback(async () => {
-        if (!localParticipant) return;
-        await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
-    }, [localParticipant, isMicrophoneEnabled]);
+    const handlePress = useCallback(() => {
+        if (isGenerating) {
+            onStopGeneration();
+        } else if (localParticipant) {
+            onEndCall();
+        } else {
+            onStartCall();
+        }
+    }, [isGenerating, localParticipant, onStartCall, onEndCall]);
 
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {!isGenerating && <PulsatingCircle isActive={isMicrophoneEnabled} volume={volume} />}
+            {localParticipant && <PulsatingCircle isActive={true} volume={volume} />}
             <Pressable
                 onPress={isGenerating ? onStopGeneration : toggleMute}
                 onPressIn={() => setIsPressed(true)}
@@ -63,26 +76,31 @@ export const VoiceButton = ({ disabled, volume, isGenerating, onStopGeneration }
                         borderRadius: 32,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: isGenerating ? '#EF4444' : (isMicrophoneEnabled ? '#EF4444' : '#3B82F6'),
+                        backgroundColor: isGenerating ? '#EF4444' : (localParticipant ? '#EF4444' : '#3B82F6'),
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
                     disabled && { opacity: 0.5 }
                 ]}
             >
-                {isGenerating ? 
-                    <Square size={24} color="white" /> :
-                    (isMicrophoneEnabled ? 
-                        <MicOff size={32} color="white" /> : 
-                        <Mic size={32} color="white" />
-                    )
+                {isGenerating ? (
+                    <Square size={24} color="white" />
+                ) : isConnecting ? (
+                    <ActivityIndicator color="white" />
+                ) : localParticipant ? (
+                    <PhoneOff size={32} color="white" />
+                ) : (
+                    <Phone size={32} color="white" />
+                )
                 }
             </Pressable>
             <Text style={{ 
                 marginTop: 8,
-                color: (isGenerating || isMicrophoneEnabled) ? '#EF4444' : '#666',
+                color: (isGenerating || localParticipant) ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isGenerating ? 'Stop generating' : (isMicrophoneEnabled ? 'Tap to stop' : 'Tap to speak')}
+                {isGenerating ? 'Stop generating' : 
+                 isConnecting ? 'Connecting...' :
+                 localParticipant ? 'End call' : 'Start call'}
             </Text>
         </View>
     );
