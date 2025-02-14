@@ -12,6 +12,7 @@ export function useVoiceRoom({
 }) {
     const [isConnecting, setIsConnecting] = useState(false);
     const [roomConnection, setRoomConnection] = useState(null);
+    const ws = useRef(null);
 
     const startCall = useCallback(async () => {
         try {
@@ -72,9 +73,33 @@ export function useVoiceRoom({
             console.log('Ultravox response:', responseData);
             
             const { joinUrl } = responseData;
-            // Use the Ultravox API key as the token
-            console.log('Setting room connection with URL:', joinUrl);
-            setRoomConnection({ url: joinUrl, token: ultravoxKey });
+            console.log('Connecting to Ultravox WebSocket:', joinUrl);
+            
+            // Connect to Ultravox WebSocket to get LiveKit details
+            const ws = new WebSocket(joinUrl);
+            
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                console.log('Received LiveKit connection details:', msg);
+                
+                // Set LiveKit connection details
+                setRoomConnection({ 
+                    url: msg.roomUrl, 
+                    token: msg.token 
+                });
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                onError?.('Failed to connect to Ultravox');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+                if (!msg) {
+                    onError?.('Connection closed before receiving LiveKit details');
+                }
+            };
         } catch (error) {
             console.error('Error starting call:', error);
             onError?.(error.message);
@@ -85,6 +110,11 @@ export function useVoiceRoom({
 
     const endCall = useCallback(() => {
         setRoomConnection(null);
+        // Close WebSocket connection if it exists
+        if (ws.current) {
+            ws.current.close();
+            ws.current = null;
+        }
     }, []);
 
     return {
