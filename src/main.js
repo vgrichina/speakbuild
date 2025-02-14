@@ -16,7 +16,7 @@ import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, Tou
 import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
-import { useSpeechRecognition } from './hooks/useSpeechRecognition';
+import { useVoiceRoom } from './hooks/useVoiceRoom';
 import { Mic, MicOff, Square } from 'lucide-react-native';
 import { Header } from './components/Header';
 import { ResponseStream } from './components/ResponseStream';
@@ -184,12 +184,11 @@ export const VoiceAssistant = () => {
     const [showDebugGeneration, setShowDebugGeneration] = useState(false);
 
     const {
-        isListening: isSpeechListening,
-        volume: speechVolume,
-        partialResults: speechPartialResults,
-        hasSpeechPermission,
-        toggleListening
-    } = useSpeechRecognition({
+        isConnecting,
+        roomConnection,
+        startCall,
+        endCall
+    } = useVoiceRoom({
         onTranscription: (text) => {
             setTranscribedText(text);
             setResponseStream('');
@@ -380,37 +379,20 @@ export const VoiceAssistant = () => {
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
-                    isListening={isSpeechListening}
-                    onClick={toggleListening}
-                    disabled={!hasSpeechPermission && !isProcessing}
-                    volume={speechVolume}
+                    disabled={isProcessing}
+                    volume={0} // TODO: Get volume from LiveKit track
                     isGenerating={isProcessing}
                     onStopGeneration={stopGeneration}
+                    onStartCall={startCall}
+                    onEndCall={endCall}
+                    isConnecting={isConnecting}
                 />
             </View>
 
-            {/* Text Input */}
-            {!hasSpeechPermission && (
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput
-                        style={[styles.input, { flex: 1 }]}
-                        value={textInput}
-                        onChangeText={setTextInput}
-                        placeholder="Type your message here..."
-                    />
-                    <Pressable
-                        style={styles.button}
-                        onPress={handleTextSubmit}
-                        disabled={!textInput.trim() || isProcessing}
-                    >
-                        <Text style={styles.buttonText}>Send</Text>
-                    </Pressable>
-                </View>
-            )}
 
             <TranscriptionBox
-                isListening={isSpeechListening}
-                partialResults={speechPartialResults}
+                isListening={!!roomConnection}
+                partialResults=""
                 transcribedText={transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
             />
