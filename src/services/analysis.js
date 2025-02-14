@@ -217,7 +217,7 @@ DO NOT include any explanation or additional text.
 ONLY return the JSON object.`
 };
 
-const analysisPrompt = ({ text, requestHistory, currentParams }) => {
+const analysisPrompt = ({ requestHistory, currentParams }) => {
     return [
         SYSTEM_PROMPT,
         {
@@ -226,9 +226,7 @@ const analysisPrompt = ({ text, requestHistory, currentParams }) => {
 ${requestHistory.map(req => `- "${req}"`).join('\n')}
 
 Previous component parameters:
-${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component'}
-
-Current request: ${text}`
+${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component'}`
         }
     ];
 };

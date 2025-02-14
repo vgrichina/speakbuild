@@ -60,7 +60,6 @@ export function useSpeechRecognition({
                 }
 
                 const messages = analysisPrompt({
-                    text: '',  // Will be filled by voice input
                     requestHistory: componentHistory?.map(entry => entry.request) || [],
                     currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
                 });
