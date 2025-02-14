@@ -26,7 +26,12 @@ export function useVoiceRoom({
                 currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
             });
 
-            console.log('Creating Ultravox call...');
+            console.log('Creating Ultravox call...', {
+                model: 'fixie-ai/ultravox',
+                languageHint: selectedLanguage,
+                initialMessages: messages.map(m => m.content)
+            });
+            
             const response = await fetch('https://api.ultravox.ai/api/calls', {
                 method: 'POST',
                 headers: {
@@ -54,12 +59,23 @@ export function useVoiceRoom({
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to create call: ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('Ultravox API error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText
+                });
+                throw new Error(`Failed to create call: ${response.status} ${response.statusText}\n${errorText}`);
             }
 
-            const { joinUrl, token } = await response.json();
+            const responseData = await response.json();
+            console.log('Ultravox response:', responseData);
+            
+            const { joinUrl, token } = responseData;
+            console.log('Setting room connection with:', { url: joinUrl, token });
             setRoomConnection({ url: joinUrl, token });
         } catch (error) {
+            console.error('Error starting call:', error);
             onError?.(error.message);
         } finally {
             setIsConnecting(false);
