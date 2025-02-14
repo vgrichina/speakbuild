@@ -65,10 +65,10 @@ export const VoiceButton = ({
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
             {localParticipant && <PulsatingCircle isActive={true} volume={volume} />}
             <Pressable
-                onPress={isGenerating ? onStopGeneration : toggleMute}
+                onPress={handlePress}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
-                disabled={disabled}
+                disabled={disabled || isConnecting}
                 style={[
                     {
                         width: 64,
@@ -79,7 +79,7 @@ export const VoiceButton = ({
                         backgroundColor: isGenerating ? '#EF4444' : (localParticipant ? '#EF4444' : '#3B82F6'),
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
-                    disabled && { opacity: 0.5 }
+                    (disabled || isConnecting) && { opacity: 0.5 }
                 ]}
             >
                 {isGenerating ? (
