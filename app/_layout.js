@@ -11,10 +11,7 @@ if (typeof navigator !== 'undefined' && !navigator.userAgent) {
 }
 
 // Setup LiveKit logging
-setLogLevel('trace');
-setLogExtension((level, msg, context) => {
-  console.log(`LiveKit [${level}]:`, msg, context);
-});
+setLogLevel('debug');
 
 export default function Layout() {
     return (
