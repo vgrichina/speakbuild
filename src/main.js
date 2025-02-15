@@ -121,6 +121,18 @@ export const VoiceAssistant = () => {
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
 
+    // Start audio session when component mounts
+    useEffect(() => {
+        const start = async () => {
+            await AudioSession.startAudioSession();
+        };
+
+        start();
+        return () => {
+            AudioSession.stopAudioSession();
+        };
+    }, []);
+
     useEffect(() => {
         // Cleanup function to abort any ongoing streams when component unmounts
         return () => {
