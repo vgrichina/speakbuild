@@ -1,5 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AudioSession, useDataChannel } from '@livekit/react-native';
+
+// Handler for LiveKit data channel messages
+function DataChannelHandler() {
+    useDataChannel((msg) => {
+        const decodedPayload = new TextDecoder().decode(msg.payload);
+        try {
+            const jsonMessage = JSON.parse(decodedPayload);
+            
+            // Only handle final messages
+            if (jsonMessage.final && jsonMessage.text) {
+                try {
+                    const analysis = JSON.parse(jsonMessage.text);
+                    processWithClaudeStream(analysis);
+                } catch (e) {
+                    console.error('Failed to parse analysis JSON:', e);
+                    setError('Failed to parse analysis result');
+                }
+            }
+        } catch (e) {
+            // Silently ignore non-JSON messages
+        }
+    });
+    return null;
+}
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { streamComponent, componentPrompt } from './services/componentGenerator';
@@ -221,11 +245,6 @@ export const VoiceAssistant = () => {
         startCall,
         endCall
     } = useVoiceRoom({
-        onTranscription: (text) => {
-            setTranscribedText(text);
-            setResponseStream('');
-            processWithClaudeStream(text);
-        },
         onError: setError,
         selectedModel,
         selectedLanguage,
@@ -242,7 +261,7 @@ export const VoiceAssistant = () => {
         }
     };
 
-    const processWithClaudeStream = async (text) => {
+    const processWithClaudeStream = async (analysis) => {
         // Clear any previous error
         setError('');
 
@@ -255,26 +274,10 @@ export const VoiceAssistant = () => {
         const currentController = new AbortController();
         abortControllerRef.current = currentController;
         
-        const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
-        if (!currentApiKey) {
-            setError('Please set your OpenRouter API key in settings');
-            setIsSettingsOpen(true);
-            return;
-        }
-
         setIsProcessing(true);
         setResponseStream('');
 
         try {
-            // Get current component params if any
-            const currentParams = currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null;
-            
-            // Analyze the request with current params context
-            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex, currentParams);
-            if (!analysis) {
-                throw new Error('Failed to analyze request');
-            }
-
             // Check cache for matching widget
             const cachedWidget = await widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
@@ -455,7 +458,7 @@ export const VoiceAssistant = () => {
                             });
                         }}
                     >
-                        <DataChannelLogger />
+                        <DataChannelHandler />
                         <VoiceButton
                             disabled={isProcessing}
                             volume={0}
