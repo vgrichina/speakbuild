@@ -300,9 +300,9 @@ export const VoiceAssistant = () => {
                         params: analysis.params || {}
                     });
                     setError('');
-                    setTranscribedText('');
                     setIsProcessing(false);
                     setModificationIntent(null);
+                    // Don't clear transcribedText - it will be shown in history
                     return;
                 } catch (error) {
                     console.error('Error creating component from cache:', error);
