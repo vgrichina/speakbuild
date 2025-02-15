@@ -80,6 +80,7 @@ export function useVoiceRoom({
             const ws = new WebSocket(joinUrl);
             
             ws.onmessage = (event) => {
+                console.log('ws.onmessage', event);
                 const msg = JSON.parse(event.data);
                 console.log('Received LiveKit connection details:', msg);
                 
