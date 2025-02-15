@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AudioSession } from '@livekit/react-native';
+import { AudioSession, useDataChannel } from '@livekit/react-native';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { streamComponent, componentPrompt } from './services/componentGenerator';
@@ -113,6 +113,18 @@ const styles = StyleSheet.create({
 });
 
 
+
+// Simple component to log data channel messages
+function DataChannelLogger() {
+    useDataChannel("chat", (msg) => {
+        console.log("LiveKit data channel message:", {
+            payload: msg.payload,
+            participant: msg.participant?.identity,
+            timestamp: new Date().toISOString()
+        });
+    });
+    return null;
+}
 
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
@@ -437,6 +449,7 @@ export const VoiceAssistant = () => {
                             });
                         }}
                     >
+                        <DataChannelLogger />
                         <VoiceButton
                             disabled={isProcessing}
                             volume={0}
