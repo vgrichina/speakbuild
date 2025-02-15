@@ -118,12 +118,16 @@ const styles = StyleSheet.create({
 function DataChannelLogger() {
     useDataChannel((msg) => {
         const decodedPayload = new TextDecoder().decode(msg.payload);
-        console.log("LiveKit data channel message:", {
-            payload: msg.payload,
-            decodedPayload,
-            participant: msg.participant?.identity,
-            timestamp: new Date().toISOString()
-        });
+        try {
+            const jsonMessage = JSON.parse(decodedPayload);
+            console.log("LiveKit data channel JSON message:", {
+                message: jsonMessage,
+                participant: msg.participant?.identity,
+                timestamp: new Date().toISOString()
+            });
+        } catch (e) {
+            // Silently ignore non-JSON messages
+        }
     });
     return null;
 }
