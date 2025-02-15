@@ -340,7 +340,6 @@ export const VoiceAssistant = () => {
                                 });
                                 
                                 setError('');
-                                setTranscribedText('');
                             })
                             .catch(error => {
                                 console.error('Storage error:', error);
@@ -350,6 +349,7 @@ export const VoiceAssistant = () => {
                         setIsProcessing(false);
                         setModificationIntent(null);
                         setResponseStream(''); // Clear response stream when done
+                        // Don't clear transcribedText - it will be shown in history
                     }
                 }
             } catch (error) {
