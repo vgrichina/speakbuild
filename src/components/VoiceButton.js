@@ -53,6 +53,22 @@ export const VoiceButton = ({
     // Only use LiveKit hooks when we're inside LiveKitRoom
     const { localParticipant } = isConnected ? useLocalParticipant() : { localParticipant: null };
 
+    useEffect(() => {
+        if (localParticipant) {
+            console.log('Local participant available:', {
+                id: localParticipant.identity,
+                audioTracks: localParticipant.audioTracks.size,
+                isMicrophoneEnabled: localParticipant.isMicrophoneEnabled,
+                publishedTracks: Array.from(localParticipant.audioTracks.values()).map(track => ({
+                    sid: track.sid,
+                    name: track.trackName,
+                    enabled: track.isEnabled,
+                    muted: track.isMuted
+                }))
+            });
+        }
+    }, [localParticipant]);
+
     const handlePress = useCallback(() => {
         if (isGenerating) {
             onStopGeneration();
