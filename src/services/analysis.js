@@ -31,8 +31,8 @@ Output JSON only:
 
 Example flows:
 
-"What time is it?" ->
 {
+    "transcription": "What time is it?",
     "intent": "new",
     "widgetUrl": "display/clock/digital/light?params=format:caption,size:integer",
     "params": {
@@ -42,8 +42,8 @@ Example flows:
 }
 
 // Converting "a few minutes" to 180 seconds (3 minutes)
-"Start a timer for a few minutes" ->
 {
+    "transcription": "Start a timer for a few minutes",
     "intent": "new",
     "widgetUrl": "interactive/timer/countdown/light?with_controls=yes&params=duration:integer,size:integer,showControls:boolean",
     "params": {
@@ -54,8 +54,8 @@ Example flows:
 }
 
 // Using ISO date format for tomorrow, 5pm
-"Remind me to call Mom tomorrow at 5pm" ->
 {
+    "transcription": "Remind me to call Mom tomorrow at 5pm",
     "intent": "new",
     "widgetUrl": "input/reminder/card/light?with_alarm=yes&params=title:caption,date:string,time:string,content:sentence",
     "params": {
@@ -67,8 +67,8 @@ Example flows:
 }
 
 // Using ISO date for 7-day forecast starting tomorrow
-"Tell me about the Roman Empire" ->
 {
+    "transcription": "Tell me about the Roman Empire",
     "intent": "new",
     "widgetUrl": "content/article/expandable/light?with_sections=yes&params=title:title,summary:paragraph,sections:{title:string,content:story}[],showTableOfContents:boolean",
     "params": {
@@ -88,8 +88,8 @@ Example flows:
     }
 }
 
-"Show me the weather for next week" ->
 {
+    "transcription": "Show me the weather for next week",
     "intent": "new",
     "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,date:string,days:integer",
     "params": {
@@ -100,8 +100,8 @@ Example flows:
     }
 }
 
-"Make the text a bit bigger" ->
 {
+    "transcription": "Make the text a bit bigger",
     "intent": "modify",
     "widgetUrl": "display/text/card/light?params=content:sentence,size:integer",
     "params": {
@@ -110,26 +110,14 @@ Example flows:
     }
 }
 
-"Add milk and eggs to my shopping list" ->
 {
+    "transcription": "Add milk and eggs to my shopping list",
     "intent": "modify",
     "widgetUrl": "input/list/editable/light?with_checkboxes=yes&params=title:title,items:caption[],enableChecks:boolean",
     "params": {
         "title": "Shopping List",
         "items": ["Milk", "Eggs"],  // Capitalized
         "enableChecks": true
-    }
-}
-
-"Show me the weather for next week" ->
-{
-    "intent": "new",
-    "widgetUrl": "display/weather/forecast/light?with_daily=yes&params=location:caption,unit:caption,date:string,days:integer",
-    "params": {
-        "location": "current",
-        "unit": "celsius",
-        "date": "2024-02-06",
-        "days": 7
     }
 }
 
