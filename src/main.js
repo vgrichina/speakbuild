@@ -403,6 +403,23 @@ export const VoiceAssistant = () => {
                         // Audio is handled automatically by LiveKitRoom
                         audio={true}
                         video={false}
+                        onConnected={() => console.log('LiveKitRoom connected')}
+                        onError={(error) => {
+                            console.error('LiveKitRoom error:', error);
+                            console.error('Error stack:', error?.stack);
+                        }}
+                        onTrackPublished={(publication, participant) => console.log('Track published:', {
+                            trackSid: publication.trackSid,
+                            kind: publication.kind,
+                            source: publication.source,
+                            participant: participant.identity
+                        })}
+                        onTrackSubscribed={(track, publication, participant) => console.log('Track subscribed:', {
+                            trackSid: publication.trackSid,
+                            kind: track.kind,
+                            enabled: track.isEnabled,
+                            participant: participant.identity
+                        })}
                     >
                         <VoiceButton
                             disabled={isProcessing}
