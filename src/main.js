@@ -12,6 +12,7 @@ function DataChannelHandler({ onAnalysis, onError, endCall, setTranscribedText }
             if (jsonMessage.final && jsonMessage.text) {
                 try {
                     const analysis = JSON.parse(jsonMessage.text);
+                    console.log('Parsed analysis JSON:', analysis);
                     if (analysis.transcription) {
                         setTranscribedText(analysis.transcription);
                     }
