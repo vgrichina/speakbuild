@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Pressable, Animated, ActivityIndicator } from 'react-native';
 import { Square, Phone, PhoneOff } from 'lucide-react-native';
 import { useLocalParticipant } from '@livekit/react-native';
