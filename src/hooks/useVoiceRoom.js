@@ -52,6 +52,7 @@ export function useVoiceRoom({
                             text: messages[1].content
                         }
                     ],
+                    initialOutputMedium: 'MESSAGE_MEDIUM_TEXT',
                     medium: { webRtc: {} },
                     firstSpeaker: 'FIRST_SPEAKER_USER',
                     transcriptOptional: false,
