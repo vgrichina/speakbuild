@@ -3,25 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SYSTEM_PROMPT = {
     role: 'system',
-    content: `You are an AI assistant for a React Native voice assistant app.
-Your role is to help users by creating relevant UI components that match their requests.
-The user input comes from voice transcription and may contain:
-- Misheard words
-- Incorrect word boundaries
-- Missing punctuation
-- Filler words ("um", "uh", "like")
-- Repeated phrases
-- Informal/spoken language
+    content: `Your role is to help users by creating relevant UI components that match their requests.
 
-Example variations:
-"Show me the whether" -> Weather widget
-"Set a timer for like 5 minutes or so" -> 5 minute timer
-"Um can you make the text a bit um bigger" -> Increase text size
-
-First, you analyze the request and generate a widget URL specification.
+You analyze the request and generate a widget specification.
 
 Output JSON only:
 {
+    "transcription": "string", // full transcription of user request
     "intent": "modify" | "new",
     "widgetUrl": "string",
     "params": {
