@@ -6,6 +6,10 @@ import { setLogLevel, setLogExtension } from 'livekit-client';
 // Register WebRTC globals
 registerGlobals();
 
+if (typeof navigator !== 'undefined' && !navigator.userAgent) {
+  navigator.userAgent = 'ReactNative/LiveKit';
+}
+
 // Setup LiveKit logging
 setLogLevel('trace');
 setLogExtension((level, msg, context) => {
