@@ -57,9 +57,9 @@ export const VoiceButton = ({
         if (localParticipant) {
             console.log('Local participant available:', {
                 id: localParticipant.identity,
-                audioTracks: localParticipant.audioTracks.size,
+                audioTracks: localParticipant.audioTracks?.size ?? 0,
                 isMicrophoneEnabled: localParticipant.isMicrophoneEnabled,
-                publishedTracks: Array.from(localParticipant.audioTracks.values()).map(track => ({
+                publishedTracks: Array.from(localParticipant.audioTracks?.values() ?? []).map(track => ({
                     sid: track.sid,
                     name: track.trackName,
                     enabled: track.isEnabled,
