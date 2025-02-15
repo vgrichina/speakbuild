@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AudioSession, useDataChannel } from '@livekit/react-native';
 
 // Handler for LiveKit data channel messages
-function DataChannelHandler({ onAnalysis, onError }) {
+function DataChannelHandler({ onAnalysis, onError, endCall }) {
     useDataChannel((msg) => {
         const decodedPayload = new TextDecoder().decode(msg.payload);
         try {
@@ -13,9 +13,11 @@ function DataChannelHandler({ onAnalysis, onError }) {
                 try {
                     const analysis = JSON.parse(jsonMessage.text);
                     onAnalysis(analysis);
+                    endCall(); // End the call after successful analysis
                 } catch (e) {
                     console.error('Failed to parse analysis JSON:', e);
                     onError('Failed to parse analysis result');
+                    endCall(); // End the call even if parsing failed
                 }
             }
         } catch (e) {
@@ -461,6 +463,7 @@ export const VoiceAssistant = () => {
                         <DataChannelHandler 
                             onAnalysis={processWithClaudeStream}
                             onError={setError}
+                            endCall={endCall}
                         />
                         <VoiceButton
                             disabled={isProcessing}
