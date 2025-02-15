@@ -77,9 +77,9 @@ export function useVoiceRoom({
             console.log('Connecting to Ultravox WebSocket:', joinUrl);
             
             // Connect to Ultravox WebSocket to get LiveKit details
-            const ws = new WebSocket(joinUrl);
+            ws.current = new WebSocket(joinUrl);
             
-            ws.onmessage = (event) => {
+            ws.current.onmessage = (event) => {
                 console.log('ws.onmessage', event);
                 const msg = JSON.parse(event.data);
                 console.log('Received LiveKit connection details:', msg);
@@ -91,12 +91,12 @@ export function useVoiceRoom({
                 });
             };
 
-            ws.onerror = (error) => {
+            ws.current.onerror = (error) => {
                 console.error('WebSocket error:', error);
                 onError?.('Failed to connect to Ultravox');
             };
 
-            ws.onclose = () => {
+            ws.current.onclose = () => {
                 console.log('WebSocket connection closed');
                 if (!roomConnection) {
                     onError?.('Connection closed before receiving LiveKit details');
@@ -112,9 +112,11 @@ export function useVoiceRoom({
 
     const endCall = useCallback(() => {
         setRoomConnection(null);
-        // Close WebSocket connection if it exists
+        // Properly close and cleanup WebSocket
         if (ws.current) {
-            ws.current.close();
+            if (ws.current.readyState === WebSocket.OPEN) {
+                ws.current.close();
+            }
             ws.current = null;
         }
     }, []);
