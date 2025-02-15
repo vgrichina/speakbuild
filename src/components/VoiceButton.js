@@ -66,6 +66,14 @@ export const VoiceButton = ({
                     muted: track.isMuted
                 }))
             });
+
+            // Enable microphone when participant is ready
+            if (!localParticipant.isMicrophoneEnabled) {
+                console.log('Enabling microphone for local participant');
+                localParticipant.setMicrophoneEnabled(true).catch(error => {
+                    console.error('Failed to enable microphone:', error);
+                });
+            }
         }
     }, [localParticipant]);
 

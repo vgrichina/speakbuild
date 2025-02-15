@@ -399,6 +399,10 @@ export const VoiceAssistant = () => {
                         connect={true}
                         options={{
                             adaptiveStream: { pixelDensity: 'screen' },
+                            audioCaptureDefaults: {
+                                trackName: 'microphone',
+                                deviceId: 'default'
+                            }
                         }}
                         // Audio is handled automatically by LiveKitRoom
                         audio={true}
@@ -420,6 +424,18 @@ export const VoiceAssistant = () => {
                             enabled: track.isEnabled,
                             participant: participant.identity
                         })}
+                        onParticipantConnected={(participant) => {
+                            console.log('Participant connected:', {
+                                id: participant.identity,
+                                metadata: participant.metadata
+                            });
+                        }}
+                        onLocalParticipantConnected={(participant) => {
+                            console.log('Local participant connected:', {
+                                id: participant.identity,
+                                metadata: participant.metadata
+                            });
+                        }}
                     >
                         <VoiceButton
                             disabled={isProcessing}
