@@ -117,8 +117,10 @@ const styles = StyleSheet.create({
 // Simple component to log data channel messages
 function DataChannelLogger() {
     useDataChannel((msg) => {
+        const decodedPayload = new TextDecoder().decode(msg.payload);
         console.log("LiveKit data channel message:", {
             payload: msg.payload,
+            decodedPayload,
             participant: msg.participant?.identity,
             timestamp: new Date().toISOString()
         });
