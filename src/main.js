@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { AudioSession } from '@livekit/react-native';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { streamComponent, componentPrompt } from './services/componentGenerator';
@@ -387,12 +388,13 @@ export const VoiceAssistant = () => {
                         options={{
                             adaptiveStream: { pixelDensity: 'screen' },
                         }}
+                        // Audio is handled automatically by LiveKitRoom
                         audio={true}
                         video={false}
                     >
                         <VoiceButton
                             disabled={isProcessing}
-                            volume={0} // TODO: Get volume from LiveKit track
+                            volume={0}
                             isGenerating={isProcessing}
                             onStopGeneration={stopGeneration}
                             onStartCall={startCall}
