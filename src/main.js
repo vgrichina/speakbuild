@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
 
 // Simple component to log data channel messages
 function DataChannelLogger() {
-    useDataChannel("chat", (msg) => {
+    useDataChannel((msg) => {
         console.log("LiveKit data channel message:", {
             payload: msg.payload,
             participant: msg.participant?.identity,
