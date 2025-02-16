@@ -500,6 +500,7 @@ export const VoiceAssistant = () => {
                 partialResults=""
                 transcribedText={transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
+                isProcessing={isProcessing}
             />
 
             {(!currentComponent || isProcessing) && (

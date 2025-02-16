@@ -15,7 +15,8 @@ export const TranscriptionBox = ({
     isListening,
     partialResults,
     transcribedText,
-    requestHistory
+    requestHistory,
+    isProcessing
 }) => {
     return (
         <>
@@ -30,7 +31,7 @@ export const TranscriptionBox = ({
             )}
 
             {/* Final Transcription */}
-            {(transcribedText || requestHistory.length > 0) && (
+            {(requestHistory.length > 0 || (transcribedText && isProcessing)) && (
                 <View style={styles.transcriptionBox}>
                     {requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
@@ -41,7 +42,7 @@ export const TranscriptionBox = ({
                             {request}
                         </Text>
                     ))}
-                    {transcribedText && (
+                    {transcribedText && isProcessing && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14
