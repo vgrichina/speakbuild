@@ -13,9 +13,19 @@ export function useComponentHistory() {
     }, [history, currentIndex]);
 
     const addToHistory = React.useCallback((entry) => {
+        console.log('Adding to history:', {
+            currentHistoryLength: history.length,
+            currentIndex,
+            newEntry: entry,
+            transcription: entry.request
+        });
         setHistory(prev => [...prev.slice(0, currentIndex + 1), entry]);
         setCurrentIndex(prev => prev + 1);
-    }, [currentIndex]);
+        console.log('After adding:', {
+            newHistoryLength: history.length + 1,
+            newIndex: currentIndex + 1
+        });
+    }, [currentIndex, history]);
 
     const clearHistory = React.useCallback(async () => {
         await widgetStorage.clear();
