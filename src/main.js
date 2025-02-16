@@ -296,7 +296,7 @@ export const VoiceAssistant = () => {
                     addToHistory({
                         component: GeneratedComponent,
                         code: cachedWidget.code,
-                        request: transcribedText,
+                        request: analysis.transcription,
                         params: analysis.params || {}
                     });
                     setError('');
@@ -335,7 +335,7 @@ export const VoiceAssistant = () => {
                                 addToHistory({
                                     component: GeneratedComponent,
                                     code,
-                                    request: transcribedText,
+                                    request: analysis.transcription,
                                     params: analysis.params || {}
                                 });
                                 
