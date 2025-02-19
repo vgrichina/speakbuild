@@ -52,15 +52,19 @@ export function useVoiceRoom({
             
             AudioRecord.on('data', data => {
                 if (ws.current?.readyState === WebSocket.OPEN) {
-                    // Convert base64 to binary
-                    const binaryData = Buffer.from(data, 'base64');
+                    // Convert base64 to binary using native base64 decoder
+                    const binaryString = atob(data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
                     
                     console.log('Sending audio data:', {
-                        dataLength: binaryData.length,
+                        dataLength: bytes.length,
                         timestamp: new Date().toISOString()
                     });
                     
-                    ws.current.send(binaryData);
+                    ws.current.send(bytes.buffer);
                 }
                 
                 // Calculate volume from PCM data
