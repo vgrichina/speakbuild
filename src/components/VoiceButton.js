@@ -90,12 +90,12 @@ export const VoiceButton = ({
             </Pressable>
             <Text style={{ 
                 marginTop: 8,
-                color: (isGenerating || localParticipant) ? '#EF4444' : '#666',
+                color: (isProcessing || isRecording) ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isGenerating ? 'Stop generating' : 
-                 isConnecting ? 'Connecting...' :
-                 localParticipant ? 'End call' : 'Start call'}
+                {isProcessing ? 'Stop processing' : 
+                 isRecording ? 'Stop recording' : 
+                 'Start recording'}
             </Text>
         </View>
     );
