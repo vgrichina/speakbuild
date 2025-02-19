@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
     const [isListening, setIsListening] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
 
@@ -216,7 +217,7 @@ export const VoiceAssistant = () => {
     const processWithClaudeStream = async (analysis) => {
         console.log('Starting component generation with analysis:', analysis);
         setError('');
-        setIsProcessing(true);
+        setIsGenerating(true);
         setResponseStream('');
 
         try {
@@ -285,7 +286,7 @@ export const VoiceAssistant = () => {
                             console.error('Component creation error:', error);
                             setError(`Failed to create component: ${error.message}`);
                         } finally {
-                            setIsProcessing(false);
+                            setIsGenerating(false);
                             setModificationIntent(null);
                             setResponseStream('');
                         }
@@ -378,10 +379,10 @@ export const VoiceAssistant = () => {
                 isProcessing={isProcessing}
             />
 
-            {(!currentComponent || isProcessing) && (
+            {(!currentComponent || isGenerating) && (
                 <ResponseStream
                     responseStream={responseStream}
-                    isProcessing={isProcessing}
+                    isProcessing={isGenerating}
                     modificationIntent={modificationIntent}
                 />
             )}

@@ -194,7 +194,6 @@ export function useVoiceRoom({
     const stopRecording = useCallback(() => {
         AudioRecord.stop();
         setIsRecording(false);
-        setIsProcessing(false);
         setVolume(0);
         
         if (ws.current?.readyState === WebSocket.OPEN) {
