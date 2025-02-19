@@ -59,7 +59,7 @@ export const ResponseStream = ({
 }) => {
     const scrollViewRef = React.useRef(null);
 
-    if (!responseStream && !isProcessing) return null;
+    if (!responseStream && !isGenerating) return null;
 
     return (
         <View style={[
