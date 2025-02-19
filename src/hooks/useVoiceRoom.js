@@ -59,11 +59,6 @@ export function useVoiceRoom({
                         bytes[i] = binaryString.charCodeAt(i);
                     }
                     
-                    console.log('Sending audio data:', {
-                        dataLength: bytes.length,
-                        timestamp: new Date().toISOString()
-                    });
-                    
                     ws.current.send(bytes.buffer);
                 }
                 
