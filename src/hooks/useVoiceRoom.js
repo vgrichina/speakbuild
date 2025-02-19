@@ -109,7 +109,12 @@ export function useVoiceRoom({
                         }
                     ],
                     initialOutputMedium: 'MESSAGE_MEDIUM_TEXT',
-                    medium: { webRtc: {} },
+                    medium: { 
+                        serverWebSocket: {
+                            inputSampleRate: 16000,
+                            outputSampleRate: 16000
+                        }
+                    },
                     firstSpeaker: 'FIRST_SPEAKER_USER',
                     transcriptOptional: false,
                     recordingEnabled: false
