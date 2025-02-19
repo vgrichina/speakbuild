@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
 
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
-    const [isListening, setIsListening] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
@@ -210,7 +209,7 @@ export const VoiceAssistant = () => {
         if (controller) {
             controller.abort();
             abortControllerRef.current = null;
-            setIsProcessing(false);
+            setIsGenerating(false);
         }
     };
 
@@ -243,7 +242,7 @@ export const VoiceAssistant = () => {
                         params: analysis.params || {}
                     });
                     setError('');
-                    setIsProcessing(false);
+                    setIsGenerating(false);
                     setModificationIntent(null);
                     // Don't clear transcribedText - it will be shown in history
                     return;
@@ -382,7 +381,7 @@ export const VoiceAssistant = () => {
             {(!currentComponent || isGenerating) && (
                 <ResponseStream
                     responseStream={responseStream}
-                    isProcessing={isGenerating}
+                    isGenerating={isGenerating}
                     modificationIntent={modificationIntent}
                 />
             )}

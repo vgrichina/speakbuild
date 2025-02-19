@@ -54,7 +54,7 @@ const LoadingSpinner = () => {
 
 export const ResponseStream = ({
     responseStream,
-    isProcessing,
+    isGenerating,
     modificationIntent
 }) => {
     const scrollViewRef = React.useRef(null);
@@ -77,7 +77,7 @@ export const ResponseStream = ({
                          modificationIntent === 'new' ? 'Creating New Component:' : 
                          'Response:'}
                     </Text>
-                    {isProcessing && <LoadingSpinner />}
+                    {isGenerating && <LoadingSpinner />}
                 </View>
                 <ScrollView 
                     style={{ minHeight: 100 }}
