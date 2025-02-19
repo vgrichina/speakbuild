@@ -85,7 +85,7 @@ export function useVoiceRoom({
                 currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
             });
 
-            const response = await fetch('https://api.ultravox.ai/api/stream', {
+            const response = await fetch('https://api.ultravox.ai/api/calls', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -94,21 +94,36 @@ export function useVoiceRoom({
                 body: JSON.stringify({
                     model: 'fixie-ai/ultravox',
                     languageHint: selectedLanguage,
-                    initialMessages: messages,
-                    audioConfig: {
-                        sampleRate: options.sampleRate,
-                        channels: options.channels,
-                        bitsPerSample: options.bitsPerSample
-                    }
+                    initialMessages: [
+                        {
+                            role: 'MESSAGE_ROLE_AGENT',
+                            text: messages[0].content
+                        },
+                        {
+                            role: 'MESSAGE_ROLE_USER',
+                            text: messages[1].content
+                        }
+                    ],
+                    initialOutputMedium: 'MESSAGE_MEDIUM_TEXT',
+                    medium: { webRtc: {} },
+                    firstSpeaker: 'FIRST_SPEAKER_USER',
+                    transcriptOptional: false,
+                    recordingEnabled: false
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to start stream: ${response.status}`);
+                const errorText = await response.text();
+                console.error('Ultravox API error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText
+                });
+                throw new Error(`Failed to create call: ${response.status} ${response.statusText}\n${errorText}`);
             }
 
-            const { streamUrl } = await response.json();
-            ws.current = new WebSocket(streamUrl);
+            const { joinUrl } = await response.json();
+            ws.current = new WebSocket(joinUrl);
             
             ws.current.onopen = () => {
                 setIsRecording(true);
