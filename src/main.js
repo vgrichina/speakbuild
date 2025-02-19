@@ -17,7 +17,6 @@ import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
 import { useVoiceRoom } from './hooks/useVoiceRoom';
-import { LiveKitRoom } from '@livekit/react-native';
 import { Mic, MicOff, Square } from 'lucide-react-native';
 import { Header } from './components/Header';
 import { ResponseStream } from './components/ResponseStream';
