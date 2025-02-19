@@ -189,7 +189,8 @@ export const VoiceAssistant = () => {
         isProcessing,
         volume,
         startRecording,
-        stopRecording
+        stopRecording,
+        stopProcessing
     } = useVoiceRoom({
         onError: setError,
         selectedModel,
@@ -365,7 +366,7 @@ export const VoiceAssistant = () => {
                     isProcessing={isProcessing}
                     onStartRecording={startRecording}
                     onStopRecording={stopRecording}
-                    onStopProcessing={stopGeneration}
+                    onStopProcessing={stopProcessing}
                     disabled={!isSettingsLoaded}
                 />
             </View>

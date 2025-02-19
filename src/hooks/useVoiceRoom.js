@@ -186,11 +186,17 @@ export function useVoiceRoom({
         ws.current = null;
     }, []);
 
+    const stopProcessing = useCallback(() => {
+        stopRecording();
+        setIsProcessing(false);
+    }, [stopRecording]);
+
     return {
         isRecording,
         isProcessing,
         volume,
         startRecording,
-        stopRecording
+        stopRecording,
+        stopProcessing
     };
 }
