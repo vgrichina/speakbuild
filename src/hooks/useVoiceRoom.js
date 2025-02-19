@@ -115,8 +115,22 @@ export function useVoiceRoom({
 
             ws.current.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
-                if (msg.transcription) {
-                    onTranscription?.(msg.transcription);
+                
+                // Log all messages, but only length for audio data
+                if (msg.type === 'audio') {
+                    console.log('Received audio message:', {
+                        type: msg.type,
+                        dataLength: msg.data?.length || 0
+                    });
+                } else {
+                    console.log('Received message:', msg);
+                }
+
+                // Handle agent transcripts
+                if (msg.type === "transcript" && msg.role === "agent") {
+                    if (msg.final) {
+                        onTranscription?.(msg.text);
+                    }
                 }
             };
 

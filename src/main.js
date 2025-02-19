@@ -1,32 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AudioSession, useDataChannel } from '@livekit/react-native';
-
-// Handler for LiveKit data channel messages
-function DataChannelHandler({ onAnalysis, onError, endCall }) {
-    useDataChannel((msg) => {
-        const decodedPayload = new TextDecoder().decode(msg.payload);
-        try {
-            const jsonMessage = JSON.parse(decodedPayload);
-            
-            // Only handle final messages
-            if (jsonMessage.final && jsonMessage.text) {
-                try {
-                    const analysis = JSON.parse(jsonMessage.text);
-                    console.log('Parsed analysis JSON:', analysis);
-                    onAnalysis(analysis);
-                    endCall(); // End the call after successful analysis
-                } catch (e) {
-                    console.error('Failed to parse analysis JSON:', e);
-                    onError('Failed to parse analysis result');
-                    endCall(); // End the call even if parsing failed
-                }
-            }
-        } catch (e) {
-            // Silently ignore non-JSON messages
-        }
-    });
-    return null;
-}
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { streamComponent, componentPrompt } from './services/componentGenerator';
@@ -141,23 +113,6 @@ const styles = StyleSheet.create({
 
 
 
-// Simple component to log data channel messages
-function DataChannelLogger() {
-    useDataChannel((msg) => {
-        const decodedPayload = new TextDecoder().decode(msg.payload);
-        try {
-            const jsonMessage = JSON.parse(decodedPayload);
-            console.log("LiveKit data channel JSON message:", {
-                message: jsonMessage,
-                participant: msg.participant?.identity,
-                timestamp: new Date().toISOString()
-            });
-        } catch (e) {
-            // Silently ignore non-JSON messages
-        }
-    });
-    return null;
-}
 
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
@@ -166,17 +121,6 @@ export const VoiceAssistant = () => {
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
 
-    // Start audio session when component mounts
-    useEffect(() => {
-        const start = async () => {
-            await AudioSession.startAudioSession();
-        };
-
-        start();
-        return () => {
-            AudioSession.stopAudioSession();
-        };
-    }, []);
 
     useEffect(() => {
         // Cleanup function to abort any ongoing streams when component unmounts
@@ -243,10 +187,11 @@ export const VoiceAssistant = () => {
     const [showDebugGeneration, setShowDebugGeneration] = useState(false);
 
     const {
-        isConnecting,
-        roomConnection,
-        startCall,
-        endCall
+        isRecording,
+        isProcessing,
+        volume,
+        startRecording,
+        stopRecording
     } = useVoiceRoom({
         onError: setError,
         selectedModel,
@@ -416,80 +361,15 @@ export const VoiceAssistant = () => {
 
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
-                {roomConnection ? (
-                    <LiveKitRoom
-                        serverUrl={roomConnection.url}
-                        token={roomConnection.token}
-                        connect={true}
-                        options={{
-                            adaptiveStream: { pixelDensity: 'screen' },
-                            audioCaptureDefaults: {
-                                trackName: 'microphone',
-                                deviceId: 'default'
-                            }
-                        }}
-                        // Audio is handled automatically by LiveKitRoom
-                        audio={true}
-                        video={false}
-                        onConnected={() => console.log('LiveKitRoom connected')}
-                        onError={(error) => {
-                            console.error('LiveKitRoom error:', error);
-                            console.error('Error stack:', error?.stack);
-                        }}
-                        onTrackPublished={(publication, participant) => console.log('Track published:', {
-                            trackSid: publication.trackSid,
-                            kind: publication.kind,
-                            source: publication.source,
-                            participant: participant.identity
-                        })}
-                        onTrackSubscribed={(track, publication, participant) => console.log('Track subscribed:', {
-                            trackSid: publication.trackSid,
-                            kind: track.kind,
-                            enabled: track.isEnabled,
-                            participant: participant.identity
-                        })}
-                        onParticipantConnected={(participant) => {
-                            console.log('Participant connected:', {
-                                id: participant.identity,
-                                metadata: participant.metadata
-                            });
-                        }}
-                        onLocalParticipantConnected={(participant) => {
-                            console.log('Local participant connected:', {
-                                id: participant.identity,
-                                metadata: participant.metadata
-                            });
-                        }}
-                    >
-                        <DataChannelHandler 
-                            onAnalysis={(analysis) => {
-                                setTranscribedText(analysis.transcription);
-                                processWithClaudeStream(analysis);
-                            }}
-                            onError={setError}
-                            endCall={endCall}
-                        />
-                        <VoiceButton
-                            volume={0}
-                            isGenerating={isProcessing}
-                            onStopGeneration={stopGeneration}
-                            onStartCall={startCall}
-                            onEndCall={endCall}
-                            isConnecting={isConnecting}
-                            isConnected={true}
-                        />
-                    </LiveKitRoom>
-                ) : (
-                    <VoiceButton
-                        volume={0}
-                        isGenerating={isProcessing}
-                        onStopGeneration={stopGeneration}
-                        onStartCall={startCall}
-                        onEndCall={endCall}
-                        isConnecting={isConnecting}
-                        isConnected={false}
-                    />
-                )}
+                <VoiceButton
+                    volume={volume}
+                    isRecording={isRecording}
+                    isProcessing={isProcessing}
+                    onStartRecording={startRecording}
+                    onStopRecording={stopRecording}
+                    onStopProcessing={stopGeneration}
+                    disabled={!isSettingsLoaded}
+                />
             </View>
 
 
