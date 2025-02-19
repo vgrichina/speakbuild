@@ -1,7 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Pressable, Animated, ActivityIndicator } from 'react-native';
-import { Square, Phone, PhoneOff } from 'lucide-react-native';
-import { useLocalParticipant } from '@livekit/react-native';
+import { Square, Mic, MicOff } from 'lucide-react-native';
 
 // Animation value outside component to prevent recreation
 const pulseAnimation = new Animated.Value(1);
@@ -42,51 +41,32 @@ const PulsatingCircle = ({ isActive, volume }) => {
 export const VoiceButton = ({ 
     disabled,
     volume,
-    isGenerating,
-    onStopGeneration,
-    onStartCall,
-    onEndCall,
-    isConnecting,
-    isConnected
+    isRecording,
+    isProcessing,
+    onStartRecording,
+    onStopRecording,
+    onStopProcessing
 }) => {
     const [isPressed, setIsPressed] = useState(false);
-    // Only use LiveKit hooks when we're inside LiveKitRoom
-    const { localParticipant } = isConnected ? useLocalParticipant() : { localParticipant: null };
-
-    useEffect(() => {
-        if (localParticipant) {
-            console.log('Local participant available:', {
-                id: localParticipant.identity,
-                audioTracks: localParticipant.audioTracks?.size ?? 0,
-                isMicrophoneEnabled: localParticipant.isMicrophoneEnabled,
-                publishedTracks: Array.from(localParticipant.audioTracks?.values() ?? []).map(track => ({
-                    sid: track.sid,
-                    name: track.trackName,
-                    enabled: track.isEnabled,
-                    muted: track.isMuted
-                }))
-            });
-        }
-    }, [localParticipant]);
 
     const handlePress = useCallback(() => {
-        if (isGenerating) {
-            onStopGeneration();
-        } else if (isConnected) {
-            onEndCall();
+        if (isProcessing) {
+            onStopProcessing();
+        } else if (isRecording) {
+            onStopRecording();
         } else {
-            onStartCall();
+            onStartRecording();
         }
-    }, [isGenerating, isConnected, onStartCall, onEndCall]);
+    }, [isProcessing, isRecording, onStartRecording, onStopRecording, onStopProcessing]);
 
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {localParticipant && <PulsatingCircle isActive={true} volume={volume} />}
+            {isRecording && <PulsatingCircle isActive={true} volume={volume} />}
             <Pressable
                 onPress={handlePress}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
-                disabled={disabled || isConnecting}
+                disabled={disabled}
                 style={[
                     {
                         width: 64,
@@ -94,22 +74,19 @@ export const VoiceButton = ({
                         borderRadius: 32,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: isGenerating ? '#EF4444' : (localParticipant ? '#EF4444' : '#3B82F6'),
+                        backgroundColor: isProcessing ? '#EF4444' : (isRecording ? '#EF4444' : '#3B82F6'),
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
-                    (disabled || isConnecting) && { opacity: 0.5 }
+                    disabled && { opacity: 0.5 }
                 ]}
             >
-                {isGenerating ? (
+                {isProcessing ? (
                     <Square size={24} color="white" />
-                ) : isConnecting ? (
-                    <ActivityIndicator color="white" />
-                ) : localParticipant ? (
-                    <PhoneOff size={32} color="white" />
+                ) : isRecording ? (
+                    <MicOff size={32} color="white" />
                 ) : (
-                    <Phone size={32} color="white" />
-                )
-                }
+                    <Mic size={32} color="white" />
+                )}
             </Pressable>
             <Text style={{ 
                 marginTop: 8,
