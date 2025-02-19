@@ -173,7 +173,12 @@ export function useVoiceRoom({
             };
 
             ws.current.onerror = (error) => {
-                console.error('WebSocket error:', error);
+                console.error('WebSocket error:', {
+                    error,
+                    errorStack: error.stack || new Error().stack,
+                    wsState: ws.current?.readyState,
+                    wsUrl: ws.current?.url
+                });
                 onError?.('Connection error');
                 stopRecording();
             };
