@@ -300,7 +300,7 @@ export const VoiceAssistant = () => {
                     console.error('Stream error:', error);
                     setError(`Stream error: ${error.message}`);
                 }
-                setIsProcessing(false);
+                setIsGenerating(false);
                 setResponseStream('');
             }
         } catch (error) {
@@ -314,7 +314,7 @@ export const VoiceAssistant = () => {
                     setError(`Error: ${error.message}`);
                 }
             }
-            setIsProcessing(false);
+            setIsGenerating(false);
         }
     };
 
