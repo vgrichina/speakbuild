@@ -419,7 +419,7 @@ export const VoiceAssistant = () => {
 
 
             {/* Component Container */}
-            {!isProcessing && !responseStream && (
+            {!isGenerating && (
                 <View style={{ flex: 1, width: '100%' }}>
                     <View style={{ 
                         backgroundColor: '#ffffff',
