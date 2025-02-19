@@ -6,20 +6,19 @@ import { Square, Mic, MicOff } from 'lucide-react-native';
 const pulseAnimation = new Animated.Value(1);
 
 const PulsatingCircle = ({ isActive, volume }) => {
-    const animConfig = React.useMemo(() => ({
-        toValue: 1 + (volume * 0.5),
-        friction: 3,
-        tension: 40,
-        useNativeDriver: true,
-    }), [volume]);
-
     React.useEffect(() => {
         if (isActive) {
-            Animated.spring(pulseAnimation, animConfig).start();
+            const safeVolume = isNaN(volume) ? 0 : volume;
+            Animated.spring(pulseAnimation, {
+                toValue: 1 + (safeVolume * 0.5),
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true
+            }).start();
         } else {
             pulseAnimation.setValue(1);
         }
-    }, [isActive, animConfig]);
+    }, [isActive, volume]);
 
     if (!isActive) return null;
 
