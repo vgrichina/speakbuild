@@ -14,7 +14,7 @@ async function* streamCompletion(apiKey, messages, {
     if (!apiKey) throw new Error('API key required');
     
     let fullResponse = '';
-    console.log(`Stream [${model.split('/')[1]}] t=${temperature}`);
+    console.log(`Stream [${model}] t=${temperature}`);
     console.log(`>> ${messages.map(m => `${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
 
     const response = await fetchSSE(API_URL, {
@@ -80,7 +80,7 @@ async function* streamCompletion(apiKey, messages, {
 }
 
 async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens, abortController } = {}) {
-    console.log(`API [${model.split('/')[1]}] t=${temperature}${max_tokens ? ` max=${max_tokens}` : ''}`);
+    console.log(`API [${model}] t=${temperature}${max_tokens ? ` max=${max_tokens}` : ''}`);
     console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0, PROMPT_PREVIEW_LENGTH)}...`).join('\n')}`);
 
     const response = await fetch(API_URL, {
@@ -101,7 +101,7 @@ async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haik
 
     if (!response.ok) {
         const data = await response.json();
-        console.error(`API Error [${model.split('/')[1]}]:`, `${response.status} - ${response.statusText}`);
+        console.error(`API Error [${model}]:`, `${response.status} - ${response.statusText}`);
         throw new Error(`API error ${response.status}: ${JSON.stringify(data)}`);
     }
 
