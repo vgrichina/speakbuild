@@ -213,22 +213,17 @@ export const VoiceAssistant = () => {
     };
 
     const processWithClaudeStream = async (analysis) => {
-        // Clear any previous error
         setError('');
-
-        // Abort any existing stream
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-        
-        // Create new AbortController for this stream
-        const currentController = new AbortController();
-        abortControllerRef.current = currentController;
-        
         setIsProcessing(true);
         setResponseStream('');
 
         try {
+            // Abort any existing stream
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+            const currentController = new AbortController();
+            abortControllerRef.current = currentController;
             // Check cache for matching widget
             const cachedWidget = await widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
@@ -274,27 +269,24 @@ export const VoiceAssistant = () => {
                     }
                     
                     if (done && code) {
-                        const GeneratedComponent = createComponent(code);
-                        widgetStorage.store(analysis.widgetUrl, code)
-                            .then(() => {
-                                addToHistory({
-                                    component: GeneratedComponent,
-                                    code,
-                                    request: analysis.transcription,
-                                    params: analysis.params || {}
-                                });
-                                
-                                setError('');
-                            })
-                            .catch(error => {
-                                console.error('Storage error:', error);
-                                setError(`Storage error: ${error.message}`);
+                        try {
+                            const GeneratedComponent = createComponent(code);
+                            await widgetStorage.store(analysis.widgetUrl, code);
+                            addToHistory({
+                                component: GeneratedComponent,
+                                code,
+                                request: analysis.transcription,
+                                params: analysis.params || {}
                             });
-                            
-                        setIsProcessing(false);
-                        setModificationIntent(null);
-                        setResponseStream(''); // Clear response stream when done
-                        // Don't clear transcribedText - it will be shown in history
+                            setError('');
+                        } catch (error) {
+                            console.error('Component creation error:', error);
+                            setError(`Failed to create component: ${error.message}`);
+                        } finally {
+                            setIsProcessing(false);
+                            setModificationIntent(null);
+                            setResponseStream('');
+                        }
                     }
                 }
             } catch (error) {

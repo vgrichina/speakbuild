@@ -156,14 +156,14 @@ export function useVoiceRoom({
                 }
 
                 // Handle agent transcripts
-                if (msg.type === "transcript" && msg.role === "agent" && msg.final) {
+                if (msg.type === "transcript" && msg.role === "agent" && msg.final && msg.text) {
                     try {
                         // Parse the JSON response from the agent
                         const analysis = JSON.parse(msg.text);
-                        // Call the onTranscription callback with the analysis
-                        onTranscription?.(analysis);
-                        // Stop recording when we receive final transcript
+                        // Stop recording first since we have the complete analysis
                         stopRecording();
+                        // Then trigger component generation
+                        onTranscription?.(analysis);
                     } catch (error) {
                         console.error('Error parsing transcript:', error);
                         onError?.('Failed to parse transcript');
