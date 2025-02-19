@@ -52,6 +52,10 @@ export function useVoiceRoom({
             
             AudioRecord.on('data', data => {
                 if (ws.current?.readyState === WebSocket.OPEN) {
+                    console.log('Sending audio data:', {
+                        dataLength: data.length,
+                        timestamp: new Date().toISOString()
+                    });
                     ws.current.send(data);
                 }
                 
