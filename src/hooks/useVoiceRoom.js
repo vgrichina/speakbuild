@@ -167,9 +167,12 @@ export function useVoiceRoom({
                         const analysis = JSON.parse(msg.text);
                         // Call the onTranscription callback with the analysis
                         onTranscription?.(analysis);
+                        // Stop recording when we receive final transcript
+                        stopRecording();
                     } catch (error) {
                         console.error('Error parsing transcript:', error);
                         onError?.('Failed to parse transcript');
+                        stopRecording();
                     }
                 }
             };
