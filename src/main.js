@@ -470,7 +470,6 @@ export const VoiceAssistant = () => {
                             endCall={endCall}
                         />
                         <VoiceButton
-                            disabled={isProcessing}
                             volume={0}
                             isGenerating={isProcessing}
                             onStopGeneration={stopGeneration}
@@ -482,7 +481,6 @@ export const VoiceAssistant = () => {
                     </LiveKitRoom>
                 ) : (
                     <VoiceButton
-                        disabled={isProcessing}
                         volume={0}
                         isGenerating={isProcessing}
                         onStopGeneration={stopGeneration}
