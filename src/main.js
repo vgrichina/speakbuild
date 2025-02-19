@@ -192,6 +192,10 @@ export const VoiceAssistant = () => {
         stopRecording,
         stopProcessing
     } = useVoiceRoom({
+        onTranscription: (analysis) => {
+            setTranscribedText(analysis.transcription);
+            processWithClaudeStream(analysis);
+        },
         onError: setError,
         selectedModel,
         selectedLanguage,

@@ -161,9 +161,15 @@ export function useVoiceRoom({
                 }
 
                 // Handle agent transcripts
-                if (msg.type === "transcript" && msg.role === "agent") {
-                    if (msg.final) {
-                        onTranscription?.(msg.text);
+                if (msg.type === "transcript" && msg.role === "agent" && msg.final) {
+                    try {
+                        // Parse the JSON response from the agent
+                        const analysis = JSON.parse(msg.text);
+                        // Call the onTranscription callback with the analysis
+                        onTranscription?.(analysis);
+                    } catch (error) {
+                        console.error('Error parsing transcript:', error);
+                        onError?.('Failed to parse transcript');
                     }
                 }
             };
