@@ -193,6 +193,7 @@ export const VoiceAssistant = () => {
         stopProcessing
     } = useVoiceRoom({
         onTranscription: (analysis) => {
+            console.log('Received analysis:', analysis);
             setTranscribedText(analysis.transcription);
             processWithClaudeStream(analysis);
         },
@@ -213,6 +214,7 @@ export const VoiceAssistant = () => {
     };
 
     const processWithClaudeStream = async (analysis) => {
+        console.log('Starting component generation with analysis:', analysis);
         setError('');
         setIsProcessing(true);
         setResponseStream('');
