@@ -73,12 +73,14 @@ export function useVoiceRoom({
 
     const startRecording = useCallback(async () => {
         try {
+            setIsProcessing(true);
             const ultravoxKey = await AsyncStorage.getItem('ultravox_api_key');
             if (!ultravoxKey) {
                 throw new Error('Ultravox API key not found');
             }
 
-            const messages = analysisPrompt({
+            const messages = analysisPrompt({ 
+                text: '', // Empty since we're starting voice recording
                 requestHistory: componentHistory?.map(entry => entry.request) || [],
                 currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
             });
@@ -148,6 +150,7 @@ export function useVoiceRoom({
         } catch (error) {
             console.error('Error starting recording:', error);
             onError?.(error.message);
+            setIsProcessing(false);
             stopRecording();
         }
     }, [componentHistory, currentHistoryIndex, selectedLanguage]);
@@ -155,6 +158,7 @@ export function useVoiceRoom({
     const stopRecording = useCallback(() => {
         AudioRecord.stop();
         setIsRecording(false);
+        setIsProcessing(false);
         setVolume(0);
         
         if (ws.current?.readyState === WebSocket.OPEN) {

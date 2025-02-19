@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
     const [isListening, setIsListening] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
 
@@ -374,7 +373,7 @@ export const VoiceAssistant = () => {
 
 
             <TranscriptionBox
-                isListening={!!roomConnection}
+                isListening={isRecording}
                 partialResults=""
                 transcribedText={transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
