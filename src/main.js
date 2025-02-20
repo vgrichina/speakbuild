@@ -129,30 +129,6 @@ export const VoiceAssistant = () => {
             }
         };
     }, []);
-
-    useEffect(() => {
-        const loadSettings = async () => {
-            const [currentApiKey, savedLanguage, savedModel] = await Promise.all([
-                AsyncStorage.getItem('openrouter_api_key'),
-                AsyncStorage.getItem('recognition_language'),
-                AsyncStorage.getItem('selected_model')
-            ]);
-            
-            // Load saved preferences even if no API key
-            if (savedLanguage) {
-                setSelectedLanguage(savedLanguage);
-            }
-            if (savedModel) {
-                setSelectedModel(savedModel);
-            }
-            
-            // Show settings modal if no API key
-            if (!currentApiKey) {
-                setIsSettingsOpen(true);
-            }
-        };
-        loadSettings();
-    }, []);
     const [partialResults, setPartialResults] = useState('');
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
