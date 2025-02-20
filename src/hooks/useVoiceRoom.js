@@ -26,21 +26,26 @@ export function useVoiceRoom({
     const audioBuffer = useRef([]);
     const isConnected = useRef(false);
 
-    const cleanup = useCallback(() => {
-        console.log('Cleaning up voice room...', new Error().stack);
+    const cleanupWebSocket = useCallback(() => {
+        console.log('Cleaning up WebSocket...');
         if (ws.current) {
             if (ws.current.readyState === WebSocket.OPEN) {
                 ws.current.close();
             }
             ws.current = null;
         }
+        isConnected.current = false;
+    }, []);
+
+    const cleanup = useCallback(() => {
+        console.log('Full cleanup of voice room...');
+        cleanupWebSocket();
         AudioRecord.stop();
         setIsRecording(false);
         setIsConnecting(false);
         setVolume(0);
         audioBuffer.current = [];
-        isConnected.current = false;
-    }, []);
+    }, [cleanupWebSocket]);
 
     useEffect(() => {
         return cleanup;
@@ -176,8 +181,7 @@ export function useVoiceRoom({
             }
 
             const { joinUrl } = await response.json();
-            cleanup();
-            
+            cleanupWebSocket(); // Only cleanup WebSocket before creating a new one
             ws.current = new WebSocket(joinUrl);
             
             ws.current.onopen = () => {
