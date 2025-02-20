@@ -440,7 +440,14 @@ export const VoiceAssistant = () => {
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
-                                console.log('Rendering component with params:', params);
+                                console.log('Component render triggered:', {
+                                    historyIndex: currentHistoryIndex,
+                                    historyLength: componentHistory.length,
+                                    params,
+                                    isGenerating,
+                                    transcribedText: transcribedText ? 'present' : 'none',
+                                    responseStream: responseStream ? 'present' : 'none'
+                                });
                                 return renderComponent(currentComponent, params);
                             })()}
                         </ScrollView>
