@@ -26,7 +26,9 @@ export function useSettings() {
                 setSelectedLanguage(savedLanguage || 'en');
                 
                 // Set model with default
+                console.log('Loading settings - saved model:', savedModel);
                 const modelToUse = savedModel || 'anthropic/claude-3.5-sonnet';
+                console.log('Using model:', modelToUse);
                 await AsyncStorage.setItem('selected_model', modelToUse);
                 setSelectedModel(modelToUse);
                 
