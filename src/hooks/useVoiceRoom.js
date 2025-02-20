@@ -20,6 +20,11 @@ export function useVoiceRoom({
     componentHistory,
     currentHistoryIndex 
 }) {
+    if (!selectedModel) {
+        console.error('useVoiceRoom: No model provided');
+    } else {
+        console.log('useVoiceRoom initialized with model:', selectedModel);
+    }
     const [isRecording, setIsRecording] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const ws = useRef(null);

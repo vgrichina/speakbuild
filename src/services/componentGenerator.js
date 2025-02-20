@@ -166,6 +166,10 @@ const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
 
 export async function* streamComponent(analysis, currentComponentCode, selectedModel, abortController) {
     console.log('streamComponent called with model:', selectedModel);
+    
+    if (!selectedModel) {
+        throw new Error('No model specified for component generation');
+    }
     const currentApiKey = process.env.OPENROUTER_API_KEY || await AsyncStorage.getItem('openrouter_api_key');
     if (!currentApiKey) {
         throw new Error('API key not found in environment or AsyncStorage');

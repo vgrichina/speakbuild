@@ -30,6 +30,7 @@ export function useSettings() {
                 const modelToUse = savedModel || 'anthropic/claude-3.5-sonnet';
                 console.log('Using model:', modelToUse);
                 setSelectedModel(modelToUse);
+                console.log('Model set in state:', modelToUse);
                 
                 // Mark settings as loaded
                 setIsSettingsLoaded(true);
