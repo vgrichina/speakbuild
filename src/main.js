@@ -169,9 +169,7 @@ export const VoiceAssistant = () => {
         }
     };
 
-    console.log('selectedModel', selectedModel);
     const handleAnalysis = useCallback(async (analysis) => {
-        console.log('handleAnalysis', selectedModel, analysis, new Error().stack);
         console.log('Received analysis:', analysis);
         setTranscribedText(analysis.transcription);
         setError('');
@@ -224,10 +222,6 @@ export const VoiceAssistant = () => {
         }
     }, [selectedModel]);
 
-    // Add an effect to track when handleAnalysis is recreated
-    useEffect(() => {
-        console.log('handleAnalysis recreated with selectedModel:', selectedModel);
-    }, [handleAnalysis]);
 
     const {
         isRecording,
