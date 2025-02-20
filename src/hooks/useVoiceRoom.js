@@ -25,6 +25,7 @@ export function useVoiceRoom({
     const [volume, setVolume] = useState(0);
 
     const cleanup = useCallback(() => {
+        console.log('Cleaning up voice room...');
         if (ws.current) {
             if (ws.current.readyState === WebSocket.OPEN) {
                 ws.current.close();
@@ -101,6 +102,9 @@ export function useVoiceRoom({
             console.log('Already connecting or recording');
             return;
         }
+
+        // Create a new AbortController for this recording session
+        const controller = new AbortController();
 
         try {
             setIsConnecting(true);
@@ -218,7 +222,7 @@ export function useVoiceRoom({
             onError?.(error.message);
             cleanup();
         }
-    }, [componentHistory, currentHistoryIndex, selectedLanguage]);
+    }, [componentHistory, currentHistoryIndex, selectedLanguage, onTranscription, cleanup]);
 
     const stopRecording = useCallback(() => {
         cleanup();
