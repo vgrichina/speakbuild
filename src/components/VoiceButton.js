@@ -8,10 +8,9 @@ const pulseAnimation = new Animated.Value(1);
 const PulsatingCircle = ({ isActive, volume }) => {
     React.useEffect(() => {
         if (isActive) {
-            const safeVolume = isNaN(volume) ? 0 : volume;
-            console.log('PulsatingCircle volume:', safeVolume, 'raw volume:', volume);
+            console.log('PulsatingCircle volume:', volume);
             Animated.spring(pulseAnimation, {
-                toValue: 1 + (safeVolume * 0.5),
+                toValue: 1 + (volume * 20),
                 friction: 3,
                 tension: 40,
                 useNativeDriver: true
