@@ -199,11 +199,21 @@ export function useVoiceRoom({
             };
 
             ws.current.onmessage = (event) => {
-                if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
-                    console.log('Received message after WebSocket closed');
+                // Store current WebSocket reference to check if it's still the active one
+                const currentWs = ws.current;
+                
+                if (!currentWs || currentWs.readyState !== WebSocket.OPEN) {
+                    console.log('Skipping message - WebSocket not open');
                     return;
                 }
-                const msg = JSON.parse(event.data);
+
+                let msg;
+                try {
+                    msg = JSON.parse(event.data);
+                } catch (error) {
+                    console.error('Failed to parse WebSocket message:', error);
+                    return;
+                }
                 
                 // Only log non-audio messages
                 if (msg.type !== 'audio') {
@@ -216,13 +226,17 @@ export function useVoiceRoom({
                         // Parse the JSON response from the agent
                         const analysis = JSON.parse(msg.text);
                         // Stop recording first since we have the complete analysis
-                        stopRecording();
-                        // Then trigger component generation
-                        onTranscription?.(analysis);
+                        if (currentWs === ws.current) { // Only if this is still the active WebSocket
+                            stopRecording();
+                            // Then trigger component generation
+                            onTranscription?.(analysis);
+                        }
                     } catch (error) {
                         console.error('Error parsing transcript:', error);
-                        onError?.('Failed to parse transcript');
-                        stopRecording();
+                        if (currentWs === ws.current) {
+                            onError?.('Failed to parse transcript');
+                            stopRecording();
+                        }
                     }
                 }
             };
