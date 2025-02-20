@@ -27,7 +27,7 @@ export function useVoiceRoom({
     const isConnected = useRef(false);
 
     const cleanup = useCallback(() => {
-        console.log('Cleaning up voice room...');
+        console.log('Cleaning up voice room...', new Error().stack);
         if (ws.current) {
             if (ws.current.readyState === WebSocket.OPEN) {
                 ws.current.close();
@@ -109,9 +109,13 @@ export function useVoiceRoom({
             return;
         }
 
+        console.log('Starting recording flow...');
+
         // Start recording immediately
         setIsRecording(true);
+        console.log('Set isRecording to true');
         AudioRecord.start();
+        console.log('AudioRecord.start() called');
 
         // Create a new AbortController for this recording session
         const controller = new AbortController();
@@ -177,6 +181,7 @@ export function useVoiceRoom({
             ws.current = new WebSocket(joinUrl);
             
             ws.current.onopen = () => {
+                console.log('WebSocket opened');
                 setIsConnecting(false);
                 isConnected.current = true;
                 
@@ -230,7 +235,7 @@ export function useVoiceRoom({
             };
 
             ws.current.onclose = () => {
-                console.log('WebSocket connection closed');
+                console.log('WebSocket connection closed', new Error().stack);
                 cleanup();
             };
 
