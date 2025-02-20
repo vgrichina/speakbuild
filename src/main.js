@@ -363,19 +363,27 @@ export const VoiceAssistant = () => {
                         shadowRadius: 4,
                         elevation: 3
                     }}>
+                    {console.log('Debug render:', {
+                        hasCurrentComponent: !!currentComponent,
+                        historyIndex: currentHistoryIndex,
+                        historyLength: componentHistory.length,
+                        componentType: currentComponent ? typeof currentComponent : 'none'
+                    })}
                     {currentComponent ? (
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
-                                console.log('Component render triggered:', {
-                                    historyIndex: currentHistoryIndex,
-                                    historyLength: componentHistory.length,
+                                console.log('Component render params:', {
                                     params,
-                                    isGenerating,
-                                    transcribedText: transcribedText ? 'present' : 'none',
-                                    responseStream: responseStream ? 'present' : 'none'
+                                    historyEntry: componentHistory[currentHistoryIndex],
+                                    componentValid: typeof currentComponent === 'function'
                                 });
-                                return renderComponent(currentComponent, params);
+                                try {
+                                    return renderComponent(currentComponent, params);
+                                } catch (error) {
+                                    console.error('Render error:', error);
+                                    return null;
+                                }
                             })()}
                         </ScrollView>
                     ) : (
