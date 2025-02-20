@@ -8,7 +8,6 @@ const pulseAnimation = new Animated.Value(1);
 const PulsatingCircle = ({ isActive, volume }) => {
     React.useEffect(() => {
         if (isActive) {
-            console.log('PulsatingCircle volume:', volume);
             Animated.spring(pulseAnimation, {
                 toValue: 1 + (volume * 20),
                 friction: 3,
@@ -45,12 +44,6 @@ export const VoiceButton = ({
 }) => {
     const [isPressed, setIsPressed] = useState(false);
 
-    // Add logging when volume changes
-    React.useEffect(() => {
-        if (isActive) {
-            console.log('VoiceButton received volume:', volume);
-        }
-    }, [isActive, volume]);
 
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>

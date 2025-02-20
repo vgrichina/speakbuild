@@ -81,23 +81,13 @@ export function useVoiceRoom({
                 }
                 
                 // Calculate volume from PCM data
-                console.log('Audio data received, length:', data.length);
                 const pcmData = new Int16Array(bytes.buffer);
-                console.log('PCM data length:', pcmData.length);
-                
                 let sum = 0;
                 for (let i = 0; i < pcmData.length; i++) {
                     sum += Math.abs(pcmData[i]);
                 }
                 const average = sum / pcmData.length;
                 const normalizedVolume = Math.min(average / 32768, 1);
-                
-                console.log('Volume calculation:', {
-                    sum,
-                    average,
-                    normalizedVolume,
-                    isNaN: isNaN(normalizedVolume)
-                });
                 
                 setVolume(normalizedVolume);
             });
@@ -186,13 +176,8 @@ export function useVoiceRoom({
                 }
                 const msg = JSON.parse(event.data);
                 
-                // Log all messages, but only length for audio data
-                if (msg.type === 'audio') {
-                    console.log('Received audio message:', {
-                        type: msg.type,
-                        dataLength: msg.data?.length || 0
-                    });
-                } else {
+                // Only log non-audio messages
+                if (msg.type !== 'audio') {
                     console.log('Received message:', msg);
                 }
 
