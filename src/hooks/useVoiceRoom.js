@@ -242,19 +242,32 @@ export function useVoiceRoom({
             };
 
             ws.current.onerror = (error) => {
-                console.error('WebSocket error:', {
-                    error,
-                    errorStack: error.stack || new Error().stack,
-                    wsState: ws.current?.readyState,
-                    wsUrl: ws.current?.url
-                });
-                onError?.('Connection error');
-                stopRecording();
+                // Only handle error if this is still the active WebSocket
+                if (ws.current) {
+                    console.error('WebSocket error:', {
+                        error,
+                        errorStack: error.stack || new Error().stack,
+                        wsState: ws.current?.readyState,
+                        wsUrl: ws.current?.url
+                    });
+                    
+                    // Don't call cleanup/stopRecording if we're already in a cleanup state
+                    if (isRecording) {
+                        onError?.('Connection error');
+                        stopRecording();
+                    }
+                }
             };
 
             ws.current.onclose = () => {
-                console.log('WebSocket connection closed', new Error().stack);
-                cleanup();
+                // Only handle close if this is still the active WebSocket
+                if (ws.current) {
+                    console.log('WebSocket connection closed normally');
+                    // Don't trigger cleanup if we're already in a cleanup state
+                    if (isRecording) {
+                        cleanup();
+                    }
+                }
             };
 
         } catch (error) {
