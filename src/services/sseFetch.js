@@ -51,7 +51,6 @@ export const fetchSSE = (url, options) => {
         xhr.onprogress = () => {
             const newData = xhr.responseText.slice(lastProcessedIndex);
             if (newData.length > 0) {
-                console.log('XHR: New data chunk:', newData.length, 'bytes');
                 lastProcessedIndex = xhr.responseText.length;
                 
                 if (resolveRead) {
