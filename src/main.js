@@ -188,7 +188,9 @@ export const VoiceAssistant = () => {
         }
     };
 
-    const handleAnalysis = useCallback(async (analysis) => {
+    console.log('selectedModel', selectedModel);
+    const handleAnalysis = async (analysis) => {
+        console.log('handleAnalysis', selectedModel, analysis);
         setError('');
         setIsGenerating(true);
         setResponseStream('');
@@ -237,7 +239,7 @@ export const VoiceAssistant = () => {
             setIsGenerating(false);
             setResponseStream('');
         }
-    }, [selectedModel, currentComponentCode, addToHistory]);
+    };
 
 
     const handleTextSubmit = (e) => {
