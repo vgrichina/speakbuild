@@ -358,12 +358,18 @@ export const VoiceAssistant = () => {
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
+                    isActive={isRecording || isGenerating}
+                    onToggle={() => {
+                        if (isGenerating) {
+                            stopGeneration();
+                        }
+                        if (isRecording) {
+                            stopRecording();
+                        } else {
+                            startRecording();
+                        }
+                    }}
                     volume={volume}
-                    isRecording={isRecording}
-                    isProcessing={isProcessing}
-                    onStartRecording={startRecording}
-                    onStopRecording={stopRecording}
-                    onCancelRecording={cancelRecording}
                     disabled={!isSettingsLoaded}
                 />
             </View>

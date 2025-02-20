@@ -39,27 +39,17 @@ const PulsatingCircle = ({ isActive, volume }) => {
 
 export const VoiceButton = ({ 
     disabled,
-    volume,
-    isRecording,
-    onStartRecording,
-    onStopRecording,
-    onCancelRecording
+    isActive,
+    onToggle,
+    volume 
 }) => {
     const [isPressed, setIsPressed] = useState(false);
 
-    const handlePress = useCallback(() => {
-        if (isRecording) {
-            onStopRecording();
-        } else {
-            onStartRecording();
-        }
-    }, [isProcessing, isRecording, onStartRecording, onStopRecording, onStopProcessing]);
-
     return (
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {isRecording && <PulsatingCircle isActive={true} volume={volume} />}
+            {isActive && <PulsatingCircle isActive={true} volume={volume} />}
             <Pressable
-                onPress={handlePress}
+                onPress={onToggle}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
                 disabled={disabled}
@@ -70,27 +60,24 @@ export const VoiceButton = ({
                         borderRadius: 32,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: isRecording ? '#EF4444' : '#3B82F6',
+                        backgroundColor: isActive ? '#EF4444' : '#3B82F6',
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
                     disabled && { opacity: 0.5 }
                 ]}
             >
-                {isProcessing ? (
-                    <Square size={24} color="white" />
-                ) : isRecording ? (
-                    <MicOff size={32} color="white" />
+                {isActive ? (
+                    <Square size={32} color="white" />
                 ) : (
                     <Mic size={32} color="white" />
                 )}
             </Pressable>
             <Text style={{ 
                 marginTop: 8,
-                color: isRecording ? '#EF4444' : '#666',
+                color: isActive ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isRecording ? 'Stop recording' : 
-                 'Start recording'}
+                {isActive ? 'Stop' : 'Start listening'}
             </Text>
         </View>
     );
