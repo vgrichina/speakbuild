@@ -214,6 +214,14 @@ export const VoiceAssistant = () => {
 
     const processWithClaudeStream = async (analysis) => {
         console.log('Starting component generation with analysis:', analysis);
+        
+        if (!selectedModel) {
+            console.error('No model selected');
+            setError('Configuration error: No model selected');
+            return;
+        }
+        console.log('Processing with model:', selectedModel);
+        
         setError('');
         setIsGenerating(true);
         setResponseStream('');
