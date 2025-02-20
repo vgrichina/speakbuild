@@ -165,8 +165,6 @@ const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
 };
 
 export async function* streamComponent(analysis, currentComponentCode, selectedModel, abortController) {
-    console.log('streamComponent called with model:', selectedModel);
-    
     if (!selectedModel) {
         throw new Error('No model specified for component generation');
     }
