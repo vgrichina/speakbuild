@@ -19,8 +19,14 @@ export function useComponentHistory() {
             newEntry: entry,
             transcription: entry.request
         });
-        setHistory(prev => [...prev.slice(0, currentIndex + 1), entry]);
-        setCurrentIndex(prev => prev + 1);
+        
+        setHistory(prev => {
+            const newHistory = [...prev.slice(0, currentIndex + 1), entry];
+            // Update index immediately after history update
+            setTimeout(() => setCurrentIndex(newHistory.length - 1), 0);
+            return newHistory;
+        });
+
         console.log('After adding:', {
             newHistoryLength: history.length + 1,
             newIndex: currentIndex + 1
