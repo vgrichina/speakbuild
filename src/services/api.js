@@ -39,7 +39,7 @@ async function* streamCompletion(apiKey, messages, {
   -H 'Content-Type: application/json' \\
   -H 'Accept: text/event-stream' \\
   -H 'X-Title: Voice Assistant Web App' \\
-  -d '${JSON.stringify(requestBody, null, 2)}'`);
+  -d '${JSON.stringify(requestBody).replace(/'/g, "'\\''")}'`);
 
     const response = await fetchSSE(API_URL, {
         method: 'POST',
