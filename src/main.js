@@ -160,24 +160,6 @@ export const VoiceAssistant = () => {
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const [showDebugGeneration, setShowDebugGeneration] = useState(false);
 
-    const {
-        isRecording,
-        volume,
-        startRecording,
-        stopRecording,
-        cancelRecording
-    } = useVoiceRoom({
-        onTranscription: (analysis) => {
-            console.log('Received analysis:', analysis);
-            setTranscribedText(analysis.transcription);
-            handleAnalysis(analysis);
-        },
-        onError: setError,
-        selectedLanguage,
-        componentHistory,
-        currentHistoryIndex
-    });
-
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
         if (controller) {
@@ -188,8 +170,10 @@ export const VoiceAssistant = () => {
     };
 
     console.log('selectedModel', selectedModel);
-    const handleAnalysis = async (analysis) => {
-        console.log('handleAnalysis', selectedModel, analysis);
+    const handleAnalysis = useCallback(async (analysis) => {
+        console.log('handleAnalysis', selectedModel, analysis, new Error().stack);
+        console.log('Received analysis:', analysis);
+        setTranscribedText(analysis.transcription);
         setError('');
         setIsGenerating(true);
         setResponseStream('');
@@ -238,7 +222,26 @@ export const VoiceAssistant = () => {
             setIsGenerating(false);
             setResponseStream('');
         }
-    };
+    }, [selectedModel]);
+
+    // Add an effect to track when handleAnalysis is recreated
+    useEffect(() => {
+        console.log('handleAnalysis recreated with selectedModel:', selectedModel);
+    }, [handleAnalysis]);
+
+    const {
+        isRecording,
+        volume,
+        startRecording,
+        stopRecording,
+        cancelRecording
+    } = useVoiceRoom({
+        onTranscription: handleAnalysis,
+        onError: setError,
+        selectedLanguage,
+        componentHistory,
+        currentHistoryIndex
+    });
 
 
     const handleTextSubmit = (e) => {
