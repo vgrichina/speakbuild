@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
-import { streamComponent, componentPrompt } from './services/componentGenerator';
 import { widgetStorage } from './services/widgetStorage';
+import { processWithClaudeStream } from './services/processStream';
 import { useComponentHistory } from './hooks/useComponentHistory';
 import { useSettings } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
@@ -16,7 +16,7 @@ import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, Tou
 import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
 import { SettingsModal } from './components/SettingsModal';
-import { useSpeechRecognition } from './hooks/useSpeechRecognition';
+import { useVoiceRoom } from './hooks/useVoiceRoom';
 import { Mic, MicOff, Square } from 'lucide-react-native';
 import { Header } from './components/Header';
 import { ResponseStream } from './components/ResponseStream';
@@ -112,12 +112,13 @@ const styles = StyleSheet.create({
 
 
 
+
 export const VoiceAssistant = () => {
     const scrollViewRef = React.useRef(null);
-    const [isListening, setIsListening] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
+
 
     useEffect(() => {
         // Cleanup function to abort any ongoing streams when component unmounts
@@ -128,30 +129,6 @@ export const VoiceAssistant = () => {
             }
         };
     }, []);
-
-    useEffect(() => {
-        const loadSettings = async () => {
-            const [currentApiKey, savedLanguage, savedModel] = await Promise.all([
-                AsyncStorage.getItem('openrouter_api_key'),
-                AsyncStorage.getItem('recognition_language'),
-                AsyncStorage.getItem('selected_model')
-            ]);
-            
-            // Load saved preferences even if no API key
-            if (savedLanguage) {
-                setSelectedLanguage(savedLanguage);
-            }
-            if (savedModel) {
-                setSelectedModel(savedModel);
-            }
-            
-            // Show settings modal if no API key
-            if (!currentApiKey) {
-                setIsSettingsOpen(true);
-            }
-        };
-        loadSettings();
-    }, []);
     const [partialResults, setPartialResults] = useState('');
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
@@ -159,9 +136,10 @@ export const VoiceAssistant = () => {
     const {
         isSettingsOpen,
         setIsSettingsOpen,
-        apiKey,
-        selectedLanguage,
+        ultravoxApiKey,
+        openrouterApiKey,
         selectedModel,
+        selectedLanguage,
         isSettingsLoaded,
         error: settingsError,
         saveSettings
@@ -182,157 +160,82 @@ export const VoiceAssistant = () => {
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const [showDebugGeneration, setShowDebugGeneration] = useState(false);
 
-    const {
-        isListening: isSpeechListening,
-        volume: speechVolume,
-        partialResults: speechPartialResults,
-        hasSpeechPermission,
-        toggleListening
-    } = useSpeechRecognition({
-        selectedLanguage,
-        onTranscription: (text) => {
-            setTranscribedText(text);
-            setResponseStream('');
-            processWithClaudeStream(text);
-        },
-        onError: setError
-    });
-
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
         if (controller) {
             controller.abort();
             abortControllerRef.current = null;
-            setIsProcessing(false);
+            setIsGenerating(false);
         }
     };
 
-    const processWithClaudeStream = async (text) => {
-        // Clear any previous error
+    const handleAnalysis = useCallback(async (analysis) => {
+        console.log('Received analysis:', analysis);
+        setTranscribedText(analysis.transcription);
         setError('');
-
-        // Abort any existing stream
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-        
-        // Create new AbortController for this stream
-        const currentController = new AbortController();
-        abortControllerRef.current = currentController;
-        
-        const currentApiKey = await AsyncStorage.getItem('openrouter_api_key');
-        if (!currentApiKey) {
-            setError('Please set your OpenRouter API key in settings');
-            setIsSettingsOpen(true);
-            return;
-        }
-
-        setIsProcessing(true);
+        setIsGenerating(true);
         setResponseStream('');
-
+        
         try {
-            // Get current component params if any
-            const currentParams = currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null;
-            
-            // Analyze the request with current params context
-            const analysis = await analyzeRequest(text, currentController, componentHistory, currentHistoryIndex, currentParams);
-            if (!analysis) {
-                throw new Error('Failed to analyze request');
+            // Abort any existing stream
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
             }
+            const currentController = new AbortController();
+            abortControllerRef.current = currentController;
 
-            // Check cache for matching widget
+            // Check cache first
             const cachedWidget = await widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
                 console.log('Found cached widget:', analysis.widgetUrl);
                 try {
-                    // Create component using our utility function
                     const GeneratedComponent = createComponent(cachedWidget.code);
-
-                    // Add to history
                     addToHistory({
                         component: GeneratedComponent,
                         code: cachedWidget.code,
-                        request: text,
-                        params: analysis.params || {}
+                        request: analysis.transcription,
+                        params: analysis.params || {},
+                        intent: analysis.intent
                     });
-                    setError('');
-                    setTranscribedText('');
-                    setIsProcessing(false);
-                    setModificationIntent(null);
                     return;
                 } catch (error) {
                     console.error('Error creating component from cache:', error);
-                    // Continue with API call if cache processing fails
                 }
             }
 
-            setModificationIntent(analysis.intent);
-            console.log('Making OpenRouter API request...');
+            const result = await processWithClaudeStream({
+                analysis,
+                selectedModel,
+                currentComponentCode,
+                abortController: currentController,
+                onResponseStream: setResponseStream
+            });
             
-            try {
-                setError(''); // Clear error at start of stream
-                for await (const { content, component, code, done } of streamComponent(
-                    analysis,
-                    currentComponentCode,
-                    selectedModel,
-                    currentController
-                )) {
-                    // Early exit if aborted
-                    if (currentController?.signal.aborted) break;
-
-                    if (content) {
-                        setResponseStream(prev => prev + content);
-                    }
-                    
-                    if (done && code) {
-                        const GeneratedComponent = createComponent(code);
-                        widgetStorage.store(analysis.widgetUrl, code)
-                            .then(() => {
-                                addToHistory({
-                                    component: GeneratedComponent,
-                                    code,
-                                    request: text,
-                                    params: analysis.params || {}
-                                });
-                                
-                                setError('');
-                                setTranscribedText('');
-                            })
-                            .catch(error => {
-                                console.error('Storage error:', error);
-                                setError(`Storage error: ${error.message}`);
-                            });
-                            
-                        setIsProcessing(false);
-                        setModificationIntent(null);
-                        setResponseStream(''); // Clear response stream when done
-                    }
-                }
-            } catch (error) {
-                if (error.name === 'AbortError' || error.message === 'Stream aborted') {
-                    // Silently handle abort errors
-                    console.log('Stream aborted by user');
-                } else {
-                    console.error('Stream error:', error);
-                    setError(`Stream error: ${error.message}`);
-                }
-                setIsProcessing(false);
-                setResponseStream('');
-            }
+            addToHistory(result);
+            setModificationIntent(result.intent);
         } catch (error) {
-            if (error.name === 'AbortError' || error.message === 'Stream aborted') {
-                console.log('Request aborted by user');
-            } else {
-                console.error('API call error:', error);
-                if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
-                    setError('Network error: Please check your internet connection');
-                } else {
-                    setError(`Error: ${error.message}`);
-                }
-            }
-            setIsProcessing(false);
+            console.error('Analysis error:', error);
+            setError(error.message);
+        } finally {
+            setIsGenerating(false);
+            setResponseStream('');
         }
-    };
+    }, [selectedModel]);
+
+
+    const {
+        isRecording,
+        volume,
+        startRecording,
+        stopRecording,
+        cancelRecording
+    } = useVoiceRoom({
+        onTranscription: handleAnalysis,
+        onError: setError,
+        selectedLanguage,
+        componentHistory,
+        currentHistoryIndex
+    });
 
 
     const handleTextSubmit = (e) => {
@@ -376,45 +279,35 @@ export const VoiceAssistant = () => {
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
-                    isListening={isSpeechListening}
-                    onClick={toggleListening}
-                    disabled={!hasSpeechPermission && !isProcessing}
-                    volume={speechVolume}
-                    isGenerating={isProcessing}
-                    onStopGeneration={stopGeneration}
+                    isActive={isRecording || isGenerating}
+                    onToggle={() => {
+                        if (isGenerating) {
+                            stopGeneration();
+                        }
+                        if (isRecording) {
+                            stopRecording();
+                        } else {
+                            startRecording();
+                        }
+                    }}
+                    volume={volume}
+                    disabled={!isSettingsLoaded}
                 />
             </View>
 
-            {/* Text Input */}
-            {!hasSpeechPermission && (
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput
-                        style={[styles.input, { flex: 1 }]}
-                        value={textInput}
-                        onChangeText={setTextInput}
-                        placeholder="Type your message here..."
-                    />
-                    <Pressable
-                        style={styles.button}
-                        onPress={handleTextSubmit}
-                        disabled={!textInput.trim() || isProcessing}
-                    >
-                        <Text style={styles.buttonText}>Send</Text>
-                    </Pressable>
-                </View>
-            )}
 
             <TranscriptionBox
-                isListening={isSpeechListening}
-                partialResults={speechPartialResults}
+                isListening={isRecording}
+                partialResults=""
                 transcribedText={transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
+                isGenerating={isGenerating}
             />
 
-            {(!currentComponent || isProcessing) && (
+            {(!currentComponent || isGenerating) && (
                 <ResponseStream
                     responseStream={responseStream}
-                    isProcessing={isProcessing}
+                    isGenerating={isGenerating}
                     modificationIntent={modificationIntent}
                 />
             )}
@@ -430,7 +323,8 @@ export const VoiceAssistant = () => {
             <SettingsModal 
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
-                apiKey={apiKey}
+                ultravoxApiKey={ultravoxApiKey}
+                openrouterApiKey={openrouterApiKey}
                 selectedLanguage={selectedLanguage}
                 selectedModel={selectedModel}
                 onSave={saveSettings}
@@ -451,7 +345,7 @@ export const VoiceAssistant = () => {
 
 
             {/* Component Container */}
-            {!isProcessing && !responseStream && (
+            {!isGenerating && (
                 <View style={{ flex: 1, width: '100%' }}>
                     <View style={{ 
                         backgroundColor: '#ffffff',
@@ -467,8 +361,13 @@ export const VoiceAssistant = () => {
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
-                                console.log('Rendering component with params:', params);
-                                return renderComponent(currentComponent, params);
+                                console.log('Rendering component:', currentHistoryIndex);
+                                try {
+                                    return renderComponent(currentComponent, params);
+                                } catch (error) {
+                                    console.error('Render error:', error);
+                                    return null;
+                                }
                             })()}
                         </ScrollView>
                     ) : (

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView, FlatList } from 'react-native';
 import { Key } from 'lucide-react-native';
-import { getSupportedLocales } from 'expo-speech-recognition';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Language name mapping for common locales
@@ -10,25 +9,34 @@ const MODELS = [
     { code: 'deepseek/deepseek-r1', name: 'DeepSeek R1' }
 ];
 
-const LANGUAGE_NAMES = {
-    'en': 'English',
-    'es': 'Spanish',
-    'fr': 'French',
-    'de': 'German',
-    'it': 'Italian',
-    'ja': 'Japanese',
-    'ko': 'Korean',
-    'zh': 'Chinese',
-    'ru': 'Russian',
-    'pt': 'Portuguese',
-    'nl': 'Dutch',
-    'pl': 'Polish',
-    'tr': 'Turkish',
-    'ar': 'Arabic',
-    'hi': 'Hindi',
-    'th': 'Thai',
-    'vi': 'Vietnamese'
-};
+const LANGUAGES = [
+    { code: 'ar', name: 'Arabic' },
+    { code: 'bg', name: 'Bulgarian' },
+    { code: 'zh', name: 'Chinese' },
+    { code: 'cs', name: 'Czech' },
+    { code: 'da', name: 'Danish' },
+    { code: 'nl', name: 'Dutch' },
+    { code: 'en', name: 'English' },
+    { code: 'fi', name: 'Finnish' },
+    { code: 'fr', name: 'French' },
+    { code: 'de', name: 'German' },
+    { code: 'el', name: 'Greek' },
+    { code: 'hi', name: 'Hindi' },
+    { code: 'hu', name: 'Hungarian' },
+    { code: 'it', name: 'Italian' },
+    { code: 'ja', name: 'Japanese' },
+    { code: 'pl', name: 'Polish' },
+    { code: 'pt', name: 'Portuguese' },
+    { code: 'ro', name: 'Romanian' },
+    { code: 'ru', name: 'Russian' },
+    { code: 'sk', name: 'Slovak' },
+    { code: 'es', name: 'Spanish' },
+    { code: 'sv', name: 'Swedish' },
+    { code: 'ta', name: 'Tamil' },
+    { code: 'tr', name: 'Turkish' },
+    { code: 'uk', name: 'Ukrainian' },
+    { code: 'vi', name: 'Vietnamese' }
+];
 
 const styles = StyleSheet.create({
     input: {
@@ -69,57 +77,21 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguage, selectedModel }) => {
-    const [draftKey, setDraftKey] = useState('');
+export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKey, selectedLanguage, selectedModel, onSave }) => {
+    const [draftUltravoxKey, setDraftUltravoxKey] = useState('');
+    const [draftOpenrouterKey, setDraftOpenrouterKey] = useState('');
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const [draftModel, setDraftModel] = useState(selectedModel);
-    const [languages, setLanguages] = useState([]);
-    const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
-    useEffect(() => {
-        if (isOpen) {
-            setIsLoadingLanguages(true);
-            getSupportedLocales({
-                androidRecognitionServicePackage: "com.google.android.as"
-            })
-            .then((supportedLocales) => {
-                // Combine both online and installed locales
-                const allLocales = [...new Set([
-                    ...supportedLocales.locales,
-                    ...supportedLocales.installedLocales
-                ])].sort();
-
-                // Format locales with readable names
-                const formattedLocales = allLocales.map(locale => {
-                    const [lang, region] = locale.split('-');
-                    const baseName = LANGUAGE_NAMES[lang] || lang;
-                    return {
-                        code: locale,
-                        name: region ? `${baseName} (${region})` : baseName
-                    };
-                });
-
-                setLanguages(formattedLocales);
-            })
-            .catch((error) => {
-                console.error('Error getting supported locales:', error);
-                // Fallback to basic language list
-                setLanguages([{ code: 'en-US', name: 'English (US)' }]);
-            })
-            .finally(() => {
-                setIsLoadingLanguages(false);
-            });
-        }
-    }, [isOpen]);
 
     // Reset drafts when modal opens
     React.useEffect(() => {
-        if (isOpen && apiKey !== null && selectedLanguage !== null && selectedModel !== null) {
-            setDraftKey(apiKey);
-            setDraftLanguage(selectedLanguage);
-            setDraftModel(selectedModel);
+        if (isOpen) {
+            setDraftUltravoxKey(ultravoxApiKey || '');
+            setDraftOpenrouterKey(openrouterApiKey || '');
+            setDraftModel(selectedModel || '');
         }
-    }, [isOpen, apiKey, selectedLanguage, selectedModel]);
+    }, [isOpen, ultravoxApiKey, openrouterApiKey, selectedModel]);
 
     return (
         <Modal
@@ -154,44 +126,58 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                 </View>
                 <View style={{ flex: 1, padding: 16 }}>
                     <View style={{ gap: 24, flex: 1 }}>
-                        <View style={{ gap: 16 }}>
-                            <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
-                            <TextInput
-                                secureTextEntry
-                                value={draftKey}
-                                onChangeText={setDraftKey}
-                                style={styles.input}
-                                placeholder="sk-or-..."
-                            />
-                            <Pressable 
-                                onPress={() => Linking.openURL('https://openrouter.ai/keys')}
-                                style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                            >
-                                <Key size={12} color="#3B82F6" />
-                                <Text style={{ color: '#3B82F6' }}>Get your API key</Text>
-                            </Pressable>
+                        <View style={{ gap: 24 }}>
+                            <View style={{ gap: 16 }}>
+                                <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
+                                <TextInput
+                                    secureTextEntry
+                                    value={draftUltravoxKey}
+                                    onChangeText={setDraftUltravoxKey}
+                                    style={styles.input}
+                                    placeholder="ultravox-..."
+                                />
+                                <Pressable 
+                                    onPress={() => Linking.openURL('https://app.ultravox.ai')}
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                >
+                                    <Key size={12} color="#3B82F6" />
+                                    <Text style={{ color: '#3B82F6' }}>Get Ultravox API key</Text>
+                                </Pressable>
+                            </View>
+
+                            <View style={{ gap: 16 }}>
+                                <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
+                                <TextInput
+                                    secureTextEntry
+                                    value={draftOpenrouterKey}
+                                    onChangeText={setDraftOpenrouterKey}
+                                    style={styles.input}
+                                    placeholder="sk-or-..."
+                                />
+                                <Pressable 
+                                    onPress={() => Linking.openURL('https://openrouter.ai/keys')}
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                >
+                                    <Key size={12} color="#3B82F6" />
+                                    <Text style={{ color: '#3B82F6' }}>Get OpenRouter API key</Text>
+                                </Pressable>
+                            </View>
                         </View>
 
                         <View style={{ gap: 8 }}>
                             <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
                             <View style={{ maxHeight: 150 }}>
-                                {isLoadingLanguages ? (
-                                    <View style={{ padding: 20, alignItems: 'center' }}>
-                                        <ActivityIndicator size="small" color="#3B82F6" />
-                                        <Text style={{ marginTop: 8, color: '#666' }}>Loading languages...</Text>
-                                    </View>
-                                ) : (
-                                    <FlatList
-                                        data={languages}
-                                        keyExtractor={item => item.code}
-                                        style={{ maxHeight: 150 }}
-                                        getItemLayout={(data, index) => ({
-                                            length: 44, // Fixed height for each item
-                                            offset: 44 * index,
-                                            index,
-                                        })}
-                                        initialScrollIndex={languages.findIndex(l => l.code === selectedLanguage)}
-                                        renderItem={({ item }) => (
+                                <FlatList
+                                    data={LANGUAGES}
+                                    keyExtractor={item => item.code}
+                                    style={{ maxHeight: 150 }}
+                                    getItemLayout={(data, index) => ({
+                                        length: 44, // Fixed height for each item
+                                        offset: 44 * index,
+                                        index,
+                                    })}
+                                    initialScrollIndex={LANGUAGES.findIndex(l => l.code === selectedLanguage)}
+                                    renderItem={({ item }) => (
                                             <Pressable
                                                 style={[
                                                     styles.languageOption,
@@ -208,7 +194,6 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                                             </Pressable>
                                         )}
                                     />
-                                )}
                             </View>
                         </View>
 
@@ -238,25 +223,14 @@ export const SettingsModal = ({ isOpen, onClose, apiKey, onSave, selectedLanguag
                         </View>
 
                         <Pressable
-                            style={[styles.button, !draftKey && styles.buttonDisabled]}
+                            style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
                             onPress={() => {
-                                if (draftKey) {
-                                    Promise.all([
-                                        AsyncStorage.setItem('openrouter_api_key', draftKey),
-                                        AsyncStorage.setItem('recognition_language', draftLanguage),
-                                        AsyncStorage.setItem('selected_model', draftModel)
-                                    ]).then(() => {
-                                        onSave(draftKey, draftLanguage, draftModel);
-                                        onClose();
-                                    }).catch(error => {
-                                        console.error('Error saving settings:', error);
-                                        // Still save to state even if storage fails
-                                        onSave(draftKey, draftLanguage, draftModel);
-                                        onClose();
-                                    });
+                                if (draftUltravoxKey && draftOpenrouterKey) {
+                                    onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
+                                    onClose();
                                 }
                             }}
-                            disabled={!draftKey}
+                            disabled={!draftUltravoxKey || !draftOpenrouterKey}
                         >
                             <Text style={styles.buttonText}>Save Settings</Text>
                         </Pressable>

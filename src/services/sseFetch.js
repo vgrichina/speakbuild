@@ -51,7 +51,6 @@ export const fetchSSE = (url, options) => {
         xhr.onprogress = () => {
             const newData = xhr.responseText.slice(lastProcessedIndex);
             if (newData.length > 0) {
-                console.log('XHR: New data chunk:', newData.length, 'bytes');
                 lastProcessedIndex = xhr.responseText.length;
                 
                 if (resolveRead) {
@@ -77,7 +76,13 @@ export const fetchSSE = (url, options) => {
                         body: { getReader: () => reader }
                     });
                 } else {
-                    reject(new Error(`HTTP ${xhr.status}`));
+                    console.error('SSE request failed:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        responseHeaders: xhr.getAllResponseHeaders()
+                    });
+                    reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}\n${xhr.responseText}`));
                 }
             }
         };
