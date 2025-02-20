@@ -380,7 +380,7 @@ export const VoiceAssistant = () => {
                 partialResults=""
                 transcribedText={transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
-                isProcessing={isProcessing}
+                isGenerating={isGenerating}
             />
 
             {(!currentComponent || isGenerating) && (

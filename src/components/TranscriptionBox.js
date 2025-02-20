@@ -31,7 +31,7 @@ export const TranscriptionBox = ({
             )}
 
             {/* Final Transcription */}
-            {(requestHistory.length > 0 || (transcribedText && isProcessing)) && (
+            {(requestHistory.length > 0 || (transcribedText && isGenerating)) && (
                 <View style={styles.transcriptionBox}>
                     {requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
