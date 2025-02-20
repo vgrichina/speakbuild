@@ -173,7 +173,6 @@ export const VoiceAssistant = () => {
             handleAnalysis(analysis);
         },
         onError: setError,
-        selectedModel,
         selectedLanguage,
         componentHistory,
         currentHistoryIndex
