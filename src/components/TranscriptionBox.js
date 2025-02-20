@@ -16,7 +16,7 @@ export const TranscriptionBox = ({
     partialResults,
     transcribedText,
     requestHistory,
-    isProcessing
+    isGenerating
 }) => {
     return (
         <>
@@ -42,7 +42,7 @@ export const TranscriptionBox = ({
                             {request}
                         </Text>
                     ))}
-                    {transcribedText && isProcessing && (
+                    {transcribedText && isGenerating && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14
