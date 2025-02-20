@@ -23,6 +23,8 @@ export function useVoiceRoom({
     const [isConnecting, setIsConnecting] = useState(false);
     const ws = useRef(null);
     const [volume, setVolume] = useState(0);
+    const audioBuffer = useRef([]);
+    const isConnected = useRef(false);
 
     const cleanup = useCallback(() => {
         console.log('Cleaning up voice room...');
@@ -36,6 +38,8 @@ export function useVoiceRoom({
         setIsRecording(false);
         setIsConnecting(false);
         setVolume(0);
+        audioBuffer.current = [];
+        isConnected.current = false;
     }, []);
 
     useEffect(() => {
@@ -75,9 +79,11 @@ export function useVoiceRoom({
                     bytes[i] = binaryString.charCodeAt(i);
                 }
                 
-                // Send to WebSocket if connected
-                if (ws.current?.readyState === WebSocket.OPEN) {
+                // If connected, send immediately, otherwise buffer
+                if (isConnected.current && ws.current?.readyState === WebSocket.OPEN) {
                     ws.current.send(bytes.buffer);
+                } else {
+                    audioBuffer.current.push(bytes.buffer);
                 }
                 
                 // Calculate volume from PCM data
@@ -102,6 +108,10 @@ export function useVoiceRoom({
             console.log('Already connecting or recording');
             return;
         }
+
+        // Start recording immediately
+        setIsRecording(true);
+        AudioRecord.start();
 
         // Create a new AbortController for this recording session
         const controller = new AbortController();
@@ -168,8 +178,15 @@ export function useVoiceRoom({
             
             ws.current.onopen = () => {
                 setIsConnecting(false);
-                setIsRecording(true);
-                AudioRecord.start();
+                isConnected.current = true;
+                
+                // Send buffered audio
+                while (audioBuffer.current.length > 0) {
+                    const buffer = audioBuffer.current.shift();
+                    if (ws.current?.readyState === WebSocket.OPEN) {
+                        ws.current.send(buffer);
+                    }
+                }
             };
 
             ws.current.onmessage = (event) => {
