@@ -357,21 +357,11 @@ export const VoiceAssistant = () => {
                         shadowRadius: 4,
                         elevation: 3
                     }}>
-                    {console.log('Debug render:', {
-                        hasCurrentComponent: !!currentComponent,
-                        historyIndex: currentHistoryIndex,
-                        historyLength: componentHistory.length,
-                        componentType: currentComponent ? typeof currentComponent : 'none'
-                    })}
                     {currentComponent ? (
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
                                 const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
-                                console.log('Component render params:', {
-                                    params,
-                                    historyEntry: componentHistory[currentHistoryIndex],
-                                    componentValid: typeof currentComponent === 'function'
-                                });
+                                console.log('Rendering component:', currentHistoryIndex);
                                 try {
                                     return renderComponent(currentComponent, params);
                                 } catch (error) {

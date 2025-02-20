@@ -15,22 +15,12 @@ export function useComponentHistory() {
     }, [state.history, state.currentIndex]);
 
     const addToHistory = React.useCallback((entry) => {
-        console.log('Adding to history:', {
-            currentHistoryLength: state.history.length,
-            currentIndex: state.currentIndex,
-            newEntry: entry,
-            transcription: entry.request
-        });
-        
         setState(prevState => ({
             history: [...prevState.history.slice(0, prevState.currentIndex + 1), entry],
             currentIndex: prevState.currentIndex + 1
         }));
 
-        console.log('After adding:', {
-            newHistoryLength: state.history.length + 1,
-            newIndex: state.currentIndex + 1
-        });
+        console.log('History updated:', state.currentIndex + 1);
     }, []);
 
     const setCurrentIndex = React.useCallback((newIndex) => {
