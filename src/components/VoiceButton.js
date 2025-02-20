@@ -40,7 +40,6 @@ const PulsatingCircle = ({ isActive, volume }) => {
 export const VoiceButton = ({ 
     disabled,
     isActive,
-    isConnecting,
     onToggle,
     volume 
 }) => {
@@ -53,7 +52,7 @@ export const VoiceButton = ({
                 onPress={onToggle}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
-                disabled={disabled || isConnecting}
+                disabled={disabled}
                 style={[
                     {
                         width: 64,
@@ -64,12 +63,10 @@ export const VoiceButton = ({
                         backgroundColor: isActive ? '#EF4444' : '#3B82F6',
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
-                    (disabled || isConnecting) && { opacity: 0.5 }
+                    disabled && { opacity: 0.5 }
                 ]}
             >
-                {isConnecting ? (
-                    <ActivityIndicator color="white" />
-                ) : isActive ? (
+                {isActive ? (
                     <Square size={32} color="white" />
                 ) : (
                     <Mic size={32} color="white" />
@@ -80,7 +77,7 @@ export const VoiceButton = ({
                 color: isActive ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isConnecting ? 'Connecting...' : isActive ? 'Stop' : 'Start listening'}
+                {isActive ? 'Stop' : 'Start listening'}
             </Text>
         </View>
     );
