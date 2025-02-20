@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
-import { streamComponent, componentPrompt } from './services/componentGenerator';
 import { widgetStorage } from './services/widgetStorage';
+import { processWithClaudeStream } from './services/processStream';
 import { useComponentHistory } from './hooks/useComponentHistory';
 import { useSettings } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
@@ -170,7 +170,7 @@ export const VoiceAssistant = () => {
         onTranscription: (analysis) => {
             console.log('Received analysis:', analysis);
             setTranscribedText(analysis.transcription);
-            processWithClaudeStream(analysis);
+            handleAnalysis(analysis);
         },
         onError: setError,
         selectedModel,
@@ -188,26 +188,11 @@ export const VoiceAssistant = () => {
         }
     };
 
-    const processWithClaudeStream = async (analysis) => {
-        console.log('Starting component generation with analysis:', analysis);
-        console.log('Current selected model:', selectedModel);
-        
-        if (!selectedModel) {
-            console.error('No model selected');
-            setError('Configuration error: No model selected');
-            return;
-        }
-        if (!isSettingsLoaded) {
-            console.error('Settings not yet loaded');
-            setError('Please wait for settings to load');
-            return;
-        }
-        console.log('Processing with model:', selectedModel);
-        
+    const handleAnalysis = useCallback(async (analysis) => {
         setError('');
         setIsGenerating(true);
         setResponseStream('');
-
+        
         try {
             // Abort any existing stream
             if (abortControllerRef.current) {
@@ -215,96 +200,44 @@ export const VoiceAssistant = () => {
             }
             const currentController = new AbortController();
             abortControllerRef.current = currentController;
-            // Check cache for matching widget
+
+            // Check cache first
             const cachedWidget = await widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
                 console.log('Found cached widget:', analysis.widgetUrl);
                 try {
-                    // Create component using our utility function
                     const GeneratedComponent = createComponent(cachedWidget.code);
-
-                    // Add to history
                     addToHistory({
                         component: GeneratedComponent,
                         code: cachedWidget.code,
                         request: analysis.transcription,
-                        params: analysis.params || {}
+                        params: analysis.params || {},
+                        intent: analysis.intent
                     });
-                    setError('');
-                    setIsGenerating(false);
-                    setModificationIntent(null);
-                    // Don't clear transcribedText - it will be shown in history
                     return;
                 } catch (error) {
                     console.error('Error creating component from cache:', error);
-                    // Continue with API call if cache processing fails
                 }
             }
 
-            setModificationIntent(analysis.intent);
-            console.log('Making OpenRouter API request...');
+            const result = await processWithClaudeStream({
+                analysis,
+                selectedModel,
+                currentComponentCode,
+                abortController: currentController,
+                onResponseStream: setResponseStream
+            });
             
-            try {
-                setError(''); // Clear error at start of stream
-                for await (const { content, component, code, done } of streamComponent(
-                    analysis,
-                    currentComponentCode,
-                    selectedModel,
-                    currentController
-                )) {
-                    // Early exit if aborted
-                    if (currentController?.signal.aborted) break;
-
-                    if (content) {
-                        setResponseStream(prev => prev + content);
-                    }
-                    
-                    if (done && code) {
-                        try {
-                            const GeneratedComponent = createComponent(code);
-                            await widgetStorage.store(analysis.widgetUrl, code);
-                            addToHistory({
-                                component: GeneratedComponent,
-                                code,
-                                request: analysis.transcription,
-                                params: analysis.params || {}
-                            });
-                            setError('');
-                        } catch (error) {
-                            console.error('Component creation error:', error);
-                            setError(`Failed to create component: ${error.message}`);
-                        } finally {
-                            setIsGenerating(false);
-                            setModificationIntent(null);
-                            setResponseStream('');
-                        }
-                    }
-                }
-            } catch (error) {
-                if (error.name === 'AbortError' || error.message === 'Stream aborted') {
-                    // Silently handle abort errors
-                    console.log('Stream aborted by user');
-                } else {
-                    console.error('Stream error:', error);
-                    setError(`Stream error: ${error.message}`);
-                }
-                setIsGenerating(false);
-                setResponseStream('');
-            }
+            addToHistory(result);
+            setModificationIntent(result.intent);
         } catch (error) {
-            if (error.name === 'AbortError' || error.message === 'Stream aborted') {
-                console.log('Request aborted by user');
-            } else {
-                console.error('API call error:', error);
-                if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
-                    setError('Network error: Please check your internet connection');
-                } else {
-                    setError(`Error: ${error.message}`);
-                }
-            }
+            console.error('Analysis error:', error);
+            setError(error.message);
+        } finally {
             setIsGenerating(false);
+            setResponseStream('');
         }
-    };
+    }, [selectedModel, currentComponentCode, addToHistory]);
 
 
     const handleTextSubmit = (e) => {
