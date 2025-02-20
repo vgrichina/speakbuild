@@ -15,7 +15,31 @@ async function* streamCompletion(apiKey, messages, {
     
     let fullResponse = '';
     console.log(`Stream [${model}] t=${temperature}`);
+    console.log(`API Key: ${apiKey ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : 'missing'}`);
     console.log(`>> ${messages.map(m => `${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
+
+    const requestBody = {
+        model,
+        messages,
+        stream: true,
+        temperature
+    };
+
+    const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+        'X-Title': 'Voice Assistant Web App',
+    };
+
+    // Log equivalent curl command for debugging
+    console.log('\nEquivalent curl command:');
+    console.log(`curl -X POST '${API_URL}' \\
+  -H 'Authorization: Bearer ${apiKey}' \\
+  -H 'Content-Type: application/json' \\
+  -H 'Accept: text/event-stream' \\
+  -H 'X-Title: Voice Assistant Web App' \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`);
 
     const response = await fetchSSE(API_URL, {
         method: 'POST',
