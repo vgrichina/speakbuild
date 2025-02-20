@@ -2,46 +2,55 @@ import React from 'react';
 import { widgetStorage } from '../services/widgetStorage';
 
 export function useComponentHistory() {
-    const [history, setHistory] = React.useState([]);
-    const [currentIndex, setCurrentIndex] = React.useState(-1);
+    const [state, setState] = React.useState({
+        history: [],
+        currentIndex: -1
+    });
 
     const current = React.useMemo(() => {
-        if (currentIndex >= 0 && currentIndex < history.length) {
-            return history[currentIndex];
+        if (state.currentIndex >= 0 && state.currentIndex < state.history.length) {
+            return state.history[state.currentIndex];
         }
         return null;
-    }, [history, currentIndex]);
+    }, [state.history, state.currentIndex]);
 
     const addToHistory = React.useCallback((entry) => {
         console.log('Adding to history:', {
-            currentHistoryLength: history.length,
-            currentIndex,
+            currentHistoryLength: state.history.length,
+            currentIndex: state.currentIndex,
             newEntry: entry,
             transcription: entry.request
         });
         
-        setHistory(prev => {
-            const newHistory = [...prev.slice(0, currentIndex + 1), entry];
-            // Update index immediately after history update
-            setTimeout(() => setCurrentIndex(newHistory.length - 1), 0);
-            return newHistory;
-        });
+        setState(prevState => ({
+            history: [...prevState.history.slice(0, prevState.currentIndex + 1), entry],
+            currentIndex: prevState.currentIndex + 1
+        }));
 
         console.log('After adding:', {
-            newHistoryLength: history.length + 1,
-            newIndex: currentIndex + 1
+            newHistoryLength: state.history.length + 1,
+            newIndex: state.currentIndex + 1
         });
-    }, [currentIndex, history]);
+    }, []);
+
+    const setCurrentIndex = React.useCallback((newIndex) => {
+        setState(prevState => ({
+            ...prevState,
+            currentIndex: newIndex
+        }));
+    }, []);
 
     const clearHistory = React.useCallback(async () => {
         await widgetStorage.clear();
-        setHistory([]);
-        setCurrentIndex(-1);
+        setState({
+            history: [],
+            currentIndex: -1
+        });
     }, []);
 
     return {
-        history,
-        currentIndex,
+        history: state.history,
+        currentIndex: state.currentIndex,
         current,
         addToHistory,
         setCurrentIndex,
