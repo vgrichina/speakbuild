@@ -21,8 +21,26 @@ export function useVoiceRoom({
     currentHistoryIndex 
 }) {
     const [isRecording, setIsRecording] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
     const ws = useRef(null);
     const [volume, setVolume] = useState(0);
+
+    const cleanup = useCallback(() => {
+        if (ws.current) {
+            if (ws.current.readyState === WebSocket.OPEN) {
+                ws.current.close();
+            }
+            ws.current = null;
+        }
+        AudioRecord.stop();
+        setIsRecording(false);
+        setIsConnecting(false);
+        setVolume(0);
+    }, []);
+
+    useEffect(() => {
+        return cleanup;
+    }, [cleanup]);
 
     useEffect(() => {
         const init = async () => {
@@ -78,7 +96,13 @@ export function useVoiceRoom({
     }, []);
 
     const startRecording = useCallback(async () => {
+        if (isConnecting || isRecording) {
+            console.log('Already connecting or recording');
+            return;
+        }
+
         try {
+            setIsConnecting(true);
             const ultravoxKey = await AsyncStorage.getItem('ultravox_api_key');
             if (!ultravoxKey) {
                 throw new Error('Ultravox API key not found');
@@ -133,14 +157,21 @@ export function useVoiceRoom({
             }
 
             const { joinUrl } = await response.json();
+            cleanup();
+            
             ws.current = new WebSocket(joinUrl);
             
             ws.current.onopen = () => {
+                setIsConnecting(false);
                 setIsRecording(true);
                 AudioRecord.start();
             };
 
             ws.current.onmessage = (event) => {
+                if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+                    console.log('Received message after WebSocket closed');
+                    return;
+                }
                 const msg = JSON.parse(event.data);
                 
                 // Log all messages, but only length for audio data
@@ -183,30 +214,23 @@ export function useVoiceRoom({
 
             ws.current.onclose = () => {
                 console.log('WebSocket connection closed');
-                stopRecording();
+                cleanup();
             };
 
         } catch (error) {
             console.error('Error starting recording:', error);
             onError?.(error.message);
-            stopRecording();
+            cleanup();
         }
     }, [componentHistory, currentHistoryIndex, selectedLanguage]);
 
     const stopRecording = useCallback(() => {
-        AudioRecord.stop();
-        setIsRecording(false);
-        setVolume(0);
-        
-        if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current.close();
-        }
-        ws.current = null;
-    }, []);
+        cleanup();
+    }, [cleanup]);
 
     const cancelRecording = useCallback(() => {
-        stopRecording();
-    }, [stopRecording]);
+        cleanup();
+    }, [cleanup]);
 
     return {
         isRecording,
