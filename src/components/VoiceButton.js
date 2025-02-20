@@ -41,17 +41,14 @@ export const VoiceButton = ({
     disabled,
     volume,
     isRecording,
-    isProcessing,
     onStartRecording,
     onStopRecording,
-    onStopProcessing
+    onCancelRecording
 }) => {
     const [isPressed, setIsPressed] = useState(false);
 
     const handlePress = useCallback(() => {
-        if (isProcessing) {
-            onStopProcessing();
-        } else if (isRecording) {
+        if (isRecording) {
             onStopRecording();
         } else {
             onStartRecording();
@@ -73,7 +70,7 @@ export const VoiceButton = ({
                         borderRadius: 32,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: isProcessing ? '#EF4444' : (isRecording ? '#EF4444' : '#3B82F6'),
+                        backgroundColor: isRecording ? '#EF4444' : '#3B82F6',
                         transform: [{ scale: isPressed ? 0.95 : 1 }],
                     },
                     disabled && { opacity: 0.5 }
@@ -89,11 +86,10 @@ export const VoiceButton = ({
             </Pressable>
             <Text style={{ 
                 marginTop: 8,
-                color: (isProcessing || isRecording) ? '#EF4444' : '#666',
+                color: isRecording ? '#EF4444' : '#666',
                 fontSize: 12 
             }}>
-                {isProcessing ? 'Stop processing' : 
-                 isRecording ? 'Stop recording' : 
+                {isRecording ? 'Stop recording' : 
                  'Start recording'}
             </Text>
         </View>

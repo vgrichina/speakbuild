@@ -186,11 +186,10 @@ export const VoiceAssistant = () => {
 
     const {
         isRecording,
-        isProcessing,
         volume,
         startRecording,
         stopRecording,
-        stopProcessing
+        cancelRecording
     } = useVoiceRoom({
         onTranscription: (analysis) => {
             console.log('Received analysis:', analysis);
@@ -364,7 +363,7 @@ export const VoiceAssistant = () => {
                     isProcessing={isProcessing}
                     onStartRecording={startRecording}
                     onStopRecording={stopRecording}
-                    onStopProcessing={stopProcessing}
+                    onCancelRecording={cancelRecording}
                     disabled={!isSettingsLoaded}
                 />
             </View>

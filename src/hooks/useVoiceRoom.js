@@ -21,7 +21,6 @@ export function useVoiceRoom({
     currentHistoryIndex 
 }) {
     const [isRecording, setIsRecording] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
     const ws = useRef(null);
     const [volume, setVolume] = useState(0);
 
@@ -80,7 +79,6 @@ export function useVoiceRoom({
 
     const startRecording = useCallback(async () => {
         try {
-            setIsProcessing(true);
             const ultravoxKey = await AsyncStorage.getItem('ultravox_api_key');
             if (!ultravoxKey) {
                 throw new Error('Ultravox API key not found');
@@ -162,14 +160,12 @@ export function useVoiceRoom({
                         const analysis = JSON.parse(msg.text);
                         // Stop recording first since we have the complete analysis
                         stopRecording();
-                        setIsProcessing(false);
                         // Then trigger component generation
                         onTranscription?.(analysis);
                     } catch (error) {
                         console.error('Error parsing transcript:', error);
                         onError?.('Failed to parse transcript');
                         stopRecording();
-                        setIsProcessing(false);
                     }
                 }
             };
@@ -193,7 +189,6 @@ export function useVoiceRoom({
         } catch (error) {
             console.error('Error starting recording:', error);
             onError?.(error.message);
-            setIsProcessing(false);
             stopRecording();
         }
     }, [componentHistory, currentHistoryIndex, selectedLanguage]);
@@ -209,17 +204,15 @@ export function useVoiceRoom({
         ws.current = null;
     }, []);
 
-    const stopProcessing = useCallback(() => {
+    const cancelRecording = useCallback(() => {
         stopRecording();
-        setIsProcessing(false);
     }, [stopRecording]);
 
     return {
         isRecording,
-        isProcessing,
         volume,
         startRecording,
         stopRecording,
-        stopProcessing
+        cancelRecording
     };
 }
