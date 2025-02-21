@@ -19,7 +19,6 @@ import { ViewCode } from './components/ViewCode';
 import { Settings } from './components/Settings';
 import { useVoiceRoom } from './hooks/useVoiceRoom';
 import { Mic, MicOff, Square } from 'lucide-react-native';
-import { Header } from './components/Header';
 import { ResponseStream } from './components/ResponseStream';
 import { TranscriptionBox } from './components/TranscriptionBox';
 import { ExpoModules } from './expo-modules';
