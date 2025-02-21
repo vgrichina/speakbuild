@@ -45,7 +45,19 @@ export default function Layout() {
                         ),
                         headerRight: () => (
                             <View style={{ overflow: 'visible' }}>
-                                <DebugMenuButton />
+                                <DebugMenuButton
+                                    onViewSource={() => {
+                                        if (currentHistoryEntry?.code) {
+                                            navigation.push('code-viewer', {
+                                                code: currentHistoryEntry.code
+                                            });
+                                        }
+                                    }}
+                                    onDebugGeneration={() => navigation.push('debug')}
+                                    onClearHistory={clearHistory}
+                                    currentComponent={currentComponent}
+                                    showSourceCode={false}
+                                />
                             </View>
                         )
                     })}
