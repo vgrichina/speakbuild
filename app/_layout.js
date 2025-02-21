@@ -9,6 +9,22 @@ export default function Layout() {
                     name="index" 
                     options={{ headerShown: false }}
                 />
+                <Stack.Screen 
+                    name="settings" 
+                    options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                        title: 'Settings'
+                    }}
+                />
+                <Stack.Screen 
+                    name="debug" 
+                    options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                        title: 'Debug Generation'
+                    }}
+                />
             </Stack>
         </SafeAreaProvider>
     );

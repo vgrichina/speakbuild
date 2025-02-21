@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'expo-router';
 import { api } from './services/api';
 import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { widgetStorage } from './services/widgetStorage';
@@ -158,7 +159,7 @@ export const VoiceAssistant = () => {
     const currentComponentCode = currentHistoryEntry?.code;
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
-    const [showDebugGeneration, setShowDebugGeneration] = useState(false);
+    const router = useRouter();
 
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
@@ -263,14 +264,14 @@ export const VoiceAssistant = () => {
                     setTranscribedText('');
                     setResponseStream('');
                 }}
-                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenSettings={() => router.push('/settings')}
                 onClearHistory={async () => {
                     await clearHistory();
                     setShowSourceCode(false);
                     setResponseStream('');
                     RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
                 }}
-                onDebugGeneration={() => setShowDebugGeneration(true)}
+                onDebugGeneration={() => router.push('/debug')}
                 onToggleSourceCode={() => setShowSourceCode(!showSourceCode)}
                 showSourceCode={showSourceCode}
                 stopGeneration={stopGeneration}
@@ -319,29 +320,6 @@ export const VoiceAssistant = () => {
                 </View>
             )}
 
-            {/* Settings Modal */}
-            <SettingsModal 
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-                ultravoxApiKey={ultravoxApiKey}
-                openrouterApiKey={openrouterApiKey}
-                selectedLanguage={selectedLanguage}
-                selectedModel={selectedModel}
-                onSave={saveSettings}
-            />
-            <RN.Modal
-                visible={showDebugGeneration}
-                animationType="slide"
-                presentationStyle="fullScreen"
-                onRequestClose={() => setShowDebugGeneration(false)}
-            >
-                <RN.SafeAreaView style={{ flex: 1, backgroundColor: '#1a1a1a' }}>
-                    <DebugGeneration
-                        onClose={() => setShowDebugGeneration(false)}
-                        selectedModel={selectedModel}
-                    />
-                </RN.SafeAreaView>
-            </RN.Modal>
 
 
             {/* Component Container */}
