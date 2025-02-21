@@ -4,8 +4,15 @@ import { Settings } from 'lucide-react-native';
 import { NavigationButtons } from '../src/components/NavigationButtons';
 import { DebugMenuButton } from '../src/components/DebugMenuButton';
 import { Pressable } from 'react-native';
+import { useComponentHistory } from '../src/hooks/useComponentHistory';
 
 export default function Layout() {
+    const {
+        history: componentHistory,
+        currentIndex: currentHistoryIndex,
+        setCurrentIndex: setCurrentHistoryIndex
+    } = useComponentHistory();
+
     return (
         <SafeAreaProvider>
             <Stack
@@ -28,7 +35,13 @@ export default function Layout() {
                             </Pressable>
                         ),
                         headerTitle: () => (
-                            <NavigationButtons />
+                            <NavigationButtons 
+                                componentHistory={componentHistory}
+                                currentHistoryIndex={currentHistoryIndex}
+                                onNavigateBack={() => setCurrentHistoryIndex(currentHistoryIndex - 1)}
+                                onNavigateForward={() => setCurrentHistoryIndex(currentHistoryIndex + 1)}
+                                stopGeneration={() => {}}
+                            />
                         ),
                         headerRight: () => (
                             <DebugMenuButton />
