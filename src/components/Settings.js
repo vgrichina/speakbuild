@@ -97,26 +97,6 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                 flex: 1,
                 backgroundColor: '#F9FAFB',
             }}>
-                <View style={{
-                    padding: 16,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E7EB',
-                    backgroundColor: 'white',
-                }}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Settings</Text>
-                    <Pressable
-                        onPress={onClose}
-                        style={{
-                            padding: 8,
-                            marginRight: -8,
-                        }}
-                    >
-                        <Text style={{ fontSize: 24, color: '#666' }}>×</Text>
-                    </Pressable>
-                </View>
                 <View style={{ flex: 1, padding: 16 }}>
                     <View style={{ gap: 24, flex: 1 }}>
                         <View style={{ gap: 24 }}>
