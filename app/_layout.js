@@ -76,7 +76,7 @@ export default function Layout() {
                                     }}
                                     onDebugGeneration={() => navigation.push('debug')}
                                     onClearHistory={clearHistory}
-                                    currentComponent={currentHistoryEntry?.component}
+                                    currentHistoryEntry={currentHistoryEntry}
                                     showSourceCode={false}
                                 />
                             </View>

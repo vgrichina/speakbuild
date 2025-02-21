@@ -44,11 +44,11 @@ export const DebugMenuButton = ({
     onViewSource,
     onDebugGeneration,
     onClearHistory,
-    currentComponent,
+    currentHistoryEntry,
     showSourceCode
 }) => {
     console.log('DebugMenuButton props:', {
-        currentComponent,
+        currentHistoryEntry,
         showSourceCode
     });
     const [isOpen, setIsOpen] = useState(false);
@@ -129,12 +129,12 @@ export const DebugMenuButton = ({
                     >
                         <Pressable
                             style={styles.menuItem}
-                            disabled={!currentComponent}
+                            disabled={!currentHistoryEntry?.code}
                             onPress={() => handleSelect(onViewSource)}
                         >
                             <Text style={[
                                 styles.menuItemText,
-                                !currentComponent && { opacity: 0.5 }
+                                !currentHistoryEntry?.code && { opacity: 0.5 }
                             ]}>
                                 {showSourceCode ? 'Hide source' : 'View source'}
                             </Text>
