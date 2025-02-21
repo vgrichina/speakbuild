@@ -16,7 +16,7 @@ import * as RN from 'react-native';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, TouchableOpacity } from 'react-native';
 import { VoiceButton } from './components/VoiceButton';
 import { ViewCode } from './components/ViewCode';
-import { SettingsModal } from './components/SettingsModal';
+import { Settings } from './components/Settings';
 import { useVoiceRoom } from './hooks/useVoiceRoom';
 import { Mic, MicOff, Square } from 'lucide-react-native';
 import { Header } from './components/Header';

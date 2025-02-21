@@ -84,14 +84,13 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
     const [draftModel, setDraftModel] = useState(selectedModel);
 
 
-    // Reset drafts when modal opens
+    // Reset drafts when component mounts
     React.useEffect(() => {
-        if (isOpen) {
-            setDraftUltravoxKey(ultravoxApiKey || '');
-            setDraftOpenrouterKey(openrouterApiKey || '');
-            setDraftModel(selectedModel || '');
-        }
-    }, [isOpen, ultravoxApiKey, openrouterApiKey, selectedModel]);
+        setDraftUltravoxKey(ultravoxApiKey || '');
+        setDraftOpenrouterKey(openrouterApiKey || '');
+        setDraftModel(selectedModel || '');
+        setDraftLanguage(selectedLanguage || '');
+    }, [ultravoxApiKey, openrouterApiKey, selectedModel, selectedLanguage]);
 
     return (
             <SafeAreaView style={{
