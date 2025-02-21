@@ -61,6 +61,11 @@ export default function Layout() {
                         ),
                         headerRight: () => (
                             <View style={{ overflow: 'visible' }}>
+                                {console.log('Debug menu state:', {
+                                    currentHistoryEntry,
+                                    component: currentHistoryEntry?.component,
+                                    code: currentHistoryEntry?.code
+                                })}
                                 <DebugMenuButton
                                     onViewSource={() => {
                                         if (currentHistoryEntry?.code) {
