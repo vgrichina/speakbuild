@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { SettingsModal } from '../src/components/SettingsModal';
+import { Settings } from '../src/components/Settings';
 import { useRouter } from 'expo-router';
 import { useSettings } from '../src/hooks/useSettings';
 
@@ -15,8 +15,7 @@ export default function SettingsScreen() {
 
     return (
         <View style={{ flex: 1 }}>
-            <SettingsModal
-                isOpen={true}
+            <Settings
                 onClose={() => router.back()}
                 ultravoxApiKey={ultravoxApiKey}
                 openrouterApiKey={openrouterApiKey}

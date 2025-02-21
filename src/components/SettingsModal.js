@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKey, selectedLanguage, selectedModel, onSave }) => {
+export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLanguage, selectedModel, onSave }) => {
     const [draftUltravoxKey, setDraftUltravoxKey] = useState('');
     const [draftOpenrouterKey, setDraftOpenrouterKey] = useState('');
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
@@ -94,12 +94,6 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
     }, [isOpen, ultravoxApiKey, openrouterApiKey, selectedModel]);
 
     return (
-        <Modal
-            visible={isOpen}
-            animationType="slide"
-            onRequestClose={onClose}
-            presentationStyle="fullScreen"
-        >
             <SafeAreaView style={{
                 flex: 1,
                 backgroundColor: '#F9FAFB',
@@ -237,6 +231,5 @@ export const SettingsModal = ({ isOpen, onClose, ultravoxApiKey, openrouterApiKe
                     </View>
                 </View>
             </SafeAreaView>
-        </Modal>
     );
 };

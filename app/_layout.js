@@ -25,6 +25,14 @@ export default function Layout() {
                         title: 'Debug Generation'
                     }}
                 />
+                <Stack.Screen 
+                    name="code-viewer" 
+                    options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                        title: 'Source Code'
+                    }}
+                />
             </Stack>
         </SafeAreaProvider>
     );

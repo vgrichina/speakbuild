@@ -272,7 +272,16 @@ export const VoiceAssistant = () => {
                     RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
                 }}
                 onDebugGeneration={() => router.push('/debug')}
-                onToggleSourceCode={() => setShowSourceCode(!showSourceCode)}
+                onToggleSourceCode={() => {
+                    if (showSourceCode) {
+                        setShowSourceCode(false);
+                    } else {
+                        router.push({
+                            pathname: '/code-viewer',
+                            params: { code: currentComponentCode }
+                        });
+                    }
+                }}
                 showSourceCode={showSourceCode}
                 stopGeneration={stopGeneration}
             />
@@ -358,11 +367,6 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Modals at root level */}
-            <ViewCode 
-                isVisible={showSourceCode}
-                onClose={() => setShowSourceCode(false)}
-                code={currentComponentCode}
-            />
         </View>
     );
 };
