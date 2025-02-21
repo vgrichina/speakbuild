@@ -250,41 +250,6 @@ export const VoiceAssistant = () => {
 
     return (
         <View style={styles.container}>
-            <Header
-                currentComponent={currentComponent}
-                currentHistoryIndex={currentHistoryIndex}
-                componentHistory={componentHistory}
-                onNavigateBack={() => {
-                    setCurrentHistoryIndex(currentHistoryIndex - 1);
-                    setTranscribedText('');
-                    setResponseStream('');
-                }}
-                onNavigateForward={() => {
-                    setCurrentHistoryIndex(currentHistoryIndex + 1);
-                    setTranscribedText('');
-                    setResponseStream('');
-                }}
-                onOpenSettings={() => router.push('/settings')}
-                onClearHistory={async () => {
-                    await clearHistory();
-                    setShowSourceCode(false);
-                    setResponseStream('');
-                    RN.Alert.alert('Storage cleared', 'Widget cache has been cleared');
-                }}
-                onDebugGeneration={() => router.push('/debug')}
-                onToggleSourceCode={() => {
-                    if (showSourceCode) {
-                        setShowSourceCode(false);
-                    } else {
-                        router.push({
-                            pathname: '/code-viewer',
-                            params: { code: currentComponentCode }
-                        });
-                    }
-                }}
-                showSourceCode={showSourceCode}
-                stopGeneration={stopGeneration}
-            />
 
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>

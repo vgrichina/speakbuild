@@ -1,13 +1,39 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Settings } from 'lucide-react-native';
+import { NavigationButtons } from '../src/components/NavigationButtons';
+import { DebugMenuButton } from '../src/components/DebugMenuButton';
+import { Pressable } from 'react-native';
 
 export default function Layout() {
     return (
         <SafeAreaProvider>
-            <Stack>
+            <Stack
+                screenOptions={{
+                    headerStyle: {
+                        backgroundColor: '#f5f5f5',
+                    },
+                    headerTintColor: '#000',
+                }}
+            >
                 <Stack.Screen 
                     name="index" 
-                    options={{ headerShown: false }}
+                    options={({ navigation }) => ({
+                        headerLeft: () => (
+                            <Pressable 
+                                onPress={() => navigation.push('settings')}
+                                style={{ padding: 12, marginLeft: -8 }}
+                            >
+                                <Settings size={24} color="#666" />
+                            </Pressable>
+                        ),
+                        headerTitle: () => (
+                            <NavigationButtons />
+                        ),
+                        headerRight: () => (
+                            <DebugMenuButton />
+                        )
+                    })}
                 />
                 <Stack.Screen 
                     name="settings" 
