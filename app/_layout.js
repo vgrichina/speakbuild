@@ -10,7 +10,9 @@ export default function Layout() {
     const {
         history: componentHistory,
         currentIndex: currentHistoryIndex,
-        setCurrentIndex: setCurrentHistoryIndex
+        setCurrentIndex: setCurrentHistoryIndex,
+        clearHistory,
+        current: currentHistoryEntry
     } = useComponentHistory();
 
     return (
@@ -55,7 +57,7 @@ export default function Layout() {
                                     }}
                                     onDebugGeneration={() => navigation.push('debug')}
                                     onClearHistory={clearHistory}
-                                    currentComponent={currentComponent}
+                                    currentComponent={currentHistoryEntry?.component}
                                     showSourceCode={false}
                                 />
                             </View>
