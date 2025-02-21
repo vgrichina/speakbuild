@@ -65,26 +65,6 @@ function DebugGeneration({ onClose, selectedModel }) {
       bottom: 0,
       zIndex: 1000
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      height: 56,
-      borderBottomWidth: 1,
-      borderBottomColor: '#333'
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: '500',
-      color: '#fff'
-    },
-    closeButton: {
-      fontSize: 24,
-      padding: 8,
-      color: '#fff',
-      opacity: 0.8
-    },
     list: {
       flex: 1
     },
@@ -144,39 +124,6 @@ function DebugGeneration({ onClose, selectedModel }) {
   };
 
   return React.createElement(RN.View, { style: styles.container },
-    React.createElement(RN.View, { style: styles.header },
-      React.createElement(RN.Text, { style: styles.title }, "Generated Widgets"),
-      React.createElement(RN.View, { style: { flexDirection: 'row', alignItems: 'center', height: '100%', gap: 12 } },
-        React.createElement(RN.TouchableOpacity, {
-          style: [
-            styles.generateButton,
-            { alignSelf: 'center' },
-            generating && { opacity: 0.5 }
-          ],
-          onPress: async () => {
-            if (generating) return;
-            const ungenerated = widgets.filter(w => !w.stored);
-            if (ungenerated.length === 0) {
-              RN.Alert.alert('No widgets to generate', 'All widgets have already been generated.');
-              return;
-            }
-            for (const widget of ungenerated) {
-              await generateWidget(widget);
-            }
-          }
-        },
-          React.createElement(RN.Text, { style: styles.buttonText },
-            generating ? "Generating..." : "Generate All"
-          )
-        ),
-        React.createElement(RN.TouchableOpacity, { 
-          style: { height: '100%', justifyContent: 'center' },
-          onPress: onClose 
-        },
-          React.createElement(RN.Text, { style: styles.closeButton }, "×")
-        )
-      )
-    ),
     React.createElement(RN.ScrollView, { style: styles.list },
       widgets.map((widget, index) => 
         React.createElement(RN.View, { 
