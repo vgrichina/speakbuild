@@ -3,7 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Settings } from 'lucide-react-native';
 import { NavigationButtons } from '../src/components/NavigationButtons';
 import { DebugMenuButton } from '../src/components/DebugMenuButton';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useComponentHistory } from '../src/hooks/useComponentHistory';
 
 export default function Layout() {
