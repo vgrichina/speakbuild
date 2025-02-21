@@ -44,7 +44,9 @@ export default function Layout() {
                             />
                         ),
                         headerRight: () => (
-                            <DebugMenuButton />
+                            <View style={{ overflow: 'visible' }}>
+                                <DebugMenuButton />
+                            </View>
                         )
                     })}
                 />

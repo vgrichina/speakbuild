@@ -1,23 +1,26 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, Modal, Animated } from 'react-native';
+import { MoreVertical } from 'lucide-react-native';
 
 const styles = StyleSheet.create({
-    debugMenu: {
+    menuTrigger: {
+        padding: 8,
+        marginRight: 4,
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    menuContent: {
         position: 'absolute',
-        right: 8,
-        top: 48,
         backgroundColor: 'white',
         borderRadius: 8,
+        minWidth: 180,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        minWidth: 150,
-        zIndex: 1002,
     },
     menuItem: {
         padding: 12,
@@ -26,6 +29,14 @@ const styles = StyleSheet.create({
     menuItemText: {
         color: '#666',
         fontSize: 14,
+    },
+    menuItemDanger: {
+        color: '#EF4444',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#E5E7EB',
+        marginHorizontal: 8,
     }
 });
 
@@ -36,65 +47,119 @@ export const DebugMenuButton = ({
     currentComponent,
     showSourceCode
 }) => {
-    const [showMenu, setShowMenu] = useState(false);
-    
+    const [isOpen, setIsOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+    const buttonRef = useRef();
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    const handleSelect = (action) => {
+        closeMenu();
+        action();
+    };
+
+    const openMenu = () => {
+        buttonRef.current.measure((x, y, width, height, pageX, pageY) => {
+            setMenuPosition({
+                top: pageY + height,
+                right: 8
+            });
+            setIsOpen(true);
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+            }).start();
+        });
+    };
+
+    const closeMenu = () => {
+        Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 150,
+            useNativeDriver: true,
+        }).start(() => {
+            setIsOpen(false);
+        });
+    };
+
     return (
-        <View style={{ overflow: 'visible' }}>
-            <Pressable
-                onPress={() => setShowMenu(!showMenu)}
-                style={{
-                    padding: 12,
-                    marginRight: -8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                }}
+        <>
+            <Pressable 
+                ref={buttonRef}
+                style={styles.menuTrigger}
+                onPress={openMenu}
             >
-                <Text style={{ color: '#666', fontSize: 24, lineHeight: 24, height: 32, textAlignVertical: 'center' }}>⋮</Text>
+                <MoreVertical size={24} color="#666" />
             </Pressable>
-            {showMenu && (
-                <View style={styles.debugMenu}>
-                    <Pressable
+
+            <Modal
+                visible={isOpen}
+                transparent={true}
+                animationType="none"
+                onRequestClose={closeMenu}
+            >
+                <Animated.View 
+                    style={[
+                        styles.overlay,
+                        { opacity: fadeAnim }
+                    ]}
+                >
+                    <Pressable 
+                        style={StyleSheet.absoluteFill}
+                        onPress={closeMenu}
+                    />
+                    <Animated.View 
                         style={[
-                            styles.menuItem,
-                            !currentComponent && { opacity: 0.5 }
+                            styles.menuContent,
+                            menuPosition,
+                            {
+                                opacity: fadeAnim,
+                                transform: [{
+                                    translateY: fadeAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [-8, 0]
+                                    })
+                                }]
+                            }
                         ]}
-                        onPress={() => {
-                            if (!currentComponent) return;
-                            onViewSource();
-                            setShowMenu(false);
-                        }}
                     >
-                        <Text style={[
-                            styles.menuItemText,
-                            !currentComponent && { color: '#999' }
-                        ]}>
-                            {showSourceCode ? 'Hide source' : 'View source'}
-                        </Text>
-                    </Pressable>
-                    <Pressable
-                        style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
-                        onPress={() => {
-                            onDebugGeneration();
-                            setShowMenu(false);
-                        }}
-                    >
-                        <Text style={styles.menuItemText}>
-                            Component Generation
-                        </Text>
-                    </Pressable>
-                    <Pressable
-                        style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
-                        onPress={() => {
-                            onClearHistory();
-                            setShowMenu(false);
-                        }}
-                    >
-                        <Text style={[styles.menuItemText, { color: '#EF4444' }]}>
-                            Clear storage
-                        </Text>
-                    </Pressable>
-                </View>
-            )}
-        </View>
+                        <Pressable
+                            style={styles.menuItem}
+                            disabled={!currentComponent}
+                            onPress={() => handleSelect(onViewSource)}
+                        >
+                            <Text style={[
+                                styles.menuItemText,
+                                !currentComponent && { opacity: 0.5 }
+                            ]}>
+                                {showSourceCode ? 'Hide source' : 'View source'}
+                            </Text>
+                        </Pressable>
+
+                        <View style={styles.divider} />
+
+                        <Pressable
+                            style={styles.menuItem}
+                            onPress={() => handleSelect(onDebugGeneration)}
+                        >
+                            <Text style={styles.menuItemText}>
+                                Component Generation
+                            </Text>
+                        </Pressable>
+
+                        <View style={styles.divider} />
+
+                        <Pressable
+                            style={styles.menuItem}
+                            onPress={() => handleSelect(onClearHistory)}
+                        >
+                            <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                                Clear storage
+                            </Text>
+                        </Pressable>
+                    </Animated.View>
+                </Animated.View>
+            </Modal>
+        </>
     );
 };
