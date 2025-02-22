@@ -121,6 +121,7 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const [draftModel, setDraftModel] = useState(selectedModel);
     const [showLanguageSelect, setShowLanguageSelect] = useState(false);
+    const [showModelSelect, setShowModelSelect] = useState(false);
 
 
     // Reset drafts when component mounts
@@ -142,7 +143,7 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                         contentContainerStyle={{ padding: 16 }}
                         keyboardShouldPersistTaps="handled"
                     >
-                        <View style={{ gap: 24, paddingBottom: 200 }}>
+                        <View style={{ gap: 24 }}>
                             <View style={{ gap: 16 }}>
                                 <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
                                 <TextInput
@@ -192,30 +193,17 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                             </View>
                         </Pressable>
 
-                        <View style={{ gap: 8 }}>
-                            <Text style={{ fontWeight: 'bold' }}>Model Selection</Text>
-                            <View style={{ maxHeight: 150 }}>
-                                <ScrollView>
-                                    {MODELS.map(model => (
-                                        <Pressable
-                                            key={model.code}
-                                            style={[
-                                                styles.languageOption,
-                                                draftModel === model.code && styles.languageOptionSelected
-                                            ]}
-                                            onPress={() => setDraftModel(model.code)}
-                                        >
-                                            <Text style={[
-                                                styles.languageOptionText,
-                                                draftModel === model.code && styles.languageOptionTextSelected
-                                            ]}>
-                                                {model.name}
-                                            </Text>
-                                        </Pressable>
-                                    ))}
-                                </ScrollView>
+                        <Pressable 
+                            style={styles.selectionButton}
+                            onPress={() => setShowModelSelect(true)}
+                        >
+                            <View>
+                                <Text style={{ fontWeight: 'bold' }}>Model Selection</Text>
+                                <Text style={styles.selectedValue}>
+                                    {MODELS.find(m => m.code === draftModel)?.name || 'Select model'}
+                                </Text>
                             </View>
-                        </View>
+                        </Pressable>
 
                     </ScrollView>
                 </View>
@@ -261,6 +249,49 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                         </View>
                     </View>
                 </Modal>
+
+                {/* Model Selection Modal */}
+                <Modal
+                    visible={showModelSelect}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => setShowModelSelect(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Select Model</Text>
+                                <Pressable onPress={() => setShowModelSelect(false)}>
+                                    <Text style={styles.modalCloseButton}>Close</Text>
+                                </Pressable>
+                            </View>
+                            <FlatList
+                                data={MODELS}
+                                keyExtractor={item => item.code}
+                                renderItem={({ item }) => (
+                                    <Pressable
+                                        style={[
+                                            styles.languageOption,
+                                            draftModel === item.code && styles.languageOptionSelected
+                                        ]}
+                                        onPress={() => {
+                                            setDraftModel(item.code);
+                                            setShowModelSelect(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.languageOptionText,
+                                            draftModel === item.code && styles.languageOptionTextSelected
+                                        ]}>
+                                            {item.name}
+                                        </Text>
+                                    </Pressable>
+                                )}
+                            />
+                        </View>
+                    </View>
+                </Modal>
+
                 <View style={{ padding: 16, paddingBottom: 0 }}>
                     <Pressable
                         style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
