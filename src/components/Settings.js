@@ -137,14 +137,13 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                 flex: 1,
                 backgroundColor: '#F9FAFB',
             }}>
-                <View style={{ flex: 1 }}>
-                    <ScrollView 
-                        style={{ flex: 1 }}
-                        contentContainerStyle={{ padding: 16 }}
-                        keyboardShouldPersistTaps="handled"
-                    >
-                        <View style={{ gap: 24 }}>
-                            <View style={{ gap: 16 }}>
+                <ScrollView 
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ padding: 16 }}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={{ gap: 16 }}>
+                        <View style={{ gap: 8 }}>
                                 <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
                                 <TextInput
                                     secureTextEntry
@@ -162,7 +161,7 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                                 </Pressable>
                             </View>
 
-                            <View style={{ gap: 16 }}>
+                            <View style={{ gap: 8 }}>
                                 <Text style={{ fontWeight: 'bold' }}>OpenRouter API Key</Text>
                                 <TextInput
                                     secureTextEntry
@@ -179,8 +178,6 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                                     <Text style={{ color: '#3B82F6' }}>Get OpenRouter API key</Text>
                                 </Pressable>
                             </View>
-                        </View>
-
                         <Pressable 
                             style={styles.selectionButton}
                             onPress={() => setShowLanguageSelect(true)}
@@ -205,8 +202,19 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                             </View>
                         </Pressable>
 
-                    </ScrollView>
-                </View>
+                        <Pressable
+                            style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
+                            onPress={() => {
+                                if (draftUltravoxKey && draftOpenrouterKey) {
+                                    onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
+                                }
+                            }}
+                            disabled={!draftUltravoxKey || !draftOpenrouterKey}
+                        >
+                            <Text style={styles.buttonText}>Save Settings</Text>
+                        </Pressable>
+                    </View>
+                </ScrollView>
 
                 {/* Language Selection Modal */}
                 <Modal
@@ -292,19 +300,6 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                     </View>
                 </Modal>
 
-                <View style={{ padding: 16, paddingBottom: 0 }}>
-                    <Pressable
-                        style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
-                        onPress={() => {
-                            if (draftUltravoxKey && draftOpenrouterKey) {
-                                onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
-                            }
-                        }}
-                        disabled={!draftUltravoxKey || !draftOpenrouterKey}
-                    >
-                        <Text style={styles.buttonText}>Save Settings</Text>
-                    </Pressable>
-                </View>
             </SafeAreaView>
     );
 };
