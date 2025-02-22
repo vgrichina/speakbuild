@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     }
 });
 export default function Layout() {
+    const router = useRouter();
     return (
         <SafeAreaProvider>
             <ComponentHistoryProvider>
