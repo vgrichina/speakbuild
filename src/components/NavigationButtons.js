@@ -30,35 +30,36 @@ export const NavigationButtons = ({ stopGeneration }) => {
     } = useComponentHistory();
 
     return (
-    <View style={styles.container}>
-        <Pressable
-            onPress={() => {
-                stopGeneration();
-                setCurrentIndex(currentHistoryIndex - 1);
-            }}
-            disabled={currentHistoryIndex <= 0}
-            style={({ pressed }) => [
-                styles.navButton,
-                currentHistoryIndex <= 0 && styles.buttonDisabled,
-                pressed && styles.buttonPressed
-            ]}
-        >
-            <ArrowLeft size={20} color={currentHistoryIndex <= 0 ? '#999' : '#666'} />
-        </Pressable>
-        
-        <Pressable
-            onPress={() => {
-                stopGeneration();
-                setCurrentIndex(currentHistoryIndex + 1);
-            }}
-            disabled={currentHistoryIndex >= componentHistory.length - 1}
-            style={({ pressed }) => [
-                styles.navButton,
-                currentHistoryIndex >= componentHistory.length - 1 && styles.buttonDisabled,
-                pressed && styles.buttonPressed
-            ]}
-        >
-            <ArrowRight size={20} color={currentHistoryIndex >= componentHistory.length - 1 ? '#999' : '#666'} />
-        </Pressable>
-    </View>
-);
+        <View style={styles.container}>
+            <Pressable
+                onPress={() => {
+                    stopGeneration();
+                    setCurrentIndex(currentHistoryIndex - 1);
+                }}
+                disabled={currentHistoryIndex <= 0}
+                style={({ pressed }) => [
+                    styles.navButton,
+                    currentHistoryIndex <= 0 && styles.buttonDisabled,
+                    pressed && styles.buttonPressed
+                ]}
+            >
+                <ArrowLeft size={20} color={currentHistoryIndex <= 0 ? '#999' : '#666'} />
+            </Pressable>
+            
+            <Pressable
+                onPress={() => {
+                    stopGeneration();
+                    setCurrentIndex(currentHistoryIndex + 1);
+                }}
+                disabled={currentHistoryIndex >= componentHistory.length - 1}
+                style={({ pressed }) => [
+                    styles.navButton,
+                    currentHistoryIndex >= componentHistory.length - 1 && styles.buttonDisabled,
+                    pressed && styles.buttonPressed
+                ]}
+            >
+                <ArrowRight size={20} color={currentHistoryIndex >= componentHistory.length - 1 ? '#999' : '#666'} />
+            </Pressable>
+        </View>
+    );
+};
