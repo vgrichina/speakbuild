@@ -186,8 +186,7 @@ export const VoiceAssistant = () => {
         
         try {
             await checkApiKeys();
-        
-        try {
+            
             // Abort any existing stream
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
@@ -225,8 +224,12 @@ export const VoiceAssistant = () => {
             addToHistory(result);
             setModificationIntent(result.intent);
         } catch (error) {
-            console.error('Analysis error:', error);
-            setError(error.message);
+            if (error.message.includes('API key')) {
+                handleApiError(error);
+            } else {
+                console.error('Analysis error:', error);
+                setError(error.message);
+            }
         } finally {
             setIsGenerating(false);
             setResponseStream('');
