@@ -5,7 +5,7 @@ import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { widgetStorage } from './services/widgetStorage';
 import { processWithClaudeStream } from './services/processStream';
 import { useComponentHistory } from './contexts/ComponentHistoryContext';
-import { useSettings } from './hooks/useSettings';
+import { useSettings, useApiKeyCheck } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
 import { createComponent, renderComponent } from './utils/componentUtils';
@@ -175,6 +175,9 @@ export const VoiceAssistant = () => {
         setResponseStream('');
         
         try {
+            await checkApiKeys();
+        
+        try {
             // Abort any existing stream
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
@@ -229,10 +232,11 @@ export const VoiceAssistant = () => {
         cancelRecording
     } = useVoiceRoom({
         onTranscription: handleAnalysis,
-        onError: setError,
+        onError: handleApiError,
         selectedLanguage,
         componentHistory,
-        currentHistoryIndex
+        currentHistoryIndex,
+        checkApiKeys
     });
 
 

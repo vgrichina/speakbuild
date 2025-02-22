@@ -1,6 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+export function useApiKeyCheck() {
+    const [isChecking, setIsChecking] = useState(false);
+    const router = useRouter();
+
+    const checkApiKeys = useCallback(async () => {
+        if (isChecking) return;
+        setIsChecking(true);
+        
+        try {
+            const [ultravoxKey, openrouterKey] = await Promise.all([
+                AsyncStorage.getItem('ultravox_api_key'),
+                AsyncStorage.getItem('openrouter_api_key')
+            ]);
+
+            const missingKeys = [];
+            if (!ultravoxKey) missingKeys.push('Ultravox');
+            if (!openrouterKey) missingKeys.push('OpenRouter');
+
+            if (missingKeys.length > 0) {
+                router.push('settings');
+                throw new Error(`Please set your ${missingKeys.join(' and ')} API key${missingKeys.length > 1 ? 's' : ''} in settings`);
+            }
+
+            return { ultravoxKey, openrouterKey };
+        } finally {
+            setIsChecking(false);
+        }
+    }, [router, isChecking]);
+
+    return { checkApiKeys, isChecking };
+}
+
 export function useSettings() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [ultravoxApiKey, setUltravoxApiKey] = useState(null);

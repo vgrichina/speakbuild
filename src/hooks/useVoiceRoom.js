@@ -17,7 +17,8 @@ export function useVoiceRoom({
     onError,
     selectedLanguage,
     componentHistory,
-    currentHistoryIndex 
+    currentHistoryIndex,
+    checkApiKeys
 }) {
     const [isRecording, setIsRecording] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
@@ -127,10 +128,7 @@ export function useVoiceRoom({
 
         try {
             setIsConnecting(true);
-            const ultravoxKey = await AsyncStorage.getItem('ultravox_api_key');
-            if (!ultravoxKey) {
-                throw new Error('Ultravox API key not found');
-            }
+            const { ultravoxKey } = await checkApiKeys();
 
             const messages = analysisPrompt({ 
                 text: '', // Empty since we're starting voice recording
