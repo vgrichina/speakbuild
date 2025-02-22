@@ -20,7 +20,10 @@ function HeaderRightButtons({ navigation }) {
                         console.log('ViewSource - code preview:', current.code?.slice(0, 100) + '...');
                         const encoded = encodeURIComponent(current.code);
                         console.log('ViewSource - encoded preview:', encoded?.slice(0, 100) + '...');
-                        router.push('code-viewer', { code: encoded });
+                        router.push({
+                            pathname: 'code-viewer',
+                            params: { code: encoded }
+                        });
                     } else {
                         console.log('ViewSource - no code in current:', current);
                     }
