@@ -97,8 +97,11 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                 flex: 1,
                 backgroundColor: '#F9FAFB',
             }}>
-                <View style={{ flex: 1, padding: 16 }}>
-                    <View style={{ gap: 24, flex: 1 }}>
+                <ScrollView 
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ padding: 16 }}
+                    keyboardShouldPersistTaps="handled"
+                >
                         <View style={{ gap: 24 }}>
                             <View style={{ gap: 16 }}>
                                 <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
@@ -195,18 +198,19 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                             </View>
                         </View>
 
-                        <Pressable
-                            style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
-                            onPress={() => {
-                                if (draftUltravoxKey && draftOpenrouterKey) {
-                                    onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
-                                }
-                            }}
-                            disabled={!draftUltravoxKey || !draftOpenrouterKey}
-                        >
-                            <Text style={styles.buttonText}>Save Settings</Text>
-                        </Pressable>
-                    </View>
+                </ScrollView>
+                <View style={{ padding: 16, paddingBottom: 0 }}>
+                    <Pressable
+                        style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
+                        onPress={() => {
+                            if (draftUltravoxKey && draftOpenrouterKey) {
+                                onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
+                            }
+                        }}
+                        disabled={!draftUltravoxKey || !draftOpenrouterKey}
+                    >
+                        <Text style={styles.buttonText}>Save Settings</Text>
+                    </Pressable>
                 </View>
             </SafeAreaView>
     );
