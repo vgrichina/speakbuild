@@ -31,7 +31,7 @@ export default function DebugScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#1a1a1a' }}>
             <DebugGeneration
                 ref={debugGenerationRef}
-                onClose={() => router.back()}
+                onClose={() => router.dismiss()}
                 selectedModel={selectedModel}
             />
         </SafeAreaView>
