@@ -232,6 +232,6 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
       title: selectedWidget.description
     })
   );
-}
+});
 
 export default DebugGeneration;
