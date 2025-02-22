@@ -13,6 +13,18 @@ export default function SettingsScreen() {
         saveSettings
     } = useSettings();
 
+    const handleSave = async (ultravoxKey, openrouterKey, model, language) => {
+        try {
+            console.log('Saving settings...');
+            await saveSettings(ultravoxKey, openrouterKey, model, language);
+            console.log('Settings saved, now dismissing');
+            router.back();
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            // Handle error appropriately
+        }
+    };
+
     return (
         <View style={{ flex: 1 }}>
             <Settings
@@ -21,13 +33,7 @@ export default function SettingsScreen() {
                 openrouterApiKey={openrouterApiKey}
                 selectedLanguage={selectedLanguage}
                 selectedModel={selectedModel}
-                onSave={(ultravoxKey, openrouterKey, model, language) => {
-                    console.log('Saving settings...');
-                    saveSettings(ultravoxKey, openrouterKey, model, language);
-                    console.log('About to dismiss...');
-                    router.dismiss();
-                    console.log('After dismiss');
-                }}
+                onSave={handleSave}
             />
         </View>
     );
