@@ -18,7 +18,7 @@ export default function SettingsScreen() {
             console.log('Saving settings...');
             await saveSettings(ultravoxKey, openrouterKey, model, language);
             console.log('Settings saved, now dismissing');
-            router.back();
+            router.dismiss();
         } catch (error) {
             console.error('Error saving settings:', error);
             // Handle error appropriately
