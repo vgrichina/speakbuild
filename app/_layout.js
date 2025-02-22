@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
         fontSize: 14
     }
 });
-import { useComponentHistory } from '../src/hooks/useComponentHistory';
+import { useComponentHistory } from '../src/contexts/ComponentHistoryContext';
 
 export default function Layout() {
     const {
