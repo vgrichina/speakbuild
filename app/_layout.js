@@ -22,6 +22,7 @@ function HeaderRightButtons({ navigation }) {
                     }
                 }}
                 onDebugGeneration={() => navigation.push('debug')}
+                currentHistoryEntry={current}
                 showSourceCode={false}
             />
         </View>
