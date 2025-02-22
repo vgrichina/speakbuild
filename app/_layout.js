@@ -17,9 +17,12 @@ function HeaderRightButtons({ navigation }) {
             <DebugMenuButton
                 onViewSource={() => {
                     if (current?.code) {
-                        router.push('code-viewer', {
-                            code: current.code
-                        });
+                        console.log('ViewSource - code preview:', current.code?.slice(0, 100) + '...');
+                        const encoded = encodeURIComponent(current.code);
+                        console.log('ViewSource - encoded preview:', encoded?.slice(0, 100) + '...');
+                        router.push('code-viewer', { code: encoded });
+                    } else {
+                        console.log('ViewSource - no code in current:', current);
                     }
                 }}
                 onDebugGeneration={() => router.push('debug')}

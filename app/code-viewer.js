@@ -4,7 +4,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function CodeViewerScreen() {
     const router = useRouter();
-    const { code } = useLocalSearchParams();
+    const params = useLocalSearchParams();
+    console.log('CodeViewer - raw params:', params);
+    const code = params.code ? decodeURIComponent(params.code) : '';
+    console.log('CodeViewer - decoded code:', code?.slice(0, 100) + '...');
 
     return (
         <View style={{ flex: 1 }}>
