@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import * as RN from 'react-native';
 import { widgetStorage } from '../services/widgetStorage';
 import { streamComponent } from '../services/componentGenerator';
@@ -9,7 +9,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 
 import { createComponent, renderComponent } from '../utils/componentUtils';
 
-function DebugGeneration({ onClose, selectedModel }) {
+const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
   const [widgets, setWidgets] = useState([]);
   const [generating, setGenerating] = useState(null);
   const [selectedWidget, setSelectedWidget] = useState(null);
@@ -122,6 +122,18 @@ function DebugGeneration({ onClose, selectedModel }) {
       borderRadius: 8
     }
   };
+
+  const generateAllWidgets = async () => {
+    for (const widget of widgets) {
+      if (!widget.stored) {
+        await generateWidget(widget);
+      }
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    generateAllWidgets
+  }));
 
   return React.createElement(RN.View, { style: styles.container },
     React.createElement(RN.ScrollView, { style: styles.list },
