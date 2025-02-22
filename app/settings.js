@@ -16,14 +16,14 @@ export default function SettingsScreen() {
     return (
         <View style={{ flex: 1 }}>
             <Settings
-                onClose={() => router.back()}
+                onClose={() => router.dismiss()}
                 ultravoxApiKey={ultravoxApiKey}
                 openrouterApiKey={openrouterApiKey}
                 selectedLanguage={selectedLanguage}
                 selectedModel={selectedModel}
                 onSave={(ultravoxKey, openrouterKey, model, language) => {
                     saveSettings(ultravoxKey, openrouterKey, model, language);
-                    router.back();
+                    router.dismiss();
                 }}
             />
         </View>
