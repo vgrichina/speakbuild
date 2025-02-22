@@ -9,7 +9,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useComponentHistory } from '../src/contexts/ComponentHistoryContext';
 
 function HeaderRightButtons({ navigation }) {
-    const { current } = useComponentHistory();
+    const { current, clearHistory } = useComponentHistory();
     
     return (
         <View style={{ overflow: 'visible' }}>
@@ -22,6 +22,7 @@ function HeaderRightButtons({ navigation }) {
                     }
                 }}
                 onDebugGeneration={() => navigation.push('debug')}
+                onClearHistory={clearHistory}
                 currentHistoryEntry={current}
                 showSourceCode={false}
             />
