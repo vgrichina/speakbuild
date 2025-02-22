@@ -10,7 +10,7 @@ export default function CodeViewerScreen() {
         <View style={{ flex: 1 }}>
             <ViewCode
                 isVisible={true}
-                onClose={() => router.back()}
+                onClose={() => router.dismiss()}
                 code={code}
             />
         </View>

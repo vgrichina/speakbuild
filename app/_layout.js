@@ -16,12 +16,12 @@ function HeaderRightButtons({ navigation }) {
             <DebugMenuButton
                 onViewSource={() => {
                     if (current?.code) {
-                        navigation.push('code-viewer', {
+                        router.push('code-viewer', {
                             code: current.code
                         });
                     }
                 }}
-                onDebugGeneration={() => navigation.push('debug')}
+                onDebugGeneration={() => router.push('debug')}
                 onClearHistory={clearHistory}
                 currentHistoryEntry={current}
                 showSourceCode={false}
@@ -59,7 +59,7 @@ export default function Layout() {
                     options={({ navigation }) => ({
                         headerLeft: () => (
                             <Pressable 
-                                onPress={() => navigation.push('settings')}
+                                onPress={() => router.push('settings')}
                                 style={{ padding: 12, marginLeft: -8 }}
                             >
                                 <Settings size={24} color="#666" />
