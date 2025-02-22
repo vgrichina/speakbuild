@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { useComponentHistory } from '../contexts/ComponentHistoryContext';
 
 const styles = StyleSheet.create({
     container: {
@@ -21,18 +22,19 @@ const styles = StyleSheet.create({
     },
 });
 
-export const NavigationButtons = ({ 
-    currentHistoryIndex,
-    componentHistory,
-    onNavigateBack,
-    onNavigateForward,
-    stopGeneration
-}) => (
+export const NavigationButtons = ({ stopGeneration }) => {
+    const { 
+        currentIndex: currentHistoryIndex,
+        history: componentHistory,
+        setCurrentIndex
+    } = useComponentHistory();
+
+    return (
     <View style={styles.container}>
         <Pressable
             onPress={() => {
                 stopGeneration();
-                onNavigateBack();
+                setCurrentIndex(currentHistoryIndex - 1);
             }}
             disabled={currentHistoryIndex <= 0}
             style={({ pressed }) => [
@@ -47,7 +49,7 @@ export const NavigationButtons = ({
         <Pressable
             onPress={() => {
                 stopGeneration();
-                onNavigateForward();
+                setCurrentIndex(currentHistoryIndex + 1);
             }}
             disabled={currentHistoryIndex >= componentHistory.length - 1}
             style={({ pressed }) => [

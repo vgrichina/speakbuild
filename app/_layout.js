@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ComponentHistoryProvider } from '../src/contexts/ComponentHistoryContext';
 import { Settings } from 'lucide-react-native';
 import { NavigationButtons } from '../src/components/NavigationButtons';
 import { DebugMenuButton } from '../src/components/DebugMenuButton';
@@ -31,7 +32,8 @@ export default function Layout() {
 
     return (
         <SafeAreaProvider>
-            <Stack
+            <ComponentHistoryProvider>
+                <Stack
                 screenOptions={{
                     headerStyle: {
                         backgroundColor: '#f5f5f5',
@@ -132,7 +134,8 @@ export default function Layout() {
                         )
                     }}
                 />
-            </Stack>
+                </Stack>
+            </ComponentHistoryProvider>
         </SafeAreaProvider>
     );
 }

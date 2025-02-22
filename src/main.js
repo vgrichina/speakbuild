@@ -149,9 +149,7 @@ export const VoiceAssistant = () => {
         history: componentHistory,
         currentIndex: currentHistoryIndex,
         current: currentHistoryEntry,
-        addToHistory,
-        setCurrentIndex: setCurrentHistoryIndex,
-        clearHistory
+        addToHistory
     } = useComponentHistory();
     
     const currentComponent = currentHistoryEntry?.component;
