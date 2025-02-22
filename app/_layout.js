@@ -19,17 +19,7 @@ const styles = StyleSheet.create({
         fontSize: 14
     }
 });
-import { useComponentHistory } from '../src/contexts/ComponentHistoryContext';
-
 export default function Layout() {
-    const {
-        history: componentHistory,
-        currentIndex: currentHistoryIndex,
-        setCurrentIndex: setCurrentHistoryIndex,
-        clearHistory,
-        current: currentHistoryEntry
-    } = useComponentHistory();
-
     return (
         <SafeAreaProvider>
             <ComponentHistoryProvider>
@@ -54,31 +44,21 @@ export default function Layout() {
                         ),
                         headerTitle: () => (
                             <NavigationButtons 
-                                componentHistory={componentHistory}
-                                currentHistoryIndex={currentHistoryIndex}
-                                onNavigateBack={() => setCurrentHistoryIndex(currentHistoryIndex - 1)}
-                                onNavigateForward={() => setCurrentHistoryIndex(currentHistoryIndex + 1)}
                                 stopGeneration={() => {}}
                             />
                         ),
                         headerRight: () => (
                             <View style={{ overflow: 'visible' }}>
-                                {console.log('Debug menu state:', {
-                                    currentHistoryEntry,
-                                    component: currentHistoryEntry?.component,
-                                    code: currentHistoryEntry?.code
-                                })}
                                 <DebugMenuButton
                                     onViewSource={() => {
-                                        if (currentHistoryEntry?.code) {
+                                        const { current } = useComponentHistory();
+                                        if (current?.code) {
                                             navigation.push('code-viewer', {
-                                                code: currentHistoryEntry.code
+                                                code: current.code
                                             });
                                         }
                                     }}
                                     onDebugGeneration={() => navigation.push('debug')}
-                                    onClearHistory={clearHistory}
-                                    currentHistoryEntry={currentHistoryEntry}
                                     showSourceCode={false}
                                 />
                             </View>
