@@ -39,6 +39,44 @@ const LANGUAGES = [
 ];
 
 const styles = StyleSheet.create({
+    selectionButton: {
+        padding: 12,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        marginVertical: 4,
+    },
+    selectedValue: {
+        color: '#666',
+        marginTop: 4,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        paddingBottom: 20,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    modalCloseButton: {
+        color: '#007AFF',
+        fontSize: 16,
+    },
     input: {
         borderWidth: 1,
         borderColor: '#D1D5DB',
@@ -82,6 +120,7 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
     const [draftOpenrouterKey, setDraftOpenrouterKey] = useState('');
     const [draftLanguage, setDraftLanguage] = useState(selectedLanguage);
     const [draftModel, setDraftModel] = useState(selectedModel);
+    const [showLanguageSelect, setShowLanguageSelect] = useState(false);
 
 
     // Reset drafts when component mounts
@@ -97,12 +136,13 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                 flex: 1,
                 backgroundColor: '#F9FAFB',
             }}>
-                <ScrollView 
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ padding: 16 }}
-                    keyboardShouldPersistTaps="handled"
-                >
-                        <View style={{ gap: 24 }}>
+                <View style={{ flex: 1 }}>
+                    <ScrollView 
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ padding: 16 }}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <View style={{ gap: 24, paddingBottom: 200 }}>
                             <View style={{ gap: 16 }}>
                                 <Text style={{ fontWeight: 'bold' }}>Ultravox API Key</Text>
                                 <TextInput
@@ -140,38 +180,17 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                             </View>
                         </View>
 
-                        <View style={{ gap: 8 }}>
-                            <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
-                            <View style={{ maxHeight: 150 }}>
-                                <FlatList
-                                    data={LANGUAGES}
-                                    keyExtractor={item => item.code}
-                                    style={{ maxHeight: 150 }}
-                                    getItemLayout={(data, index) => ({
-                                        length: 44, // Fixed height for each item
-                                        offset: 44 * index,
-                                        index,
-                                    })}
-                                    initialScrollIndex={LANGUAGES.findIndex(l => l.code === selectedLanguage)}
-                                    renderItem={({ item }) => (
-                                            <Pressable
-                                                style={[
-                                                    styles.languageOption,
-                                                    draftLanguage === item.code && styles.languageOptionSelected
-                                                ]}
-                                                onPress={() => setDraftLanguage(item.code)}
-                                            >
-                                                <Text style={[
-                                                    styles.languageOptionText,
-                                                    draftLanguage === item.code && styles.languageOptionTextSelected
-                                                ]}>
-                                                    {item.name}
-                                                </Text>
-                                            </Pressable>
-                                        )}
-                                    />
+                        <Pressable 
+                            style={styles.selectionButton}
+                            onPress={() => setShowLanguageSelect(true)}
+                        >
+                            <View>
+                                <Text style={{ fontWeight: 'bold' }}>Recognition Language</Text>
+                                <Text style={styles.selectedValue}>
+                                    {LANGUAGES.find(l => l.code === draftLanguage)?.name || 'Select language'}
+                                </Text>
                             </View>
-                        </View>
+                        </Pressable>
 
                         <View style={{ gap: 8 }}>
                             <Text style={{ fontWeight: 'bold' }}>Model Selection</Text>
@@ -198,7 +217,50 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                             </View>
                         </View>
 
-                </ScrollView>
+                    </ScrollView>
+                </View>
+
+                {/* Language Selection Modal */}
+                <Modal
+                    visible={showLanguageSelect}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => setShowLanguageSelect(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Select Language</Text>
+                                <Pressable onPress={() => setShowLanguageSelect(false)}>
+                                    <Text style={styles.modalCloseButton}>Close</Text>
+                                </Pressable>
+                            </View>
+                            <FlatList
+                                data={LANGUAGES}
+                                keyExtractor={item => item.code}
+                                renderItem={({ item }) => (
+                                    <Pressable
+                                        style={[
+                                            styles.languageOption,
+                                            draftLanguage === item.code && styles.languageOptionSelected
+                                        ]}
+                                        onPress={() => {
+                                            setDraftLanguage(item.code);
+                                            setShowLanguageSelect(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.languageOptionText,
+                                            draftLanguage === item.code && styles.languageOptionTextSelected
+                                        ]}>
+                                            {item.name}
+                                        </Text>
+                                    </Pressable>
+                                )}
+                            />
+                        </View>
+                    </View>
+                </Modal>
                 <View style={{ padding: 16, paddingBottom: 0 }}>
                     <Pressable
                         style={[styles.button, (!draftUltravoxKey || !draftOpenrouterKey) && styles.buttonDisabled]}
