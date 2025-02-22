@@ -200,7 +200,6 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                             onPress={() => {
                                 if (draftUltravoxKey && draftOpenrouterKey) {
                                     onSave(draftUltravoxKey, draftOpenrouterKey, draftModel, draftLanguage);
-                                    onClose();
                                 }
                             }}
                             disabled={!draftUltravoxKey || !draftOpenrouterKey}
