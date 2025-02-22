@@ -118,6 +118,16 @@ export const VoiceAssistant = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
+    const { checkApiKeys } = useApiKeyCheck();
+    
+    const handleApiError = useCallback((error) => {
+        if (error.message.includes('API key')) {
+            setError(error.message);
+        } else {
+            setError('An error occurred');
+            console.error(error);
+        }
+    }, []);
 
 
     useEffect(() => {
