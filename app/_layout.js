@@ -6,6 +6,27 @@ import { NavigationButtons } from '../src/components/NavigationButtons';
 import { DebugMenuButton } from '../src/components/DebugMenuButton';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { useComponentHistory } from '../src/contexts/ComponentHistoryContext';
+
+function HeaderRightButtons({ navigation }) {
+    const { current } = useComponentHistory();
+    
+    return (
+        <View style={{ overflow: 'visible' }}>
+            <DebugMenuButton
+                onViewSource={() => {
+                    if (current?.code) {
+                        navigation.push('code-viewer', {
+                            code: current.code
+                        });
+                    }
+                }}
+                onDebugGeneration={() => navigation.push('debug')}
+                showSourceCode={false}
+            />
+        </View>
+    );
+}
 
 const styles = StyleSheet.create({
     generateButton: {
@@ -47,22 +68,7 @@ export default function Layout() {
                                 stopGeneration={() => {}}
                             />
                         ),
-                        headerRight: () => (
-                            <View style={{ overflow: 'visible' }}>
-                                <DebugMenuButton
-                                    onViewSource={() => {
-                                        const { current } = useComponentHistory();
-                                        if (current?.code) {
-                                            navigation.push('code-viewer', {
-                                                code: current.code
-                                            });
-                                        }
-                                    }}
-                                    onDebugGeneration={() => navigation.push('debug')}
-                                    showSourceCode={false}
-                                />
-                            </View>
-                        )
+                        headerRight: () => <HeaderRightButtons navigation={navigation} />
                     })}
                 />
                 <Stack.Screen 
@@ -94,7 +100,7 @@ export default function Layout() {
                 />
                 <Stack.Screen 
                     name="code-viewer" 
-                    options={{
+                    options={({ route }) => ({
                         presentation: 'modal',
                         animation: 'slide_from_bottom',
                         title: 'Source Code',
@@ -112,7 +118,7 @@ export default function Layout() {
                                 <Text style={{ color: '#007AFF' }}>Copy</Text>
                             </Pressable>
                         )
-                    }}
+                    })}
                 />
                 </Stack>
             </ComponentHistoryProvider>
