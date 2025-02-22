@@ -22,8 +22,11 @@ export default function SettingsScreen() {
                 selectedLanguage={selectedLanguage}
                 selectedModel={selectedModel}
                 onSave={(ultravoxKey, openrouterKey, model, language) => {
+                    console.log('Saving settings...');
                     saveSettings(ultravoxKey, openrouterKey, model, language);
+                    console.log('About to dismiss...');
                     router.dismiss();
+                    console.log('After dismiss');
                 }}
             />
         </View>
