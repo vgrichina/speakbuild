@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ComponentHistoryProvider } from '../src/contexts/ComponentHistoryContext';
 import { Settings } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { useComponentHistory } from '../src/contexts/ComponentHistoryContext';
 
 function HeaderRightButtons({ navigation }) {
     const { current, clearHistory } = useComponentHistory();
+    const router = useRouter();
     
     return (
         <View style={{ overflow: 'visible' }}>
