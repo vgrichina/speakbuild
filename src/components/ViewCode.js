@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
 });
 
 export function ViewCode({ isVisible, code, title = 'Source Code', onClose }) {
+  console.log('ViewCode component - received props:', { isVisible, code: code?.slice(0, 100) + '...', title });
   const copyToClipboard = async () => {
     try {
       await Clipboard.setStringAsync(code);
