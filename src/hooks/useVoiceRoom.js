@@ -267,8 +267,10 @@ export function useVoiceRoom({
                     // Only try parsing if we have some JSON structure
                     if (accumulatedJson.includes('"transcription"')) {
                         try {
+                            console.log('Attempting to parse partial JSON:', accumulatedJson);
                             // Try to parse partial JSON
                             const partialResult = parse(accumulatedJson, STR | OBJ);
+                            console.log('Parsed partial JSON result:', partialResult);
                             if (partialResult?.transcription) {
                                 console.log('Setting partial results:', partialResult.transcription);
                                 setPartialResults(partialResult.transcription);
