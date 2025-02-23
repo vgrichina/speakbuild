@@ -137,18 +137,23 @@ export function useVoiceRoom({
 
         console.log('Starting recording flow...');
 
-        // Start recording immediately
-        setIsRecording(true);
-        console.log('Set isRecording to true');
-        AudioRecord.start();
-        console.log('AudioRecord.start() called');
-
-        // Create a new AbortController for this recording session
-        const controller = new AbortController();
-
         try {
-            setIsConnecting(true);
+            // Check API keys BEFORE starting any recording
             const { ultravoxKey } = await checkApiKeys();
+            if (!ultravoxKey) {
+                throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
+            }
+
+            // Only start recording if API keys are valid
+            setIsRecording(true);
+            console.log('Set isRecording to true');
+            AudioRecord.start();
+            console.log('AudioRecord.start() called');
+
+            // Create a new AbortController for this recording session
+            const controller = new AbortController();
+
+            setIsConnecting(true);
 
             const messages = analysisPrompt({ 
                 text: '', // Empty since we're starting voice recording
