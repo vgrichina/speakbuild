@@ -3,8 +3,8 @@ import { fetchSSE } from './sseFetch';
 import { truncateWithEllipsis } from '../utils/stringUtils';
 
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const PROMPT_PREVIEW_LENGTH = 5000;  // Characters to show in logs
-const RESPONSE_PREVIEW_LENGTH = 5000;  // Characters to show in logs
+const PROMPT_PREVIEW_LENGTH = 500;  // Characters to show in logs
+const RESPONSE_PREVIEW_LENGTH = 500;  // Characters to show in logs
 
 async function* streamCompletion(apiKey, messages, { 
     model = 'anthropic/claude-3.5-sonnet', 
