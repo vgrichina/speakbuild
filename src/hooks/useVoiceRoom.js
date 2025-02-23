@@ -270,6 +270,7 @@ export function useVoiceRoom({
                             // Try to parse partial JSON
                             const partialResult = parse(accumulatedJson, STR | OBJ);
                             if (partialResult?.transcription) {
+                                console.log('Setting partial results:', partialResult.transcription);
                                 setPartialResults(partialResult.transcription);
                             }
                         } catch (error) {
