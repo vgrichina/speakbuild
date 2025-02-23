@@ -18,11 +18,9 @@ function HeaderRightButtons({ navigation }) {
                 onViewSource={() => {
                     if (current?.code) {
                         console.log('ViewSource - code preview:', current.code?.slice(0, 100) + '...');
-                        const encoded = encodeURIComponent(current.code);
-                        console.log('ViewSource - encoded preview:', encoded?.slice(0, 100) + '...');
                         router.push({
                             pathname: 'code-viewer',
-                            params: { code: encoded }
+                            params: { code: current.code }
                         });
                     } else {
                         console.log('ViewSource - no code in current:', current);

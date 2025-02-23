@@ -229,11 +229,9 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
     ),
     selectedWidget && (() => {
       console.log('ViewSource - code preview:', selectedWidget.stored.code?.slice(0, 100) + '...');
-      const encoded = encodeURIComponent(selectedWidget.stored.code);
-      console.log('ViewSource - encoded preview:', encoded?.slice(0, 100) + '...');
       router.push({
         pathname: 'code-viewer',
-        params: { code: encoded }
+        params: { code: selectedWidget.stored.code }
       });
       setSelectedWidget(null);
       return null;
