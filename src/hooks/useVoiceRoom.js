@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { analysisPrompt } from '../services/analysis';
+import { parse, STR, OBJ } from 'partial-json';
 
 const cleanJsonText = (text) => {
     return text.replace(/^```(?:json)?\n?|\n?```$/g, '').trim();
@@ -231,8 +232,9 @@ export function useVoiceRoom({
                 }
             };
 
+            let accumulatedJson = '';
+            
             ws.current.onmessage = (event) => {
-                // Store current WebSocket reference to check if it's still the active one
                 const currentWs = ws.current;
                 
                 if (!currentWs || currentWs.readyState !== WebSocket.OPEN) {
@@ -254,23 +256,42 @@ export function useVoiceRoom({
                 }
 
                 // Handle agent transcripts
-                if (msg.type === "transcript" && msg.role === "agent" && msg.final && msg.text) {
+                if (msg.type === "transcript" && msg.role === "agent") {
+                    // Accumulate JSON text
+                    if (msg.text) {
+                        accumulatedJson = msg.text;
+                    } else if (msg.delta) {
+                        accumulatedJson += msg.delta;
+                    }
+
                     try {
-                        // Clean and parse the JSON response from the agent
-                        const cleanedText = cleanJsonText(msg.text);
-                        const analysis = JSON.parse(cleanedText);
-                        // Stop recording first since we have the complete analysis
-                        if (currentWs === ws.current) { // Only if this is still the active WebSocket
-                            stopRecording();
-                            // Then trigger component generation
-                            onTranscription?.(analysis);
+                        // Try to parse partial JSON
+                        const partialResult = parse(accumulatedJson, STR | OBJ);
+                        if (partialResult?.transcription) {
+                            setPartialResults(partialResult.transcription);
                         }
                     } catch (error) {
-                        console.error('Error parsing transcript:', error);
-                        if (currentWs === ws.current) {
-                            onError?.('Failed to parse transcript');
-                            stopRecording();
+                        // Ignore parsing errors for partial JSON
+                        console.debug('Partial JSON parse error:', error);
+                    }
+
+                    // Handle final message
+                    if (msg.final && accumulatedJson) {
+                        try {
+                            const analysis = JSON.parse(accumulatedJson);
+                            if (currentWs === ws.current) {
+                                stopRecording();
+                                onTranscription?.(analysis);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing final transcript:', error);
+                            if (currentWs === ws.current) {
+                                onError?.('Failed to parse transcript');
+                                stopRecording();
+                            }
                         }
+                        // Reset accumulated JSON
+                        accumulatedJson = '';
                     }
                 }
             };
