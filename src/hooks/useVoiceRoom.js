@@ -260,8 +260,10 @@ export function useVoiceRoom({
                     // Accumulate JSON text
                     if (msg.text) {
                         accumulatedJson = msg.text;
+                        console.log('Set accumulated JSON from text:', accumulatedJson);
                     } else if (msg.delta) {
                         accumulatedJson += msg.delta;
+                        console.log('Updated accumulated JSON with delta:', accumulatedJson);
                     }
 
                     // Only try parsing if we have some JSON structure
