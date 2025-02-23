@@ -28,6 +28,7 @@ export function useVoiceRoom({
 }) {
     const [isRecording, setIsRecording] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
+    const [partialResults, setPartialResults] = useState('');
     const ws = useRef(null);
     const [volume, setVolume] = useState(0);
     const audioBuffer = useRef([]);
@@ -353,6 +354,7 @@ export function useVoiceRoom({
         volume,
         startRecording,
         stopRecording,
-        cancelRecording
+        cancelRecording,
+        partialResults
     };
 }
