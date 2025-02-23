@@ -198,10 +198,26 @@ Reports are saved in the `evaluations/` directory with filenames:
 
 Key packages:
 - `expo` ~52.0.0
-- `expo-speech-recognition` ~1.0.0
+- `@expo/vector-icons` ^14.0.0
+- `expo-av` ~15.0.2
+- `expo-clipboard` ~7.0.1
+- `expo-file-system` ~18.0.7
+- `expo-haptics` ~14.0.1
+- `expo-image-picker` ~16.0.4
+- `expo-linking` ~7.0.0
+- `expo-location` ~18.0.5
+- `expo-media-library` ~17.0.5
+- `expo-notifications` ~0.29.12
+- `expo-sensors` ~14.0.2
+- `expo-sharing` ~13.0.1
 - `react` 18.3.1
 - `react-native` 0.76.6
 - `@react-native-async-storage/async-storage` 1.23.1
+- `react-native-gesture-handler` ~2.20.2
+- `react-native-reanimated` ~3.16.1
+- `react-native-audio-record` ^0.2.2
+- `lucide-react-native` ^0.359.0
+- `partial-json` ^0.1.7
 
 For full list of dependencies, see `package.json`.
 
