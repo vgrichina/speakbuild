@@ -139,7 +139,6 @@ export const VoiceAssistant = () => {
             }
         };
     }, []);
-    const [partialResults, setPartialResults] = useState('');
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
     const [error, setError] = useState('');
@@ -242,7 +241,8 @@ export const VoiceAssistant = () => {
         volume,
         startRecording,
         stopRecording,
-        cancelRecording
+        cancelRecording,
+        partialResults
     } = useVoiceRoom({
         onTranscription: handleAnalysis,
         onError: handleApiError,
