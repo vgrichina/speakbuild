@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useRouter } from 'expo-router';
 import * as RN from 'react-native';
 import { widgetStorage } from '../services/widgetStorage';
 import { streamComponent } from '../services/componentGenerator';
@@ -10,6 +11,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { createComponent, renderComponent } from '../utils/componentUtils';
 
 const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
+  const router = useRouter();
   const [widgets, setWidgets] = useState([]);
   const [generating, setGenerating] = useState(null);
   const [selectedWidget, setSelectedWidget] = useState(null);
@@ -225,12 +227,17 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
         )
       )
     ),
-    selectedWidget && React.createElement(ViewCode, {
-      isVisible: true,
-      onClose: () => setSelectedWidget(null),
-      code: selectedWidget.stored.code,
-      title: selectedWidget.description
-    })
+    selectedWidget && (() => {
+      console.log('ViewSource - code preview:', selectedWidget.stored.code?.slice(0, 100) + '...');
+      const encoded = encodeURIComponent(selectedWidget.stored.code);
+      console.log('ViewSource - encoded preview:', encoded?.slice(0, 100) + '...');
+      router.push({
+        pathname: 'code-viewer',
+        params: { code: encoded }
+      });
+      setSelectedWidget(null);
+      return null;
+    })()
   );
 });
 
