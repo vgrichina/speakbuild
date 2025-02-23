@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { analysisPrompt } from '../services/analysis';
+
+const cleanJsonText = (text) => {
+    return text.replace(/^```(?:json)?\n?|\n?```$/g, '').trim();
+};
 import { PERMISSIONS, request, check, RESULTS } from 'react-native-permissions';
 import AudioRecord from 'react-native-audio-record';
 import { Platform } from 'react-native';
@@ -252,8 +256,9 @@ export function useVoiceRoom({
                 // Handle agent transcripts
                 if (msg.type === "transcript" && msg.role === "agent" && msg.final && msg.text) {
                     try {
-                        // Parse the JSON response from the agent
-                        const analysis = JSON.parse(msg.text);
+                        // Clean and parse the JSON response from the agent
+                        const cleanedText = cleanJsonText(msg.text);
+                        const analysis = JSON.parse(cleanedText);
                         // Stop recording first since we have the complete analysis
                         if (currentWs === ws.current) { // Only if this is still the active WebSocket
                             stopRecording();
