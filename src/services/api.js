@@ -32,14 +32,6 @@ async function* streamCompletion(apiKey, messages, {
         'X-Title': 'Voice Assistant Web App',
     };
 
-    // Log equivalent curl command for debugging
-    console.log('\nEquivalent curl command:');
-    console.log(`curl -X POST '${API_URL}' \\
-  -H 'Authorization: Bearer ${apiKey}' \\
-  -H 'Content-Type: application/json' \\
-  -H 'Accept: text/event-stream' \\
-  -H 'X-Title: Voice Assistant Web App' \\
-  -d '${JSON.stringify(requestBody).replace(/'/g, "'\\''")}'`);
 
     const response = await fetchSSE(API_URL, {
         method: 'POST',
