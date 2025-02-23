@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { analysisPrompt } from '../services/analysis';
+import { PERMISSIONS, request, check, RESULTS } from 'react-native-permissions';
 import AudioRecord from 'react-native-audio-record';
-import { PermissionsAndroid, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 const options = {
     sampleRate: 16000,
@@ -52,27 +53,46 @@ export function useVoiceRoom({
         return cleanup;
     }, [cleanup]);
 
+    const checkPermission = async () => {
+        try {
+            const permission = Platform.select({
+                ios: PERMISSIONS.IOS.MICROPHONE,
+                android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+                default: null,
+            });
+
+            if (!permission) {
+                throw new Error('Platform not supported');
+            }
+
+            const status = await check(permission);
+            
+            if (status === RESULTS.GRANTED) {
+                return true;
+            }
+
+            // Request permission if not granted
+            const result = await request(permission, {
+                title: 'Microphone Permission',
+                message: 'Voice Assistant needs access to your microphone to process voice commands.',
+                buttonPositive: 'Grant Permission',
+                buttonNegative: 'Cancel',
+            });
+
+            return result === RESULTS.GRANTED;
+        } catch (err) {
+            console.error('Permission check failed:', err);
+            onError('Failed to check microphone permission');
+            return false;
+        }
+    };
+
     useEffect(() => {
-        const init = async () => {
-            if (Platform.OS === 'android') {
-                try {
-                    const granted = await PermissionsAndroid.request(
-                        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-                        {
-                            title: 'Microphone Permission',
-                            message: 'App needs access to your microphone',
-                            buttonNeutral: 'Ask Me Later',
-                            buttonNegative: 'Cancel',
-                            buttonPositive: 'OK',
-                        },
-                    );
-                    if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                        onError('Microphone permission denied');
-                    }
-                } catch (err) {
-                    console.error('Failed to request permission:', err);
-                    onError('Failed to request microphone permission');
-                }
+        const initAudio = async () => {
+            const hasPermission = await checkPermission();
+            if (!hasPermission) {
+                onError('Microphone permission is required');
+                return;
             }
             
             AudioRecord.init(options);

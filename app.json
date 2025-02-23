@@ -13,7 +13,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.voiceassistant.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone",
+        "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone for voice commands",
         "UIBackgroundModes": ["audio"],
         "bitcode": false
       }
@@ -45,6 +45,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-permissions",
+        {
+          "iosPermissions": [
+            "Microphone"
+          ]
+        }
+      ],
       [
         "expo-build-properties",
         {
