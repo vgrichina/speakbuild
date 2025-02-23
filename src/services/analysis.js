@@ -208,7 +208,7 @@ ${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component
     ];
     
     console.log(`Analysis [fixie-ai/ultravox]`);
-    console.log(`>> ${prompt.map(m => `${m.role}: ${truncateWithEllipsis(m.content, 500)}`).join('\n')}`);
+    console.log(`${prompt.map(m => `>> ${m.role}: ${truncateWithEllipsis(m.content, 500)}`).join('\n')}`);
     
     return prompt;
 };
