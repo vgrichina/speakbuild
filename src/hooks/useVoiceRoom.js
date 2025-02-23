@@ -94,8 +94,14 @@ export function useVoiceRoom({
                 onError('Microphone permission is required');
                 return;
             }
-            
-            AudioRecord.init(options);
+            console.log('Initializing AudioRecord with options:', options);
+            try {
+                AudioRecord.init(options);
+                console.log('AudioRecord initialized successfully');
+            } catch (error) {
+                console.error('AudioRecord initialization failed:', error);
+                throw error;
+            }
             
             AudioRecord.on('data', data => {
                 // Decode base64 once
