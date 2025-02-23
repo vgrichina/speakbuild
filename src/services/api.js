@@ -16,7 +16,7 @@ async function* streamCompletion(apiKey, messages, {
     let fullResponse = '';
     console.log(`Stream [${model}] t=${temperature}`);
     console.log(`API Key: ${apiKey ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : 'missing'}`);
-    console.log(`>> ${messages.map(m => `${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
+    console.log(`${messages.map(m => `>> ${m.role}: ${truncateWithEllipsis(m.content, PROMPT_PREVIEW_LENGTH)}`).join('\n')}`);
 
     const requestBody = {
         model,
@@ -97,7 +97,7 @@ async function* streamCompletion(apiKey, messages, {
 
 async function completion(apiKey, messages, { model = 'anthropic/claude-3.5-haiku', temperature = 0.1, max_tokens, abortController } = {}) {
     console.log(`API [${model}] t=${temperature}${max_tokens ? ` max=${max_tokens}` : ''}`);
-    console.log(`>> ${messages.map(m => `${m.role}: ${m.content.slice(0, PROMPT_PREVIEW_LENGTH)}...`).join('\n')}`);
+    console.log(`${messages.map(m => `>> ${m.role}: ${m.content.slice(0, PROMPT_PREVIEW_LENGTH)}...`).join('\n')}`);
 
     const response = await fetch(API_URL, {
         signal: abortController?.signal,
