@@ -25,7 +25,7 @@ export const TranscriptionBox = ({
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                     <Radio size={16} color="#EF4444" />
                     <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
-                        {console.log('Reading partial results:', partialResults) || partialResults}
+                        {partialResults}
                     </Text>
                 </View>
             )}
