@@ -47,10 +47,6 @@ export const DebugMenuButton = ({
     currentHistoryEntry,
     showSourceCode
 }) => {
-    console.log('DebugMenuButton props:', {
-        currentHistoryEntry,
-        showSourceCode
-    });
     const [isOpen, setIsOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
     const buttonRef = useRef();
