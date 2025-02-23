@@ -1,5 +1,6 @@
 import { api } from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { truncateWithEllipsis } from '../utils/stringUtils';
 
 const SYSTEM_PROMPT = {
     role: 'system',
@@ -194,7 +195,7 @@ ONLY return the JSON object.`
 };
 
 const analysisPrompt = ({ requestHistory, currentParams }) => {
-    return [
+    const prompt = [
         SYSTEM_PROMPT,
         {
             role: 'user',
@@ -205,6 +206,13 @@ Previous component parameters:
 ${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component'}`
         }
     ];
+    
+    console.log('Analysis prompt:', prompt.map(m => ({
+        role: m.role,
+        content: truncateWithEllipsis(m.content, 500)
+    })));
+    
+    return prompt;
 };
 
 const analyzeRequest = async (text, controller, history, historyIndex, currentParams) => {
