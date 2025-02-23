@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
   }
 });
 
-export function ViewCode({ isVisible, code, title = 'Source Code', onClose }) {
-  console.log('ViewCode component - received props:', { isVisible, code: code?.slice(0, 100) + '...', title });
+export function ViewCode({ code, title = 'Source Code', onClose }) {
+  console.log('ViewCode component - received props:', { code: code?.slice(0, 100) + '...', title });
   const copyToClipboard = async () => {
     try {
       await Clipboard.setStringAsync(code);
@@ -57,13 +57,7 @@ export function ViewCode({ isVisible, code, title = 'Source Code', onClose }) {
   };
 
   return (
-    <Modal
-      visible={isVisible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={onClose}
-    >
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         <View style={styles.actions}>
@@ -79,6 +73,5 @@ export function ViewCode({ isVisible, code, title = 'Source Code', onClose }) {
         <Text style={styles.code}>{code}</Text>
       </ScrollView>
       </SafeAreaView>
-    </Modal>
   );
 }
