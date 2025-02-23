@@ -253,7 +253,11 @@ export function useVoiceRoom({
                 
                 // Only log non-audio messages
                 if (msg.type !== 'audio') {
-                    console.log('Received message:', msg);
+                    if (msg.final) {
+                        console.log(`<< FINAL ${msg.role}: ${msg.text}`);
+                    } else if (msg.delta) {
+                        console.log(`<< ${msg.role}: ${msg.delta}`);
+                    }
                 }
 
                 // Handle agent transcripts
