@@ -2,7 +2,6 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { analysisPrompt } from '../services/analysis';
 import { parse, STR, OBJ } from 'partial-json';
-import { parse, STR, OBJ } from 'partial-json';
 
 const cleanJsonText = (text) => {
     return text.replace(/^```(?:json)?\n?|\n?```$/g, '').trim();
@@ -265,15 +264,18 @@ export function useVoiceRoom({
                         accumulatedJson += msg.delta;
                     }
 
-                    try {
-                        // Try to parse partial JSON
-                        const partialResult = parse(accumulatedJson, STR | OBJ);
-                        if (partialResult?.transcription) {
-                            setPartialResults(partialResult.transcription);
+                    // Only try parsing if we have some JSON structure
+                    if (accumulatedJson.includes('"transcription"')) {
+                        try {
+                            // Try to parse partial JSON
+                            const partialResult = parse(accumulatedJson, STR | OBJ);
+                            if (partialResult?.transcription) {
+                                setPartialResults(partialResult.transcription);
+                            }
+                        } catch (error) {
+                            // Ignore parsing errors for partial JSON
+                            console.debug('Partial JSON parse error:', error);
                         }
-                    } catch (error) {
-                        // Ignore parsing errors for partial JSON
-                        console.debug('Partial JSON parse error:', error);
                     }
 
                     // Handle final message
