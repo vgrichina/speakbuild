@@ -125,7 +125,7 @@ export function useVoiceRoom({
             });
         };
 
-        init();
+        initAudio();
         return () => AudioRecord.stop();
     }, []);
 
