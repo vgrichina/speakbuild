@@ -2,15 +2,15 @@ import * as FileSystem from 'expo-file-system';
 
 // Map URLs to example file paths
 const URL_TO_EXAMPLE_MAP = {
-  'input/list/editable/light': 'examples/listComponent.js',
-  'display/chart.svg/bar/light': 'examples/barChart.svg.js'
+  'input/list/editable/light': 'assets/examples/listComponent.js',
+  'display/chart.svg/bar/light': 'assets/examples/barChart.svg.js'
 };
 
 // Helper function to read example file content
 const readExampleFile = async (filePath) => {
   try {
-    // Try to read from the file system
-    const fileUri = FileSystem.documentDirectory + filePath;
+    // Read from the asset bundle
+    const fileUri = FileSystem.bundleDirectory + filePath;
     return await FileSystem.readAsStringAsync(fileUri);
   } catch (error) {
     console.warn(`Could not read example file ${filePath}:`, error);
