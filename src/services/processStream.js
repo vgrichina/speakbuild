@@ -10,7 +10,6 @@ export async function processWithClaudeStream({
     onResponseStream
 }) {
     console.log('processWithClaudeStream - selectedModel:', selectedModel);
-}) {
     if (!selectedModel) {
         throw new Error('No model selected');
     }
