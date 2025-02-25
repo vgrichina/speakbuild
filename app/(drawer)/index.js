@@ -7,6 +7,7 @@ import { DebugMenuButton } from '../../src/components/DebugMenuButton';
 import { useComponentHistory } from '../../src/contexts/ComponentHistoryContext';
 import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 
 export default function Index() {
     const navigation = useNavigation();
@@ -22,36 +23,40 @@ export default function Index() {
             },
             headerTintColor: '#000',
             headerLeft: () => (
-                <Settings 
+                <Feather 
+                    name="menu" 
                     size={24} 
                     color="#666" 
                     style={{ marginLeft: 8 }}
-                    onPress={() => router.push('settings')}
-                />
-            ),
-            headerTitle: () => (
-                <NavigationButtons 
-                    stopGeneration={() => {}}
+                    onPress={() => navigation.openDrawer()}
                 />
             ),
             headerRight: () => (
-                <DebugMenuButton
-                    onViewSource={() => {
-                        if (current?.code) {
-                            console.log('ViewSource - code preview:', current.code?.slice(0, 100) + '...');
-                            router.push({
-                                pathname: 'code-viewer',
-                                params: { code: current.code }
-                            });
-                        } else {
-                            console.log('ViewSource - no code in current:', current);
-                        }
-                    }}
-                    onDebugGeneration={() => router.push('debug')}
-                    onClearHistory={clearHistory}
-                    currentHistoryEntry={current}
-                    showSourceCode={false}
-                />
+                <View style={{ flexDirection: 'row' }}>
+                    <Settings 
+                        size={24} 
+                        color="#666" 
+                        style={{ marginRight: 16 }}
+                        onPress={() => router.push('settings')}
+                    />
+                    <DebugMenuButton
+                        onViewSource={() => {
+                            if (current?.code) {
+                                console.log('ViewSource - code preview:', current.code?.slice(0, 100) + '...');
+                                router.push({
+                                    pathname: 'code-viewer',
+                                    params: { code: current.code }
+                                });
+                            } else {
+                                console.log('ViewSource - no code in current:', current);
+                            }
+                        }}
+                        onDebugGeneration={() => router.push('debug')}
+                        onClearHistory={clearHistory}
+                        currentHistoryEntry={current}
+                        showSourceCode={false}
+                    />
+                </View>
             )
         });
     }, [navigation, current]);
