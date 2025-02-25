@@ -212,6 +212,7 @@ export const VoiceAssistant = () => {
                 }
             }
 
+            console.log('handleAnalysis - selectedModel:', selectedModel);
             const result = await processWithClaudeStream({
                 analysis,
                 selectedModel,
