@@ -24,15 +24,15 @@ export function useApiKeyCheck() {
             const { ultravoxApiKey, openrouterApiKey } = settings;
 
             const missingKeys = [];
-            if (!ultravoxKey) missingKeys.push('Ultravox');
-            if (!openrouterKey) missingKeys.push('OpenRouter');
+            if (!ultravoxApiKey) missingKeys.push('Ultravox');
+            if (!openrouterApiKey) missingKeys.push('OpenRouter');
 
             if (missingKeys.length > 0) {
                 router.push('settings');
                 throw new Error(`Please set your ${missingKeys.join(' and ')} API key${missingKeys.length > 1 ? 's' : ''} in settings`);
             }
 
-            return { ultravoxKey, openrouterKey };
+            return { ultravoxKey: ultravoxApiKey, openrouterKey: openrouterApiKey };
         } finally {
             setIsChecking(false);
         }
@@ -57,13 +57,13 @@ export function useSettings() {
                 const settings = JSON.parse(settingsJson);
                 
                 // Set API keys
-                setUltravoxApiKey(savedUltravoxKey || '');
-                setOpenrouterApiKey(savedOpenrouterKey || '');
-                setSelectedLanguage(savedLanguage || 'en');
+                setUltravoxApiKey(settings.ultravoxApiKey || '');
+                setOpenrouterApiKey(settings.openrouterApiKey || '');
+                setSelectedLanguage(settings.selectedLanguage || 'en');
                 
                 // Set model with default
-                console.log('Loading settings - saved model:', savedModel);
-                const modelToUse = savedModel || 'anthropic/claude-3.5-sonnet';
+                console.log('Loading settings - saved model:', settings.selectedModel);
+                const modelToUse = settings.selectedModel || 'anthropic/claude-3.5-sonnet';
                 console.log('Using model:', modelToUse);
                 setSelectedModel(modelToUse);
                 console.log('Model set in state:', modelToUse);
@@ -72,16 +72,18 @@ export function useSettings() {
                 setIsSettingsLoaded(true);
 
                 // Show settings modal if no API keys
-                if (!savedUltravoxKey || !savedOpenrouterKey) {
+                if (!settings.ultravoxApiKey || !settings.openrouterApiKey) {
                     setIsSettingsOpen(true);
                 }
-            } catch (error) {
-                console.error('Error loading settings:', error);
-                setError('Failed to load settings');
-                setIsSettingsLoaded(true); // Still mark as loaded even on error
+            } else {
+                setIsSettingsLoaded(true);
+                setIsSettingsOpen(true);
             }
-        };
-        loadSettings();
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            setError('Failed to load settings');
+            setIsSettingsLoaded(true); // Still mark as loaded even on error
+        }
     }, []);
 
     const saveSettings = (ultravoxKey, openrouterKey, newModel, newLanguage) => {
@@ -99,7 +101,6 @@ export function useSettings() {
         setSelectedModel(newModel);
         setSelectedLanguage(newLanguage);
         setIsSettingsOpen(false);
-        setSelectedLanguage(newLanguage);
         setError(''); // Clear any previous errors
     };
 
