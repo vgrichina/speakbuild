@@ -1,42 +1,57 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MMKV } from 'react-native-mmkv';
+import { STORAGE_KEYS } from './storageKeys';
 
-const WIDGET_STORAGE_KEY = 'cached_widgets';
+const storage = new MMKV();
 
 export const widgetStorage = {
-    async store(widgetUrl, code) {
-        const existingData = await AsyncStorage.getItem(WIDGET_STORAGE_KEY);
-        const widgets = existingData ? JSON.parse(existingData) : {};
+    store(widgetUrl, code) {
+        const key = STORAGE_KEYS.WIDGET_PREFIX + widgetUrl;
         
-        if (!widgets[widgetUrl]) {
-            widgets[widgetUrl] = [];
-        }
+        // Get existing widgets for this URL or create new array
+        const existingData = storage.getString(key);
+        const widgets = existingData ? JSON.parse(existingData) : [];
         
-        widgets[widgetUrl].push({
+        // Add new widget version
+        widgets.push({
             code,
             timestamp: Date.now()
         });
+        
         console.log('Storing widget:', widgetUrl);
         
-        await AsyncStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify(widgets));
+        // Store updated array
+        storage.set(key, JSON.stringify(widgets));
     },
 
-    async find(widgetUrl) {
-        const data = await AsyncStorage.getItem(WIDGET_STORAGE_KEY);
-        if (!data) return null;
+    find(widgetUrl) {
+        const key = STORAGE_KEYS.WIDGET_PREFIX + widgetUrl;
+        const data = storage.getString(key);
         
-        const widgets = JSON.parse(data);
-        const matches = widgets[widgetUrl];
-        
-        if (!matches?.length) {
+        if (!data) {
             console.log('No cached widget found:', widgetUrl);
             return null;
         }
         
+        const widgets = JSON.parse(data);
+        
+        if (!widgets.length) {
+            console.log('No cached widget versions found:', widgetUrl);
+            return null;
+        }
+        
         console.log('Found cached widget:', widgetUrl);
-        return matches[matches.length - 1];
+        return widgets[widgets.length - 1];
     },
 
-    async clear() {
-        await AsyncStorage.removeItem(WIDGET_STORAGE_KEY);
+    clear() {
+        // Get all keys
+        const allKeys = storage.getAllKeys();
+        
+        // Delete all widget keys
+        allKeys.forEach(key => {
+            if (key.startsWith(STORAGE_KEYS.WIDGET_PREFIX)) {
+                storage.delete(key);
+            }
+        });
     }
 };

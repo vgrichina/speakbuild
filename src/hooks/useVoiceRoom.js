@@ -1,5 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MMKV } from 'react-native-mmkv';
+import { STORAGE_KEYS } from '../services/storageKeys';
+
+const storage = new MMKV();
 import { analysisPrompt } from '../services/analysis';
 import { parse, STR, OBJ } from 'partial-json';
 
@@ -151,7 +154,7 @@ export function useVoiceRoom({
 
         try {
             // Check API keys BEFORE starting any recording
-            const { ultravoxKey } = await checkApiKeys();
+            const { ultravoxKey } = checkApiKeys();
             if (!ultravoxKey) {
                 throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
             }
@@ -181,7 +184,7 @@ export function useVoiceRoom({
                 },
                 body: JSON.stringify({
                     model: 'fixie-ai/ultravox',
-                    languageHint: selectedLanguage,
+                    languageHint: selectedLanguage || 'en',
                     initialMessages: [
                         {
                             role: 'MESSAGE_ROLE_AGENT',
