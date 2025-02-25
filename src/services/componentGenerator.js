@@ -2,6 +2,8 @@ import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const { formatExamples } = require('./componentExamples');
+
 const SYSTEM_PROMPT = {
     role: 'system',
     content: `You are an AI assistant for a React Native voice assistant app.
@@ -16,6 +18,18 @@ React Hooks:
 React Native (RN namespace):
 - Core components: View, Text, Image, ScrollView, TextInput, Pressable, TouchableOpacity
 - Utilities: Alert, Vibration, Share, Dimensions, Animated, Appearance, Platform (use as RN.Platform)
+
+SVG Components (RN.SVG namespace):
+- RN.SVG.Svg - Root SVG component
+- RN.SVG.Circle - Circle element
+- RN.SVG.Rect - Rectangle element
+- RN.SVG.Path - Path element
+- RN.SVG.Line - Line element
+- RN.SVG.G - Group element
+- RN.SVG.Text - Text element
+- RN.SVG.Defs - Definitions element
+- RN.SVG.LinearGradient - Linear gradient
+- RN.SVG.Stop - Gradient stop
 
 Expo Modules:
 Available as third argument (Expo) from these packages:
@@ -46,102 +60,8 @@ Key requirements:
 - Start with either 'function Component(props) {' or 'function Component({prop1, prop2}) {'
 - Use ONLY the exact parameter names from the URL's params
 
-Example component patterns:
-
-1. List Component with Error Handling:
-\`\`\`
-function Component({ title, items, size }) {
-  const throwError = useErrorBoundary();
-  
-  const styles = {
-    container: {
-      flex: 1,
-      padding: RN.Platform.OS === 'ios' ? 20 : 16
-    },
-    title: {
-      fontSize: size || 24,
-      fontWeight: 'bold',
-      marginBottom: 16
-    },
-    list: {
-      flex: 1
-    },
-    item: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 12,
-      borderBottomWidth: 1,
-      borderColor: '#e5e5e5'
-    },
-    itemText: {
-      flex: 1,
-      fontSize: 16
-    },
-    checkbox: {
-      width: 24,
-      height: 24,
-      borderWidth: 2,
-      borderColor: '#4B5563',
-      borderRadius: 4,
-      marginRight: 12,
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    checked: {
-      backgroundColor: '#4B5563'
-    },
-    time: {
-      fontSize: 14,
-      color: '#666'
-    },
-    errorButton: {
-      backgroundColor: '#EF4444',
-      padding: 8,
-      borderRadius: 4,
-      marginTop: 8
-    },
-    buttonText: {
-      color: 'white',
-      textAlign: 'center'
-    }
-  };
-
-  return React.createElement(RN.View, { style: styles.container },
-    React.createElement(RN.Text, { style: styles.title }, title),
-    React.createElement(RN.ScrollView, { style: styles.list },
-      items.map((item, index) => 
-        React.createElement(RN.View, { 
-          key: index,
-          style: styles.item 
-        },
-          React.createElement(RN.TouchableOpacity, {
-            style: [styles.checkbox, item.done && styles.checked],
-            onPress: () => {
-              item.done = !item.done;
-              // Trigger re-render
-              React.useState({})[1]({});
-            }
-          }),
-          React.createElement(RN.Text, { 
-            style: styles.itemText 
-          }, item.text),
-          item.time && React.createElement(RN.Text, { 
-            style: styles.time 
-          }, item.time)
-        )
-      )
-    ),
-    React.createElement(RN.TouchableOpacity, {
-      style: styles.errorButton,
-      onPress: () => throwError(new Error('Button error triggered'))
-    },
-      React.createElement(RN.Text, { style: styles.buttonText }, 
-        'Trigger Error'
-      )
-    )
-  );
-}
-\`\`\``
+Example Components:
+${formatExamples()}`
 };
 
 const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {

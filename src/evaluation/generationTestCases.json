@@ -96,6 +96,37 @@
         "throwError": true,
         "delay": 1000
       }
+    },
+    {
+      "description": "SVG Icon Button",
+      "intent": "new",
+      "widgetUrl": "display/icon.svg/button/light?params=icon:caption,size:integer,color:caption",
+      "params": {
+        "icon": "star",
+        "size": 24,
+        "color": "#4B5563"
+      }
+    },
+    {
+      "description": "SVG Progress Circle",
+      "intent": "new",
+      "widgetUrl": "display/progress.svg/circle/light?params=progress:integer,size:integer,color:caption",
+      "params": {
+        "progress": 75,
+        "size": 100,
+        "color": "#3B82F6"
+      }
+    },
+    {
+      "description": "SVG Bar Chart",
+      "intent": "new",
+      "widgetUrl": "display/chart.svg/bar/light?params=integer[],labels:caption[],height:integer,width:integer",
+      "params": {
+        "data": [10, 25, 15, 30, 20],
+        "labels": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        "height": 200,
+        "width": 300
+      }
     }
   ]
 }
