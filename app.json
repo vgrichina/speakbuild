@@ -8,7 +8,7 @@
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*",
-      "assets/examples/*"
+      "assets/examples/*.txt"
     ],
     "ios": {
       "supportsTablet": true,

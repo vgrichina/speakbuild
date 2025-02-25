@@ -4,12 +4,12 @@ import * as FileSystem from 'expo-file-system';
 // Map URLs to example file paths and their require statements
 const URL_TO_EXAMPLE_MAP = {
   'input/list/editable/light': {
-    path: 'assets/examples/listComponent.js',
-    module: require('../../assets/examples/listComponent.js')
+    path: 'assets/examples/listComponent.txt',
+    module: require('../../assets/examples/listComponent.txt')
   },
   'display/chart.svg/bar/light': {
-    path: 'assets/examples/barChart.svg.js',
-    module: require('../../assets/examples/barChart.svg.js')
+    path: 'assets/examples/barChart.svg.txt',
+    module: require('../../assets/examples/barChart.svg.txt')
   }
 };
 
