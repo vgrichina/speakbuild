@@ -37,20 +37,10 @@ const formatExamples = async () => {
   
   // Process each example
   for (const [url, assetInfo] of Object.entries(URL_TO_EXAMPLE_MAP)) {
-    try {
-      const name = url.split('/').pop().replace('light', '').trim();
-      const source = await readExampleFile(assetInfo);
-      
-      result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. ${name.charAt(0).toUpperCase() + name.slice(1)} Component (${url}):\n\`\`\`\n${source}\n\`\`\`\n`;
-    } catch (error) {
-      console.error(`Error formatting example for ${url}:`, error);
-      // Add error information to the examples so it's visible in the prompt
-      result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. Error loading example for ${url}: ${error.message}\n`;
-    }
-  }
-  
-  if (result === '') {
-    throw new Error('Failed to load any component examples');
+    const name = url.split('/').pop().replace('light', '').trim();
+    const source = await readExampleFile(assetInfo);
+    
+    result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. ${name.charAt(0).toUpperCase() + name.slice(1)} Component (${url}):\n\`\`\`\n${source}\n\`\`\`\n`;
   }
   
   return result;
