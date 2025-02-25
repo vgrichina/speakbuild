@@ -32,8 +32,8 @@ export function ComponentHistoryProvider({ children }) {
         }));
     }, []);
 
-    const clearHistory = React.useCallback(async () => {
-        await widgetStorage.clear();
+    const clearHistory = React.useCallback(() => {
+        widgetStorage.clear();
         setState({
             history: [],
             currentIndex: -1

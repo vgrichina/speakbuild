@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView, FlatList } from 'react-native';
 import { Key } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage, SETTINGS_KEY } from '../services/storage';
 
 // Language name mapping for common locales
 const MODELS = [

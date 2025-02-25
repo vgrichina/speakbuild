@@ -6,15 +6,14 @@ export function useApiKeyCheck() {
     const [isChecking, setIsChecking] = useState(false);
     const router = useRouter();
 
-    const checkApiKeys = useCallback(async () => {
-        if (isChecking) return;
+    const checkApiKeys = useCallback(() => {
+        if (isChecking) return { ultravoxKey: null, openrouterKey: null };
         setIsChecking(true);
         
         try {
-            const [ultravoxKey, openrouterKey] = await Promise.all([
-                AsyncStorage.getItem('ultravox_api_key'),
-                AsyncStorage.getItem('openrouter_api_key')
-            ]);
+            const settingsJson = storage.getString(SETTINGS_KEY);
+            const settings = settingsJson ? JSON.parse(settingsJson) : DEFAULT_SETTINGS;
+            const { ultravoxApiKey, openrouterApiKey } = settings;
 
             const missingKeys = [];
             if (!ultravoxKey) missingKeys.push('Ultravox');
@@ -44,15 +43,11 @@ export function useSettings() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const loadSettings = async () => {
-            try {
-                const [savedUltravoxKey, savedOpenrouterKey, savedModel, savedLanguage] = await Promise.all([
-                    AsyncStorage.getItem('ultravox_api_key'),
-                    AsyncStorage.getItem('openrouter_api_key'),
-                    AsyncStorage.getItem('selected_model'),
-                    AsyncStorage.getItem('selected_language')
-                ]);
-
+        try {
+            const settingsJson = storage.getString(SETTINGS_KEY);
+            if (settingsJson) {
+                const settings = JSON.parse(settingsJson);
+                
                 // Set API keys
                 setUltravoxApiKey(savedUltravoxKey || '');
                 setOpenrouterApiKey(savedOpenrouterKey || '');
@@ -81,16 +76,21 @@ export function useSettings() {
         loadSettings();
     }, []);
 
-    const saveSettings = async (ultravoxKey, openrouterKey, newModel, newLanguage) => {
-        await Promise.all([
-            AsyncStorage.setItem('ultravox_api_key', ultravoxKey),
-            AsyncStorage.setItem('openrouter_api_key', openrouterKey),
-            AsyncStorage.setItem('selected_model', newModel),
-            AsyncStorage.setItem('selected_language', newLanguage)
-        ]);
+    const saveSettings = (ultravoxKey, openrouterKey, newModel, newLanguage) => {
+        const settings = {
+            ultravoxApiKey: ultravoxKey,
+            openrouterApiKey: openrouterKey,
+            selectedModel: newModel,
+            selectedLanguage: newLanguage
+        };
+        
+        storage.set(SETTINGS_KEY, JSON.stringify(settings));
+        
         setUltravoxApiKey(ultravoxKey);
         setOpenrouterApiKey(openrouterKey);
         setSelectedModel(newModel);
+        setSelectedLanguage(newLanguage);
+        setIsSettingsOpen(false);
         setSelectedLanguage(newLanguage);
         setError(''); // Clear any previous errors
     };

@@ -1,11 +1,8 @@
-import { MMKV } from 'react-native-mmkv';
-import { STORAGE_KEYS } from './storageKeys';
-
-const storage = new MMKV();
+import { storage, WIDGET_PREFIX } from './storage';
 
 export const widgetStorage = {
     store(widgetUrl, code) {
-        const key = STORAGE_KEYS.WIDGET_PREFIX + widgetUrl;
+        const key = WIDGET_PREFIX + widgetUrl;
         
         // Get existing widgets for this URL or create new array
         const existingData = storage.getString(key);
@@ -24,7 +21,7 @@ export const widgetStorage = {
     },
 
     find(widgetUrl) {
-        const key = STORAGE_KEYS.WIDGET_PREFIX + widgetUrl;
+        const key = WIDGET_PREFIX + widgetUrl;
         const data = storage.getString(key);
         
         if (!data) {
@@ -49,7 +46,7 @@ export const widgetStorage = {
         
         // Delete all widget keys
         allKeys.forEach(key => {
-            if (key.startsWith(STORAGE_KEYS.WIDGET_PREFIX)) {
+            if (key.startsWith(WIDGET_PREFIX)) {
                 storage.delete(key);
             }
         });

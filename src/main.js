@@ -22,10 +22,7 @@ import { Mic, MicOff, Square } from 'lucide-react-native';
 import { ResponseStream } from './components/ResponseStream';
 import { TranscriptionBox } from './components/TranscriptionBox';
 import { ExpoModules } from './expo-modules';
-import { MMKV } from 'react-native-mmkv';
-import { STORAGE_KEYS } from './services/storageKeys';
-
-const storage = new MMKV();
+import { storage } from './services/storage';
 
 
 const styles = StyleSheet.create({
@@ -196,7 +193,7 @@ export const VoiceAssistant = () => {
             const currentController = new AbortController();
             abortControllerRef.current = currentController;
 
-            // Check cache first - now synchronous!
+            // Check cache first
             const cachedWidget = widgetStorage.find(analysis.widgetUrl);
             if (cachedWidget) {
                 console.log('Found cached widget:', analysis.widgetUrl);

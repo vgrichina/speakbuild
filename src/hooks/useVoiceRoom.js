@@ -1,8 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { MMKV } from 'react-native-mmkv';
-import { STORAGE_KEYS } from '../services/storageKeys';
-
-const storage = new MMKV();
+import { storage, SETTINGS_KEY } from '../services/storage';
 import { analysisPrompt } from '../services/analysis';
 import { parse, STR, OBJ } from 'partial-json';
 
