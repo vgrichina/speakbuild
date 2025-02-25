@@ -9,6 +9,8 @@ import { useSettings, useApiKeyCheck } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
 import { createComponent, renderComponent } from './utils/componentUtils';
+import { ConversationDrawer } from './components/ConversationDrawer';
+import { Feather } from '@expo/vector-icons';
 
 
 
@@ -44,9 +46,19 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    marginBottom: 8,
+  },
+  menuButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 12,
   },
   button: {
     backgroundColor: '#3B82F6',
@@ -119,6 +131,7 @@ export const VoiceAssistant = () => {
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
     const { checkApiKeys } = useApiKeyCheck();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     
     const handleApiError = useCallback((error) => {
         if (error.message.includes('API key')) {
@@ -265,6 +278,16 @@ export const VoiceAssistant = () => {
 
     return (
         <View style={styles.container}>
+            {/* Header with Burger Menu */}
+            <View style={styles.header}>
+                <TouchableOpacity 
+                    style={styles.menuButton}
+                    onPress={() => setIsDrawerOpen(true)}
+                >
+                    <Feather name="menu" size={24} color="#333" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Voice Assistant</Text>
+            </View>
 
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
@@ -347,6 +370,10 @@ export const VoiceAssistant = () => {
             )}
 
             {/* Modals at root level */}
+            <ConversationDrawer 
+                isOpen={isDrawerOpen}
+                onClose={() => setIsDrawerOpen(false)}
+            />
         </View>
     );
 };
