@@ -1,6 +1,7 @@
 import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import { formatExamples } from './componentExamples';
+import { storage, SETTINGS_KEY } from './storage';
 
 const componentPrompt = async ({ isModifying, currentComponentCode, widgetUrl }) => {
     // Get examples dynamically
@@ -100,9 +101,26 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
     if (!selectedModel) {
         throw new Error('No model specified for component generation');
     }
-    const currentApiKey = process.env.OPENROUTER_API_KEY;
+    
+    // Try to get API key from environment first
+    let currentApiKey = process.env.OPENROUTER_API_KEY;
+    
+    // If not found in environment, try to get from MMKV storage
     if (!currentApiKey) {
-        throw new Error('API key not found in environment');
+        try {
+            const settingsJson = storage.getString(SETTINGS_KEY);
+            if (settingsJson) {
+                const settings = JSON.parse(settingsJson);
+                currentApiKey = settings.openrouterApiKey;
+                console.log('Using API key from storage');
+            }
+        } catch (error) {
+            console.error('Error reading settings from storage:', error);
+        }
+    }
+    
+    if (!currentApiKey) {
+        throw new Error('API key not found in environment or settings. Please add your OpenRouter API key in the settings.');
     }
 
     const messages = await componentPrompt({ 

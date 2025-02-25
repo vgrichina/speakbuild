@@ -1,5 +1,6 @@
 import { api } from './api';
 import { truncateWithEllipsis } from '../utils/stringUtils';
+import { storage, SETTINGS_KEY } from './storage';
 
 const SYSTEM_PROMPT = {
     role: 'system',
@@ -213,8 +214,24 @@ ${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component
 };
 
 const analyzeRequest = async (text, controller, history, historyIndex, currentParams) => {
-    const currentApiKey = process.env.OPENROUTER_API_KEY;
-    if (!currentApiKey) throw new Error('API key required');
+    // Try to get API key from environment first
+    let currentApiKey = process.env.OPENROUTER_API_KEY;
+    
+    // If not found in environment, try to get from MMKV storage
+    if (!currentApiKey) {
+        try {
+            const settingsJson = storage.getString(SETTINGS_KEY);
+            if (settingsJson) {
+                const settings = JSON.parse(settingsJson);
+                currentApiKey = settings.openrouterApiKey;
+                console.log('Using API key from storage for analysis');
+            }
+        } catch (error) {
+            console.error('Error reading settings from storage:', error);
+        }
+    }
+    
+    if (!currentApiKey) throw new Error('API key not found in environment or settings. Please add your OpenRouter API key in the settings.');
 
     const requestHistory = getRequestHistory(history, historyIndex);
     const response = await api.completion(
