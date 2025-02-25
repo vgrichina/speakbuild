@@ -52,5 +52,12 @@
     "@types/react": "~18.3.12",
     "typescript": "^5.3.3"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": ["lucide-react-native", "partial-json", "react-native-audio-record"]
+      }
+    }
+  }
 }
