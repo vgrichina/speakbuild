@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Language name mapping for common locales
 const MODELS = [
     { code: 'anthropic/claude-3-opus', name: 'Claude 3 Opus' },
+    { code: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet' },
     { code: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
     { code: 'deepseek/deepseek-r1', name: 'DeepSeek R1' }
 ];
