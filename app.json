@@ -16,8 +16,6 @@
       }
     },
     "android": {
-	    "enableJetifier": true,
-	       "androidXVersion": "1.1.0",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
