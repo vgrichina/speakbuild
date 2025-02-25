@@ -1,7 +1,5 @@
 import { api } from './api';
 import { widgetStorage } from './widgetStorage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { formatExamples } from './componentExamples';
 
 const componentPrompt = async ({ isModifying, currentComponentCode, widgetUrl }) => {
@@ -102,9 +100,9 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
     if (!selectedModel) {
         throw new Error('No model specified for component generation');
     }
-    const currentApiKey = process.env.OPENROUTER_API_KEY || await AsyncStorage.getItem('openrouter_api_key');
+    const currentApiKey = process.env.OPENROUTER_API_KEY;
     if (!currentApiKey) {
-        throw new Error('API key not found in environment or AsyncStorage');
+        throw new Error('API key not found in environment');
     }
 
     const messages = await componentPrompt({ 

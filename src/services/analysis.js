@@ -1,5 +1,4 @@
 import { api } from './api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { truncateWithEllipsis } from '../utils/stringUtils';
 
 const SYSTEM_PROMPT = {
@@ -214,7 +213,7 @@ ${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component
 };
 
 const analyzeRequest = async (text, controller, history, historyIndex, currentParams) => {
-    const currentApiKey = process.env.OPENROUTER_API_KEY || await AsyncStorage.getItem('openrouter_api_key');
+    const currentApiKey = process.env.OPENROUTER_API_KEY;
     if (!currentApiKey) throw new Error('API key required');
 
     const requestHistory = getRequestHistory(history, historyIndex);
