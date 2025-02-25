@@ -1,11 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-// Map URLs to example file paths
+// Map URLs to example file paths - only include files that exist
 const URL_TO_EXAMPLE_MAP = {
   'input/list/editable/light': 'examples/listComponent.js',
-  'display/icon.svg/button/light': 'examples/iconComponent.svg.js',
-  'display/progress.svg/circle/light': 'examples/progressCircle.svg.js',
   'display/chart.svg/bar/light': 'examples/barChart.svg.js'
 };
 
