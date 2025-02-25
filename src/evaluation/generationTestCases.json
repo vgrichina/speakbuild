@@ -120,12 +120,13 @@
     {
       "description": "SVG Bar Chart",
       "intent": "new",
-      "widgetUrl": "display/chart.svg/bar/light?params=integer[],labels:caption[],height:integer,width:integer",
+      "widgetUrl": "display/chart.svg/bar/light?params=integer[],labels:caption[],height:integer,width:integer,colors:caption[]",
       "params": {
         "data": [10, 25, 15, 30, 20],
         "labels": ["Mon", "Tue", "Wed", "Thu", "Fri"],
         "height": 200,
-        "width": 300
+        "width": 300,
+        "colors": ["#3b82f6", "#4f46e5", "#7c3aed", "#a855f7", "#ec4899"]
       }
     }
   ]

@@ -31,9 +31,19 @@ SVG Components (RN.SVG namespace):
 - RN.SVG.Line - Line element
 - RN.SVG.G - Group element
 - RN.SVG.Text - Text element
-- RN.SVG.Defs - Definitions element
-- RN.SVG.LinearGradient - Linear gradient
-- RN.SVG.Stop - Gradient stop
+- RN.SVG.Defs - Definitions element for gradients and patterns
+- RN.SVG.LinearGradient - Linear gradient with multiple stops
+- RN.SVG.RadialGradient - Radial gradient with multiple stops
+- RN.SVG.Stop - Gradient stop with offset, color and opacity
+- RN.SVG.ClipPath - For clipping other elements
+- RN.SVG.Mask - For masking elements
+
+SVG Best Practices:
+- Use gradients for visual appeal
+- Add accessibility attributes (accessible, accessibilityLabel)
+- Make interactive elements with onPress handlers
+- Use stroke-dasharray for dashed lines (e.g., "5,5")
+- Implement proper error handling for SVG components
 
 Expo Modules:
 Available as third argument (Expo) from these packages:
