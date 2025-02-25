@@ -26,8 +26,8 @@ const readExampleFile = async (assetInfo) => {
       throw new Error('Asset localUri is undefined');
     }
   } catch (error) {
-    console.warn(`Could not read example file ${assetInfo.path}:`, error);
-    return `function Component(props) {\n  return React.createElement(RN.Text, null, "Example not available");\n}`;
+    console.error(`Failed to load example file ${assetInfo.path}:`, error);
+    throw new Error(`Could not load example file ${assetInfo.path}: ${error.message}`);
   }
 };
 
@@ -37,10 +37,20 @@ const formatExamples = async () => {
   
   // Process each example
   for (const [url, assetInfo] of Object.entries(URL_TO_EXAMPLE_MAP)) {
-    const name = url.split('/').pop().replace('light', '').trim();
-    const source = await readExampleFile(assetInfo);
-    
-    result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. ${name.charAt(0).toUpperCase() + name.slice(1)} Component (${url}):\n\`\`\`\n${source}\n\`\`\`\n`;
+    try {
+      const name = url.split('/').pop().replace('light', '').trim();
+      const source = await readExampleFile(assetInfo);
+      
+      result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. ${name.charAt(0).toUpperCase() + name.slice(1)} Component (${url}):\n\`\`\`\n${source}\n\`\`\`\n`;
+    } catch (error) {
+      console.error(`Error formatting example for ${url}:`, error);
+      // Add error information to the examples so it's visible in the prompt
+      result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. Error loading example for ${url}: ${error.message}\n`;
+    }
+  }
+  
+  if (result === '') {
+    throw new Error('Failed to load any component examples');
   }
   
   return result;
