@@ -2,11 +2,15 @@ import { api } from './api';
 import { widgetStorage } from './widgetStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { formatExamples } = require('./componentExamples');
+import { formatExamples } from './componentExamples';
 
-const SYSTEM_PROMPT = {
-    role: 'system',
-    content: `You are an AI assistant for a React Native voice assistant app.
+const componentPrompt = async ({ isModifying, currentComponentCode, widgetUrl }) => {
+    // Get examples dynamically
+    const examplesText = await formatExamples();
+    
+    const systemPrompt = {
+        role: 'system',
+        content: `You are an AI assistant for a React Native voice assistant app.
 Your role is to help users by creating relevant UI components that match their requests.
 Based on the widget URL specification, you generate a React Native component.
 
@@ -61,11 +65,10 @@ Key requirements:
 - Use ONLY the exact parameter names from the URL's params
 
 Example Components:
-${formatExamples()}`
-};
+${examplesText}`
+    };
 
-const componentPrompt = ({ isModifying, currentComponentCode, widgetUrl }) => {
-    const messages = [SYSTEM_PROMPT];
+    const messages = [systemPrompt];
 
     const userMessage = `${isModifying ? 
         'Modify the component to match this widget specification.' :
@@ -94,7 +97,7 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
         throw new Error('API key not found in environment or AsyncStorage');
     }
 
-    const messages = componentPrompt({ 
+    const messages = await componentPrompt({ 
         isModifying: analysis.intent === 'modify', 
         currentComponentCode,
         widgetUrl: analysis.widgetUrl
