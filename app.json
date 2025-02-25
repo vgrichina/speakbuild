@@ -6,10 +6,6 @@
     "orientation": "portrait",
     "scheme": "voiceassistant",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*",
-      "assets/examples/*.txt"
-    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.voiceassistant.app",

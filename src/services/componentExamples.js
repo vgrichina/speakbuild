@@ -1,23 +1,22 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 
+import listComponent from '../../assets/examples/listComponent.txt';
+
 // Map URLs to example file paths and their require statements
 const URL_TO_EXAMPLE_MAP = {
-  'input/list/editable/light': {
-    path: 'assets/examples/listComponent.txt',
-    module: require('../../assets/examples/listComponent.txt')
-  },
-  'display/chart.svg/bar/light': {
-    path: 'assets/examples/barChart.svg.txt',
-    module: require('../../assets/examples/barChart.svg.txt')
-  }
+  'input/list/editable/light': listComponent,
+  //'display/chart.svg/bar/light': {
+  //  path: 'assets/examples/barChart.svg.txt',
+  //  module: require('/assets/examples/barChart.svg.txt')
+  //}
 };
 
 // Helper function to read example file content using expo-asset
-const readExampleFile = async (assetInfo) => {
+const readExampleFile = async (module) => {
   try {
     // Create an asset reference and download it
-    const asset = await Asset.fromModule(assetInfo.module).downloadAsync();
+    const asset = await Asset.fromModule(module).downloadAsync();
     
     // Read the file content using the localUri
     if (asset.localUri) {
@@ -26,8 +25,8 @@ const readExampleFile = async (assetInfo) => {
       throw new Error('Asset localUri is undefined');
     }
   } catch (error) {
-    console.error(`Failed to load example file ${assetInfo.path}:`, error);
-    throw new Error(`Could not load example file ${assetInfo.path}: ${error.message}`);
+    console.error(`Failed to load example file ${module.path}:`, error);
+    throw new Error(`Could not load example file ${module.path}: ${error.message}`);
   }
 };
 
@@ -36,9 +35,9 @@ const formatExamples = async () => {
   let result = '';
   
   // Process each example
-  for (const [url, assetInfo] of Object.entries(URL_TO_EXAMPLE_MAP)) {
+  for (const [url, module] of Object.entries(URL_TO_EXAMPLE_MAP)) {
     const name = url.split('/').pop().replace('light', '').trim();
-    const source = await readExampleFile(assetInfo);
+    const source = await readExampleFile(module);
     
     result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. ${name.charAt(0).toUpperCase() + name.slice(1)} Component (${url}):\n\`\`\`\n${source}\n\`\`\`\n`;
   }
