@@ -9,8 +9,6 @@ import { useSettings, useApiKeyCheck } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
 import { createComponent, renderComponent } from './utils/componentUtils';
-import { ConversationDrawer } from './components/ConversationDrawer';
-
 
 
 import * as RN from 'react-native';
