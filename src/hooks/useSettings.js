@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { storage, SETTINGS_KEY } from '../services/storage';
+
+// Default settings
+const DEFAULT_SETTINGS = {
+    ultravoxApiKey: '',
+    openrouterApiKey: '',
+    selectedModel: 'anthropic/claude-3.5-sonnet',
+    selectedLanguage: 'en'
+};
 
 export function useApiKeyCheck() {
     const [isChecking, setIsChecking] = useState(false);
