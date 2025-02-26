@@ -11,17 +11,24 @@ const styles = {
     }
 };
 
+/**
+ * Displays transcription and partial results during recording
+ * @param {Object} props - Component props
+ * @param {string} props.status - Current generation status
+ * @param {string} props.partialResults - Partial transcription results
+ * @param {string} props.transcribedText - Complete transcribed text
+ * @param {Array} props.requestHistory - History of previous requests
+ */
 export const TranscriptionBox = ({ 
-    isListening,
+    status,
     partialResults,
     transcribedText,
-    requestHistory,
-    isGenerating
+    requestHistory
 }) => {
     return (
         <>
             {/* Live Transcription */}
-            {isListening && partialResults && (
+            {status === 'RECORDING' && partialResults && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                     <Radio size={16} color="#EF4444" />
                     <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
@@ -31,7 +38,7 @@ export const TranscriptionBox = ({
             )}
 
             {/* Final Transcription */}
-            {(requestHistory.length > 0 || (transcribedText && isGenerating)) && (
+            {(requestHistory.length > 0 || (transcribedText && status === 'GENERATING')) && (
                 <View style={styles.transcriptionBox}>
                     {requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
@@ -42,7 +49,7 @@ export const TranscriptionBox = ({
                             {request}
                         </Text>
                     ))}
-                    {transcribedText && isGenerating && (
+                    {transcribedText && status === 'GENERATING' && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14

@@ -52,14 +52,21 @@ const LoadingSpinner = () => {
     );
 };
 
+/**
+ * Displays streaming response during generation
+ * @param {Object} props - Component props
+ * @param {string} props.responseStream - Current response stream text
+ * @param {string} props.status - Current generation status
+ * @param {string} props.modificationIntent - Intent of the modification
+ */
 export const ResponseStream = ({
     responseStream,
-    isGenerating,
+    status,
     modificationIntent
 }) => {
     const scrollViewRef = React.useRef(null);
 
-    if (!responseStream && !isGenerating) return null;
+    if (!responseStream && status !== 'GENERATING') return null;
 
     return (
         <View style={[
@@ -77,7 +84,7 @@ export const ResponseStream = ({
                          modificationIntent === 'new' ? 'Creating New Component:' : 
                          'Response:'}
                     </Text>
-                    {isGenerating && <LoadingSpinner />}
+                    {status === 'GENERATING' && <LoadingSpinner />}
                 </View>
                 <ScrollView 
                     style={{ minHeight: 100 }}
