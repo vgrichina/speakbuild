@@ -158,7 +158,19 @@ export const VoiceAssistant = () => {
         goForward
     } = useComponentHistory();
     
-    const currentComponent = currentHistoryEntry?.component;
+    // Recreate component from code whenever history entry changes
+    const currentComponent = React.useMemo(() => {
+        if (currentHistoryEntry?.code) {
+            try {
+                return createComponent(currentHistoryEntry.code);
+            } catch (error) {
+                console.error('Error recreating component from history:', error);
+                return null;
+            }
+        }
+        return null;
+    }, [currentHistoryEntry?.code]);
+    
     const currentComponentCode = currentHistoryEntry?.code;
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
@@ -202,11 +214,11 @@ export const VoiceAssistant = () => {
                 try {
                     const GeneratedComponent = createComponent(cachedWidget.code);
                     addToHistory({
-                        component: GeneratedComponent,
                         code: cachedWidget.code,
                         request: analysis.transcription,
                         params: analysis.params || {},
                         intent: analysis.intent
+                        // Don't store component reference directly
                     });
                     return;
                 } catch (error) {
@@ -223,7 +235,11 @@ export const VoiceAssistant = () => {
                 onResponseStream: setResponseStream
             });
             
-            addToHistory(result);
+            // Store result but don't rely on component reference persisting
+            addToHistory({
+                ...result,
+                component: undefined // Explicitly remove component reference
+            });
             setModificationIntent(result.intent);
         } catch (error) {
             if (error && error.message && error.message.includes('API key')) {
