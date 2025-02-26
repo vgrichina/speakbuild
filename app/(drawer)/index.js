@@ -24,12 +24,7 @@ export default function Index() {
             },
             headerTintColor: '#000',
             headerTitle: () => (
-                <NavigationButtons 
-                    canGoBack={currentIndex > 0}
-                    canGoForward={currentIndex < history.length - 1}
-                    onBack={goBack}
-                    onForward={goForward}
-                />
+                <NavigationButtons />
             ),
             headerLeft: () => (
                 <Feather 
