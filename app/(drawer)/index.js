@@ -33,7 +33,7 @@ export default function Index() {
                 />
             ),
             headerRight: () => (
-                <View style={{ flexDirection: 'row' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Settings 
                         size={24} 
                         color="#666" 
