@@ -12,7 +12,7 @@ import { Feather } from '@expo/vector-icons';
 export default function Index() {
     const navigation = useNavigation();
     const router = useRouter();
-    const { current, clearHistory } = useComponentHistory();
+    const { current, history, currentIndex, goBack, goForward, clearHistory } = useComponentHistory();
     
     // Set up the header
     React.useLayoutEffect(() => {
@@ -23,6 +23,14 @@ export default function Index() {
                 backgroundColor: '#f5f5f5',
             },
             headerTintColor: '#000',
+            headerTitle: () => (
+                <NavigationButtons 
+                    canGoBack={currentIndex > 0}
+                    canGoForward={currentIndex < history.length - 1}
+                    onBack={goBack}
+                    onForward={goForward}
+                />
+            ),
             headerLeft: () => (
                 <Feather 
                     name="menu" 

@@ -20,7 +20,6 @@ export default function DrawerLayout() {
           name="index"
           options={{
             drawerLabel: "Home",
-            title: "Voice Assistant",
             headerShown: true,
             drawerIcon: ({ color }) => <Feather name="home" size={24} color={color} />
           }}

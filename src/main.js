@@ -307,15 +307,6 @@ export const VoiceAssistant = () => {
 
 
 
-            {/* Navigation Buttons */}
-            {!isGenerating && componentHistory.length > 0 && (
-                <NavigationButtons 
-                    canGoBack={currentHistoryIndex > 0}
-                    canGoForward={currentHistoryIndex < componentHistory.length - 1}
-                    onBack={() => goBack()}
-                    onForward={() => goForward()}
-                />
-            )}
 
             {/* Component Container */}
             {!isGenerating && (
