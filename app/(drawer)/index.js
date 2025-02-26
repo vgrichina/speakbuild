@@ -28,7 +28,10 @@ export default function Index() {
                     name="menu" 
                     size={24} 
                     color="#666" 
-                    style={{ marginLeft: 8 }}
+                    style={{ 
+                        padding: 12,
+                        marginLeft: 4
+                    }}
                     onPress={() => navigation.openDrawer()}
                 />
             ),
