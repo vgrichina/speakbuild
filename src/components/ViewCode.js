@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   }
 });
 
-export function ViewCode({ code, title = 'Source Code', onClose }) {
+export function ViewCode({ code, title = 'Source Code', onClose, showHeader = true }) {
   const copyToClipboard = async () => {
     try {
       await Clipboard.setStringAsync(code);
@@ -57,20 +57,22 @@ export function ViewCode({ code, title = 'Source Code', onClose }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.actions}>
-          <Pressable style={styles.actionButton} onPress={copyToClipboard}>
-            <Text style={styles.actionText}>Copy</Text>
-          </Pressable>
-          <Pressable style={styles.actionButton} onPress={onClose}>
-            <Text style={styles.actionText}>Close</Text>
-          </Pressable>
+      {showHeader && (
+        <View style={styles.header}>
+          <Text style={styles.title}>{title}</Text>
+          <View style={styles.actions}>
+            <Pressable style={styles.actionButton} onPress={copyToClipboard}>
+              <Text style={styles.actionText}>Copy</Text>
+            </Pressable>
+            <Pressable style={styles.actionButton} onPress={onClose}>
+              <Text style={styles.actionText}>Close</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
       <ScrollView style={styles.codeContainer}>
         <Text style={styles.code}>{code}</Text>
       </ScrollView>
-      </SafeAreaView>
+    </SafeAreaView>
   );
 }
