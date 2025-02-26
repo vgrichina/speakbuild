@@ -287,7 +287,7 @@ export const VoiceAssistant = () => {
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
-                    isActive={isRecording || isGenerating}
+                    status={isRecording ? 'RECORDING' : (isGenerating ? 'GENERATING' : 'IDLE')}
                     onToggle={() => {
                         if (isGenerating) {
                             stopGeneration();
