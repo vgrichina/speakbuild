@@ -12,6 +12,7 @@ export default function CodeViewerScreen() {
             <ViewCode
                 onClose={() => router.dismiss()}
                 code={code}
+                showHeader={false}
             />
         </View>
     );
