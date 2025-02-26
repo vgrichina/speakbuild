@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { storage, SETTINGS_KEY } from '../services/storage';
 import { analysisPrompt } from '../services/analysis';
 import { parse, STR, OBJ } from 'partial-json';
+import { useGeneration } from '../contexts/GenerationContext';
 
 const cleanJsonText = (text) => {
     return text.replace(/^```(?:json)?\n?|\n?```$/g, '').trim();
@@ -26,13 +27,24 @@ export function useVoiceRoom({
     currentHistoryIndex,
     checkApiKeys
 }) {
-    const [isRecording, setIsRecording] = useState(false);
+    // Use the generation context directly
+    const { 
+        state: generationState, 
+        startRecording: startGenerationRecording,
+        stopRecording: stopGenerationRecording,
+        handleError: handleGenerationError
+    } = useGeneration();
+    
+    // Local refs and state that don't conflict with generation context
     const [isConnecting, setIsConnecting] = useState(false);
     const [partialResults, setPartialResults] = useState('');
     const ws = useRef(null);
     const [volume, setVolume] = useState(0);
     const audioBuffer = useRef([]);
     const isConnected = useRef(false);
+    
+    // Use the recording state from the generation context
+    const isRecording = generationState.status === 'RECORDING';
 
     const cleanupWebSocket = useCallback(() => {
         console.log('Cleaning up WebSocket...', new Error().stack);
@@ -49,15 +61,23 @@ export function useVoiceRoom({
         console.log('Full cleanup of voice room...', new Error().stack);
         cleanupWebSocket();
         AudioRecord.stop();
-        setIsRecording(false);
         setIsConnecting(false);
         setVolume(0);
         audioBuffer.current = [];
     }, [cleanupWebSocket]);
 
+    // Clean up when component unmounts
     useEffect(() => {
         return cleanup;
     }, [cleanup]);
+
+    // Clean up when recording state changes in generation context
+    useEffect(() => {
+        if (generationState.status !== 'RECORDING' && ws.current) {
+            console.log('Cleaning up because generation state changed to:', generationState.status);
+            cleanup();
+        }
+    }, [generationState.status, cleanup]);
 
     const checkPermission = async () => {
         try {
@@ -156,9 +176,11 @@ export function useVoiceRoom({
                 throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
             }
 
+            // Update the generation context state first
+            startGenerationRecording();
+            
             // Only start recording if API keys are valid
-            setIsRecording(true);
-            console.log('Set isRecording to true');
+            console.log('Set isRecording to true via generation context');
             AudioRecord.start();
             console.log('AudioRecord.start() called');
 
@@ -347,6 +369,7 @@ export function useVoiceRoom({
                     if (isRecording) {
                         console.log('WebSocket close triggering cleanup while isRecording=true');
                         cleanup();
+                        stopGenerationRecording(); // Update generation context
                     }
                 }
             };
@@ -354,19 +377,22 @@ export function useVoiceRoom({
         } catch (error) {
             console.error('Error starting recording:', error);
             onError?.(error.message);
+            handleGenerationError(error.message);
             cleanup();
         }
-    }, [componentHistory, currentHistoryIndex, selectedLanguage, onTranscription, cleanup]);
+    }, [componentHistory, currentHistoryIndex, selectedLanguage, onTranscription, cleanup, startGenerationRecording, handleGenerationError]);
 
-    const stopRecording = useCallback(() => {
+    const stopRecording = useCallback((transcribedText = '') => {
         console.log('stopRecording called', new Error().stack);
         cleanup();
-    }, [cleanup]);
+        stopGenerationRecording(transcribedText);
+    }, [cleanup, stopGenerationRecording]);
 
     const cancelRecording = useCallback(() => {
         console.log('cancelRecording called', new Error().stack);
         cleanup();
-    }, [cleanup]);
+        stopGenerationRecording();
+    }, [cleanup, stopGenerationRecording]);
 
     return {
         isRecording,
