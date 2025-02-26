@@ -43,9 +43,6 @@ export function useVoiceRoom({
     const audioBuffer = useRef([]);
     const isConnected = useRef(false);
     
-    // Use the recording state from the generation context
-    const isRecording = generationState.status === 'RECORDING';
-
     const cleanupWebSocket = useCallback(() => {
         console.log('Cleaning up WebSocket...', new Error().stack);
         if (ws.current) {
@@ -162,7 +159,7 @@ export function useVoiceRoom({
     }, []);
 
     const startRecording = useCallback(async () => {
-        if (isConnecting || isRecording) {
+        if (isConnecting || generationState.status === 'RECORDING') {
             console.log('Already connecting or recording');
             return;
         }
@@ -180,7 +177,7 @@ export function useVoiceRoom({
             startGenerationRecording();
             
             // Only start recording if API keys are valid
-            console.log('Set isRecording to true via generation context');
+            console.log('Set recording state to true via generation context');
             AudioRecord.start();
             console.log('AudioRecord.start() called');
 
@@ -353,7 +350,7 @@ export function useVoiceRoom({
                     });
                     
                     // Don't call cleanup/stopRecording if we're already in a cleanup state
-                    if (isRecording) {
+                    if (generationState.status === 'RECORDING') {
                         console.log('WebSocket error triggering stopRecording');
                         onError?.('Connection error');
                         stopRecording();
@@ -366,8 +363,8 @@ export function useVoiceRoom({
                 if (ws.current) {
                     console.log('WebSocket connection closed normally', new Error().stack);
                     // Don't trigger cleanup if we're already in a cleanup state
-                    if (isRecording) {
-                        console.log('WebSocket close triggering cleanup while isRecording=true');
+                    if (generationState.status === 'RECORDING') {
+                        console.log('WebSocket close triggering cleanup while recording is active');
                         cleanup();
                         stopGenerationRecording(); // Update generation context
                     }
@@ -395,7 +392,6 @@ export function useVoiceRoom({
     }, [cleanup, stopGenerationRecording]);
 
     return {
-        isRecording,
         volume,
         startRecording,
         stopRecording,

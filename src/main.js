@@ -110,10 +110,10 @@ const styles = StyleSheet.create({
 export const VoiceAssistant = () => {
     console.log('Rendering VoiceAssistant');
     const scrollViewRef = React.useRef(null);
-    const [isGenerating, setIsGenerating] = useState(false);
     const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
     const abortControllerRef = React.useRef(null);
     const { checkApiKeys } = useApiKeyCheck();
+    const { state: generationState } = useGeneration();
     
     const handleApiError = useCallback((error) => {
         if (error && error.message && error.message.includes('API key')) {
@@ -181,7 +181,6 @@ export const VoiceAssistant = () => {
         if (controller) {
             controller.abort();
             abortControllerRef.current = null;
-            setIsGenerating(false);
         }
     };
 
@@ -189,7 +188,6 @@ export const VoiceAssistant = () => {
         console.log('Received analysis:', analysis);
         setTranscribedText(analysis.transcription);
         setError('');
-        setIsGenerating(true);
         setResponseStream('');
         
         try {
@@ -244,14 +242,12 @@ export const VoiceAssistant = () => {
                 setError(error && error.message ? error.message : 'An unknown error occurred');
             }
         } finally {
-            setIsGenerating(false);
             setResponseStream('');
         }
     }, [selectedModel]);
 
 
     const {
-        isRecording,
         volume,
         startRecording,
         stopRecording,
@@ -282,12 +278,12 @@ export const VoiceAssistant = () => {
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
-                    status={isRecording ? 'RECORDING' : (isGenerating ? 'GENERATING' : 'IDLE')}
+                    status={generationState.status}
                     onToggle={() => {
-                        if (isGenerating) {
+                        if (generationState.status === 'GENERATING') {
                             stopGeneration();
                         }
-                        if (isRecording) {
+                        if (generationState.status === 'RECORDING') {
                             stopRecording();
                         } else {
                             startRecording();
@@ -300,17 +296,16 @@ export const VoiceAssistant = () => {
 
 
             <TranscriptionBox
-                isListening={isRecording}
+                status={generationState.status}
                 partialResults={partialResults}
                 transcribedText={transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
-                isGenerating={isGenerating}
             />
 
-            {(!currentComponent || isGenerating) && (
+            {(!currentComponent || generationState.status === 'GENERATING') && (
                 <ResponseStream
                     responseStream={responseStream}
-                    isGenerating={isGenerating}
+                    status={generationState.status}
                     modificationIntent={modificationIntent}
                 />
             )}
@@ -326,7 +321,7 @@ export const VoiceAssistant = () => {
 
 
             {/* Component Container */}
-            {!isGenerating && (
+            {generationState.status !== 'GENERATING' && (
                 <View style={{ flex: 1, width: '100%' }}>
                     <View style={{ 
                         backgroundColor: '#ffffff',
