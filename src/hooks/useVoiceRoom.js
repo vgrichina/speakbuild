@@ -35,7 +35,7 @@ export function useVoiceRoom({
     const isConnected = useRef(false);
 
     const cleanupWebSocket = useCallback(() => {
-        console.log('Cleaning up WebSocket...');
+        console.log('Cleaning up WebSocket...', new Error().stack);
         if (ws.current) {
             if (ws.current.readyState === WebSocket.OPEN) {
                 ws.current.close();
@@ -46,7 +46,7 @@ export function useVoiceRoom({
     }, []);
 
     const cleanup = useCallback(() => {
-        console.log('Full cleanup of voice room...');
+        console.log('Full cleanup of voice room...', new Error().stack);
         cleanupWebSocket();
         AudioRecord.stop();
         setIsRecording(false);
@@ -332,6 +332,7 @@ export function useVoiceRoom({
                     
                     // Don't call cleanup/stopRecording if we're already in a cleanup state
                     if (isRecording) {
+                        console.log('WebSocket error triggering stopRecording');
                         onError?.('Connection error');
                         stopRecording();
                     }
@@ -341,9 +342,10 @@ export function useVoiceRoom({
             ws.current.onclose = () => {
                 // Only handle close if this is still the active WebSocket
                 if (ws.current) {
-                    console.log('WebSocket connection closed normally');
+                    console.log('WebSocket connection closed normally', new Error().stack);
                     // Don't trigger cleanup if we're already in a cleanup state
                     if (isRecording) {
+                        console.log('WebSocket close triggering cleanup while isRecording=true');
                         cleanup();
                     }
                 }
@@ -357,10 +359,12 @@ export function useVoiceRoom({
     }, [componentHistory, currentHistoryIndex, selectedLanguage, onTranscription, cleanup]);
 
     const stopRecording = useCallback(() => {
+        console.log('stopRecording called', new Error().stack);
         cleanup();
     }, [cleanup]);
 
     const cancelRecording = useCallback(() => {
+        console.log('cancelRecording called', new Error().stack);
         cleanup();
     }, [cleanup]);
 
