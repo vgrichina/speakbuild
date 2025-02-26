@@ -16,6 +16,7 @@ export default function Index() {
     
     // Set up the header
     React.useLayoutEffect(() => {
+        console.log('Setting up header in (drawer)/index.js');
         navigation.setOptions({
             headerShown: true,
             headerStyle: {
@@ -59,6 +60,7 @@ export default function Index() {
                 </View>
             )
         });
+        console.log('Header setup complete');
     }, [navigation, current]);
 
     return (
