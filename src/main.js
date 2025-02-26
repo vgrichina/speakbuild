@@ -114,7 +114,7 @@ export const VoiceAssistant = () => {
     const { checkApiKeys } = useApiKeyCheck();
     
     const handleApiError = useCallback((error) => {
-        if (error.message.includes('API key')) {
+        if (error && error.message && error.message.includes('API key')) {
             setError(error.message);
         } else {
             setError('An error occurred');
@@ -217,11 +217,11 @@ export const VoiceAssistant = () => {
             addToHistory(result);
             setModificationIntent(result.intent);
         } catch (error) {
-            if (error.message.includes('API key')) {
+            if (error && error.message && error.message.includes('API key')) {
                 handleApiError(error);
             } else {
                 console.error('Analysis error:', error);
-                setError(error.message);
+                setError(error && error.message ? error.message : 'An unknown error occurred');
             }
         } finally {
             setIsGenerating(false);

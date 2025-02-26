@@ -287,13 +287,28 @@ export function useVoiceRoom({
                     // Handle final message
                     if (msg.final && accumulatedJson) {
                         try {
-                            const analysis = JSON.parse(accumulatedJson);
+                            // Make sure JSON is complete before parsing
+                            let jsonToProcess = accumulatedJson;
+                            
+                            // Try to fix common JSON issues
+                            if (!jsonToProcess.endsWith('}')) {
+                                jsonToProcess += '}';
+                            }
+                            
+                            const analysis = JSON.parse(jsonToProcess);
+                            
+                            // Validate required fields
+                            if (!analysis.transcription) {
+                                throw new Error('Missing transcription field in response');
+                            }
+                            
                             if (currentWs === ws.current) {
                                 stopRecording();
                                 onTranscription?.(analysis);
                             }
                         } catch (error) {
                             console.error('Error parsing final transcript:', error);
+                            console.error('Raw JSON:', accumulatedJson);
                             if (currentWs === ws.current) {
                                 onError?.('Failed to parse transcript');
                                 stopRecording();
