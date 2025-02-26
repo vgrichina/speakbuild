@@ -5,6 +5,7 @@ import { analyzeRequest, getRequestHistory } from './services/analysis';
 import { widgetStorage } from './services/widgetStorage';
 import { processWithClaudeStream } from './services/processStream';
 import { useComponentHistory } from './contexts/ComponentHistoryContext';
+import { useGeneration } from './contexts/GenerationContext';
 import { useSettings, useApiKeyCheck } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
