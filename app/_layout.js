@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ComponentHistoryProvider } from '../src/contexts/ComponentHistoryContext';
+import { GenerationProvider } from '../src/contexts/GenerationContext';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
@@ -21,9 +22,10 @@ export default function RootLayout() {
     return (
         <SafeAreaProvider>
             <ComponentHistoryProvider>
-                <Stack screenOptions={{
-                    headerShown: false
-                }}>
+                <GenerationProvider>
+                    <Stack screenOptions={{
+                        headerShown: false
+                    }}>
                     <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
                     <Stack.Screen 
                         name="settings" 
@@ -76,7 +78,8 @@ export default function RootLayout() {
                             )
                         })}
                     />
-                </Stack>
+                    </Stack>
+                </GenerationProvider>
             </ComponentHistoryProvider>
         </SafeAreaProvider>
     );
