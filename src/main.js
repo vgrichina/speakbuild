@@ -175,11 +175,6 @@ export const VoiceAssistant = () => {
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const router = useRouter();
-    
-    console.log('Component history:', componentHistory);
-    console.log('Current index:', currentHistoryIndex);
-    console.log('Current entry:', currentHistoryEntry);
-    console.log('Current component:', currentComponent);
 
     const stopGeneration = () => {
         const controller = abortControllerRef.current;
