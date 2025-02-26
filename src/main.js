@@ -8,6 +8,7 @@ import { useComponentHistory } from './contexts/ComponentHistoryContext';
 import { useSettings, useApiKeyCheck } from './hooks/useSettings';
 import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
+import { NavigationButtons } from './components/NavigationButtons';
 import { createComponent, renderComponent } from './utils/componentUtils';
 
 
@@ -151,7 +152,9 @@ export const VoiceAssistant = () => {
         history: componentHistory,
         currentIndex: currentHistoryIndex,
         current: currentHistoryEntry,
-        addToHistory
+        addToHistory,
+        goBack,
+        goForward
     } = useComponentHistory();
     
     const currentComponent = currentHistoryEntry?.component;
@@ -303,6 +306,16 @@ export const VoiceAssistant = () => {
             )}
 
 
+
+            {/* Navigation Buttons */}
+            {!isGenerating && componentHistory.length > 0 && (
+                <NavigationButtons 
+                    canGoBack={currentHistoryIndex > 0}
+                    canGoForward={currentHistoryIndex < componentHistory.length - 1}
+                    onBack={() => goBack()}
+                    onForward={() => goForward()}
+                />
+            )}
 
             {/* Component Container */}
             {!isGenerating && (
