@@ -292,8 +292,11 @@ export function useVoiceRoom({
                     // Only try parsing if we have some JSON structure
                     if (accumulatedJson.includes('"transcription"')) {
                         try {
+                            // Clean the JSON text before parsing
+                            const cleanedJson = cleanJsonText(accumulatedJson);
+                            
                             // Try to parse partial JSON
-                            const partialResult = parse(accumulatedJson, STR | OBJ);
+                            const partialResult = parse(cleanedJson, STR | OBJ);
                             if (partialResult?.transcription) {
                                 console.log('Setting partial results:', partialResult.transcription);
                                 setPartialResults(partialResult.transcription);
@@ -307,8 +310,8 @@ export function useVoiceRoom({
                     // Handle final message
                     if (msg.final && accumulatedJson) {
                         try {
-                            // Make sure JSON is complete before parsing
-                            let jsonToProcess = accumulatedJson;
+                            // Clean the JSON text before parsing
+                            let jsonToProcess = cleanJsonText(accumulatedJson);
                             
                             // Try to fix common JSON issues
                             if (!jsonToProcess.endsWith('}')) {
