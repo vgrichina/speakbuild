@@ -141,8 +141,6 @@ export const VoiceAssistant = () => {
             abortGeneration();
         };
     }, [abortGeneration]);
-    const [transcribedText, setTranscribedText] = useState('');
-    const [responseStream, setResponseStream] = useState('');
     const [error, setError] = useState('');
     const {
         isSettingsOpen,
@@ -189,7 +187,6 @@ export const VoiceAssistant = () => {
         console.log('Received analysis:', analysis);
         setTranscribedText(analysis.transcription);
         setError('');
-        setResponseStream('');
         
         try {
             checkApiKeys();
@@ -304,7 +301,7 @@ export const VoiceAssistant = () => {
             <TranscriptionBox
                 status={generationState.status}
                 partialResults={partialResults}
-                transcribedText={transcribedText}
+                transcribedText={generationState.transcribedText}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
             />
 
