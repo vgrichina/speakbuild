@@ -50,10 +50,12 @@ export const VoiceButton = ({
     onToggle,
     volume = 0
 }) => {
+    console.log('VoiceButton rendered with status:', status); // Add logging
     const [isPressed, setIsPressed] = useState(false);
     
     // Determine if button should show active state
     const isActive = status === 'RECORDING' || status === 'GENERATING';
+    console.log('VoiceButton isActive:', isActive); // Add logging
 
     // Determine the button style based on status
     let buttonStyle;

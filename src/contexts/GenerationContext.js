@@ -52,7 +52,10 @@ function generationReducer(state, action) {
       
     case 'STOP_RECORDING':
       // Only allow stopping recording from RECORDING state
-      if (state.status !== 'RECORDING') return state;
+      if (state.status !== 'RECORDING') {
+        console.log(`Ignoring STOP_RECORDING - current status is ${state.status}`);
+        return state;
+      }
       newState = { 
         ...state, 
         status: 'GENERATING', 
@@ -81,7 +84,10 @@ function generationReducer(state, action) {
       };
       
     case 'GENERATION_COMPLETE':
-      if (state.status !== 'GENERATING') return state;
+      if (state.status !== 'GENERATING') {
+        console.log(`Ignoring GENERATION_COMPLETE - current status is ${state.status}`);
+        return state;
+      }
       newState = { 
         ...state, 
         status: 'IDLE', 
@@ -200,6 +206,7 @@ export function useGeneration() {
   }, [dispatch]);
   
   const completeGeneration = useCallback(() => {
+    console.log('completeGeneration called - transitioning to IDLE');
     dispatch({ type: 'GENERATION_COMPLETE' });
   }, [dispatch]);
   

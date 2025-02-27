@@ -392,11 +392,17 @@ export function useVoiceRoom({
     // Debounce stopRecording to prevent multiple rapid calls
     const stopRecording = useCallback(
         debounce((transcribedText = '') => {
-            console.log('stopRecording called');
-            cleanup();
+            console.log('stopRecording called with status:', generationState.status);
+            
+            // First update the generation context state
             stopGenerationRecording(transcribedText);
+            
+            // Then clean up resources
+            cleanup();
+            
+            console.log('After stopRecording, status should be GENERATING');
         }, 100),
-        [cleanup, stopGenerationRecording]
+        [cleanup, stopGenerationRecording, generationState.status]
     );
     
     // Helper debounce function
