@@ -32,7 +32,8 @@ export function useVoiceRoom({
         state: generationState, 
         startRecording: startGenerationRecording,
         stopRecording: stopGenerationRecording,
-        handleError: handleGenerationError
+        handleError: handleGenerationError,
+        setTranscribedText
     } = useGeneration();
     
     // Local refs and state that don't conflict with generation context
@@ -323,6 +324,8 @@ export function useVoiceRoom({
                             
                             if (currentWs === ws.current) {
                                 stopRecording();
+                                // Set transcribed text directly in the context
+                                setTranscribedText(analysis.transcription);
                                 onTranscription?.(analysis);
                             }
                         } catch (error) {

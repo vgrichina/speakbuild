@@ -9,6 +9,7 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
  * @property {string} transcribedText - Text transcribed from voice
  * @property {string} responseStream - Streaming response during generation
  * @property {AbortController} [abortController] - Controller to abort ongoing operations
+ * @property {string} [modificationIntent] - Intent of the modification ('modify' or 'new')
  */
 
 /**
@@ -22,7 +23,8 @@ const initialState = {
   error: undefined,
   transcribedText: '',
   responseStream: '',
-  abortController: null
+  abortController: null,
+  modificationIntent: null
 };
 
 /**
@@ -67,7 +69,7 @@ function generationReducer(state, action) {
       if (state.status !== 'GENERATING') return state;
       return {
         ...state,
-        responseStream: state.responseStream + action.responseChunk
+        responseStream: action.responseStream || state.responseStream + (action.responseChunk || '')
       };
       
     case 'GENERATION_COMPLETE':
@@ -94,6 +96,18 @@ function generationReducer(state, action) {
         ...state, 
         status: 'ERROR', 
         error: action.error 
+      };
+      
+    case 'SET_TRANSCRIBED_TEXT':
+      return {
+        ...state,
+        transcribedText: action.text
+      };
+      
+    case 'SET_MODIFICATION_INTENT':
+      return {
+        ...state,
+        modificationIntent: action.intent
       };
       
     case 'RESET':
@@ -144,12 +158,29 @@ export function useGeneration() {
     dispatch({ type: 'STOP_RECORDING', transcribedText });
   }, [dispatch]);
   
+  const createAbortController = useCallback(() => {
+    const controller = new AbortController();
+    return controller;
+  }, []);
+  
   const startGeneration = useCallback((abortController) => {
     dispatch({ type: 'START_GENERATION', abortController });
   }, [dispatch]);
   
   const updateGenerationProgress = useCallback((responseChunk) => {
     dispatch({ type: 'GENERATION_PROGRESS', responseChunk });
+  }, [dispatch]);
+  
+  const setResponseStream = useCallback((responseStream) => {
+    dispatch({ type: 'GENERATION_PROGRESS', responseStream });
+  }, [dispatch]);
+  
+  const setTranscribedText = useCallback((text) => {
+    dispatch({ type: 'SET_TRANSCRIBED_TEXT', text });
+  }, [dispatch]);
+  
+  const setModificationIntent = useCallback((intent) => {
+    dispatch({ type: 'SET_MODIFICATION_INTENT', intent });
   }, [dispatch]);
   
   const completeGeneration = useCallback(() => {
@@ -172,8 +203,12 @@ export function useGeneration() {
     state,
     startRecording,
     stopRecording,
+    createAbortController,
     startGeneration,
     updateGenerationProgress,
+    setResponseStream,
+    setTranscribedText,
+    setModificationIntent,
     completeGeneration,
     abortGeneration,
     handleError,

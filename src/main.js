@@ -111,10 +111,19 @@ const styles = StyleSheet.create({
 export const VoiceAssistant = () => {
     console.log('Rendering VoiceAssistant');
     const scrollViewRef = React.useRef(null);
-    const [modificationIntent, setModificationIntent] = useState(null); // 'modify' or 'new'
-    const abortControllerRef = React.useRef(null);
     const { checkApiKeys } = useApiKeyCheck();
-    const { state: generationState } = useGeneration();
+    const { 
+        state: generationState,
+        setTranscribedText,
+        setResponseStream,
+        setModificationIntent,
+        createAbortController,
+        startGeneration,
+        updateGenerationProgress,
+        completeGeneration,
+        abortGeneration,
+        handleError
+    } = useGeneration();
     
     const handleApiError = useCallback((error) => {
         if (error && error.message && error.message.includes('API key')) {
@@ -129,12 +138,9 @@ export const VoiceAssistant = () => {
     useEffect(() => {
         // Cleanup function to abort any ongoing streams when component unmounts
         return () => {
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-                abortControllerRef.current = null;
-            }
+            abortGeneration();
         };
-    }, []);
+    }, [abortGeneration]);
     const [transcribedText, setTranscribedText] = useState('');
     const [responseStream, setResponseStream] = useState('');
     const [error, setError] = useState('');
@@ -177,13 +183,7 @@ export const VoiceAssistant = () => {
     const [showDebugMenu, setShowDebugMenu] = useState(false);
     const router = useRouter();
 
-    const stopGeneration = () => {
-        const controller = abortControllerRef.current;
-        if (controller) {
-            controller.abort();
-            abortControllerRef.current = null;
-        }
-    };
+    // We no longer need the stopGeneration function as it's handled by the context
 
     const handleAnalysis = useCallback(async (analysis) => {
         console.log('Received analysis:', analysis);
@@ -194,12 +194,14 @@ export const VoiceAssistant = () => {
         try {
             checkApiKeys();
             
-            // Abort any existing stream
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
-            const currentController = new AbortController();
-            abortControllerRef.current = currentController;
+            // Abort any existing generation
+            abortGeneration();
+            
+            // Create a new controller
+            const currentController = createAbortController();
+            
+            // Start generation process
+            startGeneration(currentController);
 
             // Check cache first
             const cachedWidget = widgetStorage.find(analysis.widgetUrl);
@@ -214,6 +216,7 @@ export const VoiceAssistant = () => {
                         intent: analysis.intent
                         // Don't store component reference directly
                     });
+                    completeGeneration();
                     return;
                 } catch (error) {
                     console.error('Error creating component from cache:', error);
@@ -226,7 +229,7 @@ export const VoiceAssistant = () => {
                 selectedModel,
                 currentComponentCode,
                 abortController: currentController,
-                onResponseStream: setResponseStream
+                onResponseStream: (chunk) => updateGenerationProgress(chunk)
             });
             
             // Store result but don't rely on component reference persisting
@@ -235,17 +238,19 @@ export const VoiceAssistant = () => {
                 component: undefined // Explicitly remove component reference
             });
             setModificationIntent(result.intent);
+            completeGeneration();
         } catch (error) {
             if (error && error.message && error.message.includes('API key')) {
                 handleApiError(error);
             } else {
                 console.error('Analysis error:', error);
                 setError(error && error.message ? error.message : 'An unknown error occurred');
+                handleError(error.message || 'An unknown error occurred');
             }
-        } finally {
-            setResponseStream('');
         }
-    }, [selectedModel]);
+    }, [selectedModel, abortGeneration, createAbortController, startGeneration, 
+        updateGenerationProgress, completeGeneration, handleError, setTranscribedText, 
+        setResponseStream, setModificationIntent]);
 
 
     const {
@@ -282,7 +287,7 @@ export const VoiceAssistant = () => {
                     status={generationState.status}
                     onToggle={() => {
                         if (generationState.status === 'GENERATING') {
-                            stopGeneration();
+                            abortGeneration();
                         }
                         if (generationState.status === 'RECORDING') {
                             stopRecording();
@@ -305,9 +310,9 @@ export const VoiceAssistant = () => {
 
             {(!currentComponent || generationState.status === 'GENERATING') && (
                 <ResponseStream
-                    responseStream={responseStream}
+                    responseStream={generationState.responseStream}
                     status={generationState.status}
-                    modificationIntent={modificationIntent}
+                    modificationIntent={generationState.modificationIntent}
                 />
             )}
 

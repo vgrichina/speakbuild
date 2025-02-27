@@ -38,7 +38,7 @@ export const TranscriptionBox = ({
             )}
 
             {/* Final Transcription */}
-            {(requestHistory.length > 0 || (transcribedText && status === 'GENERATING')) && (
+            {(requestHistory.length > 0 || (transcribedText && (status === 'GENERATING' || status === 'RECORDING'))) && (
                 <View style={styles.transcriptionBox}>
                     {requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
@@ -49,7 +49,7 @@ export const TranscriptionBox = ({
                             {request}
                         </Text>
                     ))}
-                    {transcribedText && status === 'GENERATING' && (
+                    {transcribedText && (status === 'GENERATING' || status === 'RECORDING') && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14
