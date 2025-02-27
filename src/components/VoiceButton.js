@@ -40,16 +40,16 @@ const PulsatingCircle = ({ isActive, volume }) => {
  * Voice button component that changes appearance based on generation status
  * @param {Object} props - Component props
  * @param {string} props.status - Current generation status ('IDLE', 'RECORDING', 'GENERATING', 'ERROR')
- * @param {Function} props.onToggle - Function to call when button is pressed
- * @param {Function} props.onCancel - Function to call when cancelling generation
+ * @param {Function} props.onStart - Function to call when starting recording
+ * @param {Function} props.onStop - Function to call when stopping recording or canceling generation
  * @param {number} props.volume - Current audio volume (0-1)
  * @param {boolean} props.disabled - Whether the button is disabled
  */
 export const VoiceButton = ({ 
     disabled,
     status,
-    onToggle,
-    onCancel,
+    onStart,
+    onStop,
     volume = 0
 }) => {
     console.log('VoiceButton rendered with status:', status); // Add logging
@@ -61,12 +61,12 @@ export const VoiceButton = ({
 
     // Handle button press based on current status
     const handlePress = () => {
-        if (status === 'GENERATING') {
-            // If we're generating, cancel the operation
-            onCancel?.();
+        if (status === 'RECORDING' || status === 'GENERATING') {
+            // If we're recording or generating, stop/cancel
+            onStop?.();
         } else {
-            // Otherwise toggle recording
-            onToggle?.();
+            // Otherwise start recording
+            onStart?.();
         }
     };
 
