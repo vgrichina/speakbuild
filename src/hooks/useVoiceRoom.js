@@ -417,9 +417,17 @@ export function useVoiceRoom({
 
     const cancelRecording = useCallback(() => {
         console.log('cancelRecording called', new Error().stack);
+        // First abort any ongoing operations
+        if (generationState.abortController) {
+            generationState.abortController.abort();
+        }
+        // Then clean up resources
         cleanup();
+        // Finally reset the generation state to IDLE
         stopGenerationRecording();
-    }, [cleanup, stopGenerationRecording]);
+        // Ensure we're fully reset to IDLE state
+        generationState.status !== 'IDLE' && abortGeneration();
+    }, [cleanup, stopGenerationRecording, generationState, abortGeneration]);
 
     return {
         volume,
