@@ -42,17 +42,22 @@ export function useVoiceRoom({
     const ws = useRef(null);
     const [volume, setVolume] = useState(0);
     const audioBuffer = useRef([]);
-    const isConnected = useRef(false);
+    // We don't need isConnected since we can rely on ws.current and its readyState
     
     const cleanupWebSocket = useCallback(() => {
-        console.log('Cleaning up WebSocket...', new Error().stack);
-        if (ws.current) {
-            if (ws.current.readyState === WebSocket.OPEN) {
-                ws.current.close();
+        console.log('Cleaning up WebSocket...');
+        
+        // Get the current WebSocket and immediately set the ref to null
+        // This acts as a lock to prevent multiple cleanup attempts on the same instance
+        const currentWs = ws.current;
+        ws.current = null;
+        
+        // Only proceed with cleanup if we had an active WebSocket
+        if (currentWs) {
+            if (currentWs.readyState === WebSocket.OPEN) {
+                currentWs.close();
             }
-            ws.current = null;
         }
-        isConnected.current = false;
     }, []);
 
     const cleanup = useCallback(() => {
@@ -135,8 +140,8 @@ export function useVoiceRoom({
                     bytes[i] = binaryString.charCodeAt(i);
                 }
                 
-                // If connected, send immediately, otherwise buffer
-                if (isConnected.current && ws.current?.readyState === WebSocket.OPEN) {
+                // If WebSocket is open, send immediately, otherwise buffer
+                if (ws.current?.readyState === WebSocket.OPEN) {
                     ws.current.send(bytes.buffer);
                 } else {
                     audioBuffer.current.push(bytes.buffer);
@@ -237,28 +242,35 @@ export function useVoiceRoom({
 
             const { joinUrl } = await response.json();
             cleanupWebSocket(); // Only cleanup WebSocket before creating a new one
-            ws.current = new WebSocket(joinUrl);
+            const wsInstance = new WebSocket(joinUrl);
+            ws.current = wsInstance;
             
-            ws.current.onopen = () => {
+            wsInstance.onopen = () => {
                 console.log('WebSocket opened');
                 setIsConnecting(false);
-                isConnected.current = true;
                 
-                // Send buffered audio
-                while (audioBuffer.current.length > 0) {
-                    const buffer = audioBuffer.current.shift();
-                    if (ws.current?.readyState === WebSocket.OPEN) {
-                        ws.current.send(buffer);
+                // Only proceed if this is still the active WebSocket
+                if (ws.current === wsInstance) {
+                    // Send buffered audio
+                    while (audioBuffer.current.length > 0) {
+                        const buffer = audioBuffer.current.shift();
+                        if (wsInstance.readyState === WebSocket.OPEN) {
+                            wsInstance.send(buffer);
+                        }
                     }
                 }
             };
 
             let accumulatedJson = '';
             
-            ws.current.onmessage = (event) => {
-                const currentWs = ws.current;
+            wsInstance.onmessage = (event) => {
+                // Only process messages if this is still the active WebSocket
+                if (ws.current !== wsInstance) {
+                    console.log('Skipping message - WebSocket no longer active');
+                    return;
+                }
                 
-                if (!currentWs || currentWs.readyState !== WebSocket.OPEN) {
+                if (wsInstance.readyState !== WebSocket.OPEN) {
                     console.log('Skipping message - WebSocket not open');
                     return;
                 }
@@ -321,16 +333,17 @@ export function useVoiceRoom({
                                 throw new Error('Missing transcription field in response');
                             }
                             
-                            if (currentWs === ws.current) {
-                                stopRecording();
+                            // Only process if this WebSocket is still active
+                            if (ws.current === wsInstance) {
                                 // Set transcribed text directly in the context
                                 setTranscribedText(analysis.transcription);
                                 onTranscription?.(analysis);
+                                stopRecording();
                             }
                         } catch (error) {
                             console.error('Error parsing final transcript:', error);
                             console.error('Raw JSON:', accumulatedJson);
-                            if (currentWs === ws.current) {
+                            if (ws.current === wsInstance) {
                                 onError?.('Failed to parse transcript');
                                 stopRecording();
                             }
@@ -341,35 +354,30 @@ export function useVoiceRoom({
                 }
             };
 
-            ws.current.onerror = (error) => {
+            wsInstance.onerror = (error) => {
+                console.error('WebSocket error:', {
+                    error,
+                    errorStack: error.stack || new Error().stack,
+                    wsState: wsInstance.readyState,
+                    wsUrl: wsInstance.url
+                });
+                
                 // Only handle error if this is still the active WebSocket
-                if (ws.current) {
-                    console.error('WebSocket error:', {
-                        error,
-                        errorStack: error.stack || new Error().stack,
-                        wsState: ws.current?.readyState,
-                        wsUrl: ws.current?.url
-                    });
-                    
-                    // Don't call cleanup/stopRecording if we're already in a cleanup state
-                    if (generationState.status === 'RECORDING') {
-                        console.log('WebSocket error triggering stopRecording');
-                        onError?.('Connection error');
-                        stopRecording();
-                    }
+                if (ws.current === wsInstance && generationState.status === 'RECORDING') {
+                    console.log('WebSocket error triggering stopRecording');
+                    onError?.('Connection error');
+                    stopRecording();
                 }
             };
 
-            ws.current.onclose = () => {
+            wsInstance.onclose = () => {
+                console.log('WebSocket connection closed');
+                
                 // Only handle close if this is still the active WebSocket
-                if (ws.current) {
-                    console.log('WebSocket connection closed normally', new Error().stack);
-                    // Don't trigger cleanup if we're already in a cleanup state
-                    if (generationState.status === 'RECORDING') {
-                        console.log('WebSocket close triggering cleanup while recording is active');
-                        cleanup();
-                        stopGenerationRecording(); // Update generation context
-                    }
+                if (ws.current === wsInstance && generationState.status === 'RECORDING') {
+                    console.log('WebSocket close triggering cleanup while recording is active');
+                    cleanup();
+                    stopGenerationRecording(); // Update generation context
                 }
             };
 
@@ -381,11 +389,25 @@ export function useVoiceRoom({
         }
     }, [componentHistory, currentHistoryIndex, selectedLanguage, onTranscription, cleanup, startGenerationRecording, handleGenerationError]);
 
-    const stopRecording = useCallback((transcribedText = '') => {
-        console.log('stopRecording called', new Error().stack);
-        cleanup();
-        stopGenerationRecording(transcribedText);
-    }, [cleanup, stopGenerationRecording]);
+    // Debounce stopRecording to prevent multiple rapid calls
+    const stopRecording = useCallback(
+        debounce((transcribedText = '') => {
+            console.log('stopRecording called');
+            cleanup();
+            stopGenerationRecording(transcribedText);
+        }, 100),
+        [cleanup, stopGenerationRecording]
+    );
+    
+    // Helper debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
 
     const cancelRecording = useCallback(() => {
         console.log('cancelRecording called', new Error().stack);
