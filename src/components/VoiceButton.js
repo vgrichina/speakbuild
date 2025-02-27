@@ -41,6 +41,7 @@ const PulsatingCircle = ({ isActive, volume }) => {
  * @param {Object} props - Component props
  * @param {string} props.status - Current generation status ('IDLE', 'RECORDING', 'GENERATING', 'ERROR')
  * @param {Function} props.onToggle - Function to call when button is pressed
+ * @param {Function} props.onCancel - Function to call when cancelling generation
  * @param {number} props.volume - Current audio volume (0-1)
  * @param {boolean} props.disabled - Whether the button is disabled
  */
@@ -48,6 +49,7 @@ export const VoiceButton = ({
     disabled,
     status,
     onToggle,
+    onCancel,
     volume = 0
 }) => {
     console.log('VoiceButton rendered with status:', status); // Add logging
@@ -56,6 +58,17 @@ export const VoiceButton = ({
     // Determine if button should show active state
     const isActive = status === 'RECORDING' || status === 'GENERATING';
     console.log('VoiceButton isActive:', isActive); // Add logging
+
+    // Handle button press based on current status
+    const handlePress = () => {
+        if (status === 'GENERATING') {
+            // If we're generating, cancel the operation
+            onCancel?.();
+        } else {
+            // Otherwise toggle recording
+            onToggle?.();
+        }
+    };
 
     // Determine the button style based on status
     let buttonStyle;
@@ -105,7 +118,7 @@ export const VoiceButton = ({
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
             {isActive && <PulsatingCircle isActive={true} volume={volume} />}
             <Pressable
-                onPress={onToggle}
+                onPress={handlePress}
                 onPressIn={() => setIsPressed(true)}
                 onPressOut={() => setIsPressed(false)}
                 disabled={disabled}

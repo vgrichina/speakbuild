@@ -76,7 +76,7 @@ export function useVoiceRoom({
 
     // Clean up when recording state changes in generation context
     useEffect(() => {
-        if (generationState.status !== 'RECORDING' && ws.current) {
+        if (generationState.status !== 'RECORDING' && generationState.status !== 'GENERATING' && ws.current) {
             console.log('Cleaning up because generation state changed to:', generationState.status);
             cleanup();
         }

@@ -211,6 +211,7 @@ export function useGeneration() {
   }, [dispatch]);
   
   const abortGeneration = useCallback(() => {
+    console.log('Explicitly aborting generation and resetting to IDLE state');
     dispatch({ type: 'ABORT' });
   }, [dispatch]);
   
