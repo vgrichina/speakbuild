@@ -33,7 +33,8 @@ export function useVoiceRoom({
         startRecording: startGenerationRecording,
         stopRecording: stopGenerationRecording,
         handleError: handleGenerationError,
-        setTranscribedText
+        setTranscribedText,
+        abortGeneration
     } = useGeneration();
     
     // Local refs and state that don't conflict with generation context
