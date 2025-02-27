@@ -390,45 +390,47 @@ export function useVoiceRoom({
         }
     }, [componentHistory, currentHistoryIndex, selectedLanguage, onTranscription, cleanup, startGenerationRecording, handleGenerationError]);
 
-    // Debounce stopRecording to prevent multiple rapid calls
-    const stopRecording = useCallback(
-        debounce((transcribedText = '') => {
-            console.log('stopRecording called with status:', generationState.status);
-            
-            // First update the generation context state
-            stopGenerationRecording(transcribedText);
-            
-            // Then clean up resources
-            cleanup();
-            
-            console.log('After stopRecording, status should be GENERATING');
-        }, 100),
-        [cleanup, stopGenerationRecording, generationState.status]
-    );
-    
-    // Helper debounce function
-    function debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-            const context = this;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(context, args), wait);
-        };
-    }
+    // Stop recording and transition to generating state
+    const stopRecording = useCallback((transcribedText = '') => {
+        console.log('stopRecording called with status:', generationState.status);
+        
+        // Only proceed if we're actually recording
+        if (generationState.status !== 'RECORDING') {
+            console.log('Ignoring stopRecording call - not in RECORDING state');
+            return;
+        }
+        
+        // First update the generation context state
+        stopGenerationRecording(transcribedText);
+        
+        // Then clean up resources
+        cleanup();
+        
+        console.log('After stopRecording, status should be GENERATING');
+    }, [cleanup, stopGenerationRecording, generationState.status]);
 
     const cancelRecording = useCallback(() => {
         console.log('cancelRecording called', new Error().stack);
+        
+        // Only proceed if we're in a state that can be canceled
+        if (generationState.status === 'IDLE') {
+            console.log('Ignoring cancelRecording call - already in IDLE state');
+            return;
+        }
+        
         // First abort any ongoing operations
         if (generationState.abortController) {
             generationState.abortController.abort();
         }
+        
         // Then clean up resources
         cleanup();
-        // Finally reset the generation state to IDLE
-        stopGenerationRecording();
+        
         // Ensure we're fully reset to IDLE state
-        generationState.status !== 'IDLE' && abortGeneration();
-    }, [cleanup, stopGenerationRecording, generationState, abortGeneration]);
+        abortGeneration();
+        
+        console.log('After cancelRecording, status should be IDLE');
+    }, [cleanup, generationState, abortGeneration]);
 
     return {
         volume,
