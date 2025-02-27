@@ -311,14 +311,10 @@ export function useVoiceRoom({
                     if (msg.final && accumulatedJson) {
                         try {
                             // Clean the JSON text before parsing
-                            let jsonToProcess = cleanJsonText(accumulatedJson);
+                            const jsonToProcess = cleanJsonText(accumulatedJson);
                             
-                            // Try to fix common JSON issues
-                            if (!jsonToProcess.endsWith('}')) {
-                                jsonToProcess += '}';
-                            }
-                            
-                            const analysis = JSON.parse(jsonToProcess);
+                            // Use partial JSON parser instead of manual fixing
+                            const analysis = parse(jsonToProcess, STR | OBJ);
                             
                             // Validate required fields
                             if (!analysis.transcription) {

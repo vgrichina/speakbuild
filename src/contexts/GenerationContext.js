@@ -34,36 +34,44 @@ const initialState = {
  * @returns {GenerationState} New state
  */
 function generationReducer(state, action) {
+  let newState;
+  
   switch (action.type) {
     case 'START_RECORDING':
       // Only allow starting recording from IDLE or ERROR state
       if (state.status !== 'IDLE' && state.status !== 'ERROR') return state;
-      return { 
+      newState = { 
         ...state, 
         status: 'RECORDING', 
         error: undefined,
         transcribedText: '',
         responseStream: ''
       };
+      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      return newState;
       
     case 'STOP_RECORDING':
       // Only allow stopping recording from RECORDING state
       if (state.status !== 'RECORDING') return state;
-      return { 
+      newState = { 
         ...state, 
         status: 'GENERATING', 
         transcribedText: action.transcribedText 
       };
+      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      return newState;
       
     case 'START_GENERATION':
       // Can start generation from IDLE or after RECORDING
       if (state.status !== 'IDLE' && state.status !== 'RECORDING') return state;
-      return { 
+      newState = { 
         ...state, 
         status: 'GENERATING', 
         abortController: action.abortController,
         responseStream: '' 
       };
+      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      return newState;
       
     case 'GENERATION_PROGRESS':
       if (state.status !== 'GENERATING') return state;
@@ -74,29 +82,35 @@ function generationReducer(state, action) {
       
     case 'GENERATION_COMPLETE':
       if (state.status !== 'GENERATING') return state;
-      return { 
+      newState = { 
         ...state, 
         status: 'IDLE', 
         abortController: null 
       };
+      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      return newState;
       
     case 'ABORT':
       // Abort any active controller
       if (state.abortController) {
         state.abortController.abort();
       }
-      return { 
+      newState = { 
         ...state, 
         status: 'IDLE', 
         abortController: null 
       };
+      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status} (ABORT)`);
+      return newState;
       
     case 'ERROR':
-      return { 
+      newState = { 
         ...state, 
         status: 'ERROR', 
         error: action.error 
       };
+      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}, error: ${action.error}`);
+      return newState;
       
     case 'SET_TRANSCRIBED_TEXT':
       return {
@@ -111,7 +125,9 @@ function generationReducer(state, action) {
       };
       
     case 'RESET':
-      return initialState;
+      newState = initialState;
+      console.log(`GenerationContext: Status reset from ${state.status} to ${newState.status}`);
+      return newState;
       
     default:
       return state;
