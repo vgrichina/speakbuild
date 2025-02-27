@@ -1,29 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
-import { api } from './services/api';
-import { analyzeRequest, getRequestHistory } from './services/analysis';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { getRequestHistory } from './services/analysis';
 import { widgetStorage } from './services/widgetStorage';
 import { processWithClaudeStream } from './services/processStream';
 import { useComponentHistory } from './contexts/ComponentHistoryContext';
 import { useGeneration } from './contexts/GenerationContext';
 import { useSettings, useApiKeyCheck } from './hooks/useSettings';
-import DebugGeneration from './components/DebugGeneration';
 import { EmptyState } from './components/EmptyState';
-import { NavigationButtons } from './components/NavigationButtons';
 import { createComponent, renderComponent } from './utils/componentUtils';
-
-
-import * as RN from 'react-native';
-import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Animated, TouchableOpacity } from 'react-native';
 import { VoiceButton } from './components/VoiceButton';
-import { ViewCode } from './components/ViewCode';
-import { Settings } from './components/Settings';
-import { useVoiceRoom } from './hooks/useVoiceRoom';
-import { Mic, MicOff, Square } from 'lucide-react-native';
 import { ResponseStream } from './components/ResponseStream';
 import { TranscriptionBox } from './components/TranscriptionBox';
-import { ExpoModules } from './expo-modules';
-import { storage } from './services/storage';
+import { useVoiceRoom } from './hooks/useVoiceRoom';
 
 
 const styles = StyleSheet.create({
@@ -31,71 +20,11 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  navButton: {
-    padding: 8,
-    borderRadius: 4,
-    backgroundColor: '#f5f5f5',
-    marginHorizontal: 2,
-  },
-  buttonPressed: {
-    backgroundColor: '#e5e5e5',
-  },
-  button: {
-    backgroundColor: '#3B82F6',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  voiceButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  voiceButtonListening: {
-    backgroundColor: '#EF4444',
-  },
   transcriptionBox: {
     backgroundColor: '#F3F4F6',
     padding: 16,
     borderRadius: 8,
     marginVertical: 8,
-  },
-  heading: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
   },
   floatingButtonContainer: {
     position: 'absolute',
@@ -153,7 +82,6 @@ export const VoiceAssistant = () => {
         error: settingsError,
         saveSettings
     } = useSettings();
-    const [textInput, setTextInput] = useState('');
     const {
         history: componentHistory,
         currentIndex: currentHistoryIndex,
@@ -177,8 +105,6 @@ export const VoiceAssistant = () => {
     }, [currentHistoryEntry?.code]);
     
     const currentComponentCode = currentHistoryEntry?.code;
-    const [showSourceCode, setShowSourceCode] = useState(false);
-    const [showDebugMenu, setShowDebugMenu] = useState(false);
     const router = useRouter();
 
     // We no longer need the stopGeneration function as it's handled by the context
@@ -197,7 +123,7 @@ export const VoiceAssistant = () => {
             // Create a new controller
             const currentController = createAbortController();
             
-            // Start generation process
+            // Start generation process (this already sets responseStream to '')
             startGeneration(currentController);
 
             // Check cache first
@@ -205,13 +131,13 @@ export const VoiceAssistant = () => {
             if (cachedWidget) {
                 console.log('Found cached widget:', analysis.widgetUrl);
                 try {
-                    const GeneratedComponent = createComponent(cachedWidget.code);
+                    // Just test if it works, no need to store the component
+                    createComponent(cachedWidget.code);
                     addToHistory({
                         code: cachedWidget.code,
                         request: analysis.transcription,
                         params: analysis.params || {},
                         intent: analysis.intent
-                        // Don't store component reference directly
                     });
                     completeGeneration();
                     return;
@@ -226,7 +152,7 @@ export const VoiceAssistant = () => {
                 selectedModel,
                 currentComponentCode,
                 abortController: currentController,
-                onResponseStream: (chunk) => updateGenerationProgress(chunk)
+                onResponseStream: updateGenerationProgress
             });
             
             // Store result but don't rely on component reference persisting
@@ -237,17 +163,13 @@ export const VoiceAssistant = () => {
             setModificationIntent(result.intent);
             completeGeneration();
         } catch (error) {
-            if (error && error.message && error.message.includes('API key')) {
-                handleApiError(error);
-            } else {
-                console.error('Analysis error:', error);
-                setError(error && error.message ? error.message : 'An unknown error occurred');
-                handleError(error.message || 'An unknown error occurred');
-            }
+            console.error('Analysis error:', error);
+            // Use the context's error handler which will update the state
+            handleError(error.message || 'An unknown error occurred');
         }
     }, [selectedModel, abortGeneration, createAbortController, startGeneration, 
         updateGenerationProgress, completeGeneration, handleError, setTranscribedText, 
-        setResponseStream, setModificationIntent]);
+        setModificationIntent]);
 
 
     const {
@@ -266,14 +188,6 @@ export const VoiceAssistant = () => {
     });
 
 
-    const handleTextSubmit = (e) => {
-        e.preventDefault();
-        if (!textInput.trim()) return;
-
-        setTranscribedText(textInput);
-        processWithClaudeStream(textInput);
-        setTextInput('');
-    };
 
     return (
         <View style={styles.container}>
