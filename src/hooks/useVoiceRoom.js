@@ -74,11 +74,14 @@ export function useVoiceRoom({
     const cleanup = useCallback(() => {
         console.log('Full cleanup of voice room...', new Error().stack);
         cleanupWebSocket();
+        console.log('Stopping AudioRecord');
         AudioRecord.stop();
+        console.log('Setting volume to 0');
         setIsConnecting(false);
         setVolume(0);
         audioBuffer.current = [];
-    }, [cleanupWebSocket]);
+        console.log('Cleanup complete, status:', generationState.status);
+    }, [cleanupWebSocket, generationState.status]);
 
     // Clean up when component unmounts
     useEffect(() => {
@@ -144,20 +147,22 @@ export function useVoiceRoom({
             }
             
             AudioRecord.on('data', data => {
+                console.log(`Audio data received, status: ${generationState.status}, data length: ${data.length}`);
+            
                 // Decode base64 once
                 const binaryString = atob(data);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
-                
+            
                 // If WebSocket is open, send immediately, otherwise buffer
                 if (ws.current?.readyState === WebSocket.OPEN) {
                     ws.current.send(bytes.buffer);
                 } else {
                     audioBuffer.current.push(bytes.buffer);
                 }
-                
+            
                 // Calculate volume from PCM data
                 const pcmData = new Int16Array(bytes.buffer);
                 let sum = 0;
@@ -166,13 +171,17 @@ export function useVoiceRoom({
                 }
                 const average = sum / pcmData.length;
                 const normalizedVolume = Math.min(average / 32768, 1);
-                
+            
+                console.log(`Setting volume to ${normalizedVolume.toFixed(3)}, generation status: ${generationState.status}`);
                 setVolume(normalizedVolume);
             });
         };
 
         initAudio();
-        return () => AudioRecord.stop();
+        return () => {
+            console.log('Component unmounting, stopping AudioRecord');
+            AudioRecord.stop();
+        };
     }, []);
 
     const startRecording = useCallback(async () => {
