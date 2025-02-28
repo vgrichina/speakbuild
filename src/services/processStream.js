@@ -26,7 +26,8 @@ export async function processWithClaudeStream({
             }
 
             if (content) {
-                onResponseStream(prev => prev + content);
+                // Pass the content directly, not a function
+                onResponseStream(content);
             }
             
             if (done && code) {
