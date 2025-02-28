@@ -47,17 +47,27 @@ export function useVoiceRoom({
     
     const cleanupWebSocket = useCallback(() => {
         console.log('Cleaning up WebSocket...');
-        
+    
         // Get the current WebSocket and immediately set the ref to null
         // This acts as a lock to prevent multiple cleanup attempts on the same instance
         const currentWs = ws.current;
         ws.current = null;
-        
+    
         // Only proceed with cleanup if we had an active WebSocket
         if (currentWs) {
-            if (currentWs.readyState === WebSocket.OPEN) {
-                currentWs.close();
+            if (currentWs.readyState === WebSocket.OPEN || currentWs.readyState === WebSocket.CONNECTING) {
+                console.log(`Closing WebSocket in state: ${currentWs.readyState}`);
+                try {
+                    currentWs.close();
+                    console.log('WebSocket closed successfully');
+                } catch (error) {
+                    console.error('Error closing WebSocket:', error);
+                }
+            } else {
+                console.log(`WebSocket already closed or closing (state: ${currentWs.readyState})`);
             }
+        } else {
+            console.log('No active WebSocket to clean up');
         }
     }, []);
 
@@ -247,9 +257,9 @@ export function useVoiceRoom({
             ws.current = wsInstance;
             
             wsInstance.onopen = () => {
-                console.log('WebSocket opened');
+                console.log('WebSocket opened with ID:', wsInstance.url.split('/').pop());
                 setIsConnecting(false);
-                
+        
                 // Only proceed if this is still the active WebSocket
                 if (ws.current === wsInstance) {
                     // Send buffered audio
@@ -325,21 +335,27 @@ export function useVoiceRoom({
                         try {
                             // Clean the JSON text before parsing
                             const jsonToProcess = cleanJsonText(accumulatedJson);
-                            
+                    
                             // Use partial JSON parser instead of manual fixing
                             const analysis = parse(jsonToProcess, STR | OBJ);
-                            
+                    
                             // Validate required fields
                             if (!analysis.transcription) {
                                 throw new Error('Missing transcription field in response');
                             }
-                            
+                    
                             // Only process if this WebSocket is still active
                             if (ws.current === wsInstance) {
+                                // Explicitly close the WebSocket first to prevent more messages
+                                console.log('Received final analysis, closing WebSocket connection');
+                                cleanupWebSocket();
+                        
                                 // Set transcribed text directly in the context
                                 setTranscribedText(analysis.transcription);
                                 onTranscription?.(analysis);
-                                stopRecording();
+                        
+                                // Now update the state
+                                stopGenerationRecording(analysis.transcription);
                             }
                         } catch (error) {
                             console.error('Error parsing final transcript:', error);
@@ -371,9 +387,9 @@ export function useVoiceRoom({
                 }
             };
 
-            wsInstance.onclose = () => {
-                console.log('WebSocket connection closed');
-                
+            wsInstance.onclose = (event) => {
+                console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
+        
                 // Only handle close if this is still the active WebSocket
                 if (ws.current === wsInstance && generationState.status === 'RECORDING') {
                     console.log('WebSocket close triggering cleanup while recording is active');
@@ -394,19 +410,16 @@ export function useVoiceRoom({
     const stopRecording = useCallback((transcribedText = '') => {
         console.log('stopRecording called with status:', generationState.status);
         
-        // Only proceed if we're actually recording
-        if (generationState.status !== 'RECORDING') {
-            console.log('Ignoring stopRecording call - not in RECORDING state');
-            return;
-        }
-        
-        // First update the generation context state
-        stopGenerationRecording(transcribedText);
-        
-        // Then clean up resources
+        // Always clean up WebSocket resources regardless of state
         cleanup();
         
-        console.log('After stopRecording, status should be GENERATING');
+        // Only update generation state if we were recording
+        if (generationState.status === 'RECORDING') {
+            stopGenerationRecording(transcribedText);
+            console.log('After stopRecording, status should be GENERATING');
+        } else {
+            console.log('Resources cleaned up, but state not changed (not in RECORDING state)');
+        }
     }, [cleanup, stopGenerationRecording, generationState.status]);
 
     const cancelRecording = useCallback(() => {

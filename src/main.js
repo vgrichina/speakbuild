@@ -117,9 +117,6 @@ export const VoiceAssistant = () => {
         try {
             checkApiKeys();
             
-            // Abort any existing generation
-            abortGeneration();
-            
             // Create a new controller
             const currentController = createAbortController();
             
