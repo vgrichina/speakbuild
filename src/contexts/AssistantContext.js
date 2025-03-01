@@ -17,8 +17,7 @@ export function AssistantProvider({ children }) {
   // Create a unified status
   const status = useMemo(() => {
     let newStatus;
-    if (voiceRoom.state.isConnecting || 
-        (voiceRoom.state.volume > 0 && generation.state.status === 'RECORDING')) {
+    if (voiceRoom.state.isRecording) {
       newStatus = 'LISTENING';
     } else if (generation.state.status === 'GENERATING') {
       newStatus = 'THINKING';
@@ -28,9 +27,10 @@ export function AssistantProvider({ children }) {
       newStatus = 'IDLE';
     }
     
-    console.log(`[AssistantContext] Status calculated: ${newStatus} (voiceRoom.isConnecting=${voiceRoom.state.isConnecting}, voiceRoom.volume=${voiceRoom.state.volume}, generation.status=${generation.state.status})`);
+    console.log(`[AssistantContext] Status calculated: ${newStatus} (voiceRoom.isRecording=${voiceRoom.state.isRecording}, voiceRoom.isConnecting=${voiceRoom.state.isConnecting}, voiceRoom.volume=${voiceRoom.state.volume}, generation.status=${generation.state.status})`);
     return newStatus;
   }, [
+    voiceRoom.state.isRecording,
     voiceRoom.state.isConnecting,
     voiceRoom.state.volume,
     generation.state.status
