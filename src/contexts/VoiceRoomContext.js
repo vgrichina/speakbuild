@@ -305,6 +305,9 @@ export function VoiceRoomProvider({ children }) {
 
       console.log(`[VoiceRoom] [${Date.now()}] Setting isRecording=true`);
       dispatch({ type: ACTIONS.SET_RECORDING, payload: true });
+      
+      // Reset partial results to ensure clean state
+      dispatch({ type: ACTIONS.SET_PARTIAL_RESULTS, payload: '' });
 
       // Get the analysis prompt
       const messages = analysisPrompt({ 
