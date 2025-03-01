@@ -24,9 +24,25 @@ export function AssistantProvider({ children }) {
   const [modificationIntent, setModificationIntent] = useState(null);
   const abortControllerRef = useRef(null);
   
+  // Track previous conversation ID to detect actual changes
+  const prevConversationIdRef = useRef(null);
+  
   // Reset state when conversation changes
   useEffect(() => {
-    console.log('[AssistantContext] Conversation changed, resetting state');
+    // Skip the effect on initial mount
+    if (prevConversationIdRef.current === null) {
+      prevConversationIdRef.current = activeConversationId;
+      return;
+    }
+    
+    // Skip if the conversation ID hasn't actually changed
+    if (prevConversationIdRef.current === activeConversationId) {
+      return;
+    }
+    
+    console.log('[AssistantContext] Conversation changed from', 
+      prevConversationIdRef.current, 'to', activeConversationId);
+    prevConversationIdRef.current = activeConversationId;
     
     // Stop recording if active
     if (status === 'LISTENING') {
@@ -47,7 +63,6 @@ export function AssistantProvider({ children }) {
     setTranscribedText('');
     setResponseStream('');
     setModificationIntent(null);
-    
   }, [activeConversationId, status, voiceRoom]);
   
   // Derived value for transcript (either partial results during listening or final transcribed text)
