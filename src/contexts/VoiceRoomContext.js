@@ -144,6 +144,7 @@ export function VoiceRoomProvider({ children }) {
   // Main cleanup function
   const cleanup = useCallback(() => {
     console.log('CLEANUP: Function called, isCleaningUp.current =', isCleaningUp.current);
+    console.log('CLEANUP: Stack trace:', new Error().stack);
     
     if (isCleaningUp.current) {
       console.log('CLEANUP: Already in progress, skipping');
