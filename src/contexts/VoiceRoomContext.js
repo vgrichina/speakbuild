@@ -156,10 +156,10 @@ export function VoiceRoomProvider({ children }) {
       console.log('Stopping AudioRecord');
       AudioRecord.stop();
       
-      // Remove the audio data listener
+      // Replace the active listener with our no-op listener
       if (audioSubscriptionRef.current) {
-        console.log('Removing audio data listener');
-        audioSubscriptionRef.current.remove();
+        console.log('Replacing audio data listener with no-op');
+        AudioRecord.on('data', noopAudioListener);
         audioSubscriptionRef.current = null;
       }
       
@@ -207,6 +207,12 @@ export function VoiceRoomProvider({ children }) {
 
   // Create a ref to store the audio subscription
   const audioSubscriptionRef = useRef(null);
+
+  // Define a no-op function that does nothing when we want to disable audio processing
+  const noopAudioListener = () => {
+    // Do nothing, just a placeholder
+    console.log('No-op audio listener called - ignoring data');
+  };
   
   // Define the audio data handler function
   const handleAudioData = useCallback((data) => {
