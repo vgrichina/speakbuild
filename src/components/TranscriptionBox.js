@@ -28,7 +28,7 @@ export const TranscriptionBox = ({
     return (
         <>
             {/* Live Transcription */}
-            {status === 'RECORDING' && partialResults && (
+            {status === 'LISTENING' && partialResults && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                     <Radio size={16} color="#EF4444" />
                     <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
@@ -38,7 +38,7 @@ export const TranscriptionBox = ({
             )}
 
             {/* Final Transcription */}
-            {(requestHistory.length > 0 || (transcribedText && (status === 'GENERATING' || status === 'RECORDING'))) && (
+            {(requestHistory.length > 0 || (transcribedText && (status === 'THINKING' || status === 'LISTENING'))) && (
                 <View style={styles.transcriptionBox}>
                     {requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
@@ -49,7 +49,7 @@ export const TranscriptionBox = ({
                             {request}
                         </Text>
                     ))}
-                    {transcribedText && (status === 'GENERATING' || status === 'RECORDING') && (
+                    {transcribedText && (status === 'THINKING' || status === 'LISTENING') && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14

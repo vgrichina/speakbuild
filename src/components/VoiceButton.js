@@ -39,7 +39,7 @@ const PulsatingCircle = ({ isActive, volume }) => {
 /**
  * Voice button component that changes appearance based on generation status
  * @param {Object} props - Component props
- * @param {string} props.status - Current generation status ('IDLE', 'RECORDING', 'GENERATING', 'ERROR')
+ * @param {string} props.status - Current generation status ('IDLE', 'LISTENING', 'THINKING', 'ERROR')
  * @param {Function} props.onStart - Function to call when starting recording
  * @param {Function} props.onStop - Function to call when stopping recording or canceling generation
  * @param {number} props.volume - Current audio volume (0-1)
