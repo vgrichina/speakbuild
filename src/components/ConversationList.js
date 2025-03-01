@@ -71,38 +71,37 @@ export function ConversationList(props) {
     </TouchableOpacity>
   );
 
+  // Use a custom drawer content component without ScrollView
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
-      <View style={styles.container}>
-        <View style={styles.searchContainer}>
-          <Feather name="search" size={18} color="#666" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search conversations"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-        
-        <TouchableOpacity style={styles.newButton} onPress={handleCreateNew}>
-          <Feather name="plus" size={18} color="#fff" />
-          <Text style={styles.newButtonText}>New Conversation</Text>
-        </TouchableOpacity>
-        
-        <FlatList
-          data={filteredConversations}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>
-              {searchQuery ? "No matching conversations" : "No conversations yet"}
-            </Text>
-          }
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <Feather name="search" size={18} color="#666" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search conversations"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
       </View>
-    </DrawerContentScrollView>
+      
+      <TouchableOpacity style={styles.newButton} onPress={handleCreateNew}>
+        <Feather name="plus" size={18} color="#fff" />
+        <Text style={styles.newButtonText}>New Conversation</Text>
+      </TouchableOpacity>
+      
+      <FlatList
+        data={filteredConversations}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            {searchQuery ? "No matching conversations" : "No conversations yet"}
+          </Text>
+        }
+      />
+    </View>
   );
 }
 
