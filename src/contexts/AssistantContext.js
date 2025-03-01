@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useCallback } from 'react';
 import { useVoiceRoom } from './VoiceRoomContext';
 import { useGeneration } from './GenerationContext';
+import { useSettings } from '../hooks/useSettings';
 
 // Create the unified context
 const AssistantContext = createContext(null);
@@ -10,9 +11,10 @@ const AssistantContext = createContext(null);
  * This sits inside both the VoiceRoomProvider and GenerationProvider
  */
 export function AssistantProvider({ children }) {
-  // Access both internal contexts
+  // Access internal contexts
   const voiceRoom = useVoiceRoom();
   const generation = useGeneration();
+  const { selectedModel } = useSettings();
   
   // Create a unified status
   const status = useMemo(() => {
@@ -72,8 +74,15 @@ export function AssistantProvider({ children }) {
     voiceRoom.startRecording({
       onTranscription: (analysis) => {
         console.log(`[AssistantContext] onTranscription callback with analysis:`, analysis.transcription);
+        
+        // First update the transcribed text in generation context
         generation.stopRecording(analysis.transcription);
-        generation.startGeneration(analysis);
+        
+        // Then start generation with selectedModel from settings
+        console.log(`[AssistantContext] Starting generation with model: ${selectedModel}`);
+        generation.startGeneration(analysis, { 
+          selectedModel: selectedModel 
+        });
       },
       onError: (error) => {
         console.log(`[AssistantContext] onError callback with error:`, error);
