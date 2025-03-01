@@ -224,7 +224,7 @@ export function VoiceRoomProvider({ children }) {
   };
   
   // Define the audio data handler function
-  const handleAudioData = (data) => {
+  function handleAudioData(data) {
     console.log(`AUDIO: Data received, data length: ${data.length}`);
     
     // Decode base64 once
@@ -252,7 +252,7 @@ export function VoiceRoomProvider({ children }) {
     
     console.log(`Setting volume to ${normalizedVolume.toFixed(3)}`);
     dispatch({ type: ACTIONS.SET_VOLUME, payload: normalizedVolume });
-  }, []);
+  }
   
   // Clean up audio subscription when component unmounts
   useEffect(() => {
