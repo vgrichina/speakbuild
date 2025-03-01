@@ -151,6 +151,14 @@ export function VoiceRoomProvider({ children }) {
       cleanupWebSocket();
       console.log('Stopping AudioRecord');
       AudioRecord.stop();
+      
+      // Remove the audio data listener
+      if (audioSubscriptionRef.current) {
+        console.log('Removing audio data listener');
+        audioSubscriptionRef.current.remove();
+        audioSubscriptionRef.current = null;
+      }
+      
       console.log('Setting volume to 0');
       dispatch({ type: ACTIONS.SET_CONNECTING, payload: false });
       dispatch({ type: ACTIONS.SET_VOLUME, payload: 0 });
@@ -196,55 +204,47 @@ export function VoiceRoomProvider({ children }) {
   // We don't need to watch generationState.status anymore
   // VoiceRoomContext should only be concerned with its own state
 
-  // Create a ref to track if we're actively recording
-  const isActivelyRecording = useRef(false);
+  // Create a ref to store the audio subscription
+  const audioSubscriptionRef = useRef(null);
   
-  // Set up audio data listener
+  // Define the audio data handler function
+  const handleAudioData = useCallback((data) => {
+    console.log(`Audio data received, data length: ${data.length}`);
+    
+    // Decode base64 once
+    const binaryString = atob(data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // If WebSocket is open, send immediately, otherwise buffer
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(bytes.buffer);
+    } else {
+      audioBuffer.current.push(bytes.buffer);
+    }
+    
+    // Calculate volume from PCM data
+    const pcmData = new Int16Array(bytes.buffer);
+    let sum = 0;
+    for (let i = 0; i < pcmData.length; i++) {
+      sum += Math.abs(pcmData[i]);
+    }
+    const average = sum / pcmData.length;
+    const normalizedVolume = Math.min(average / 32768, 1);
+    
+    console.log(`Setting volume to ${normalizedVolume.toFixed(3)}`);
+    dispatch({ type: ACTIONS.SET_VOLUME, payload: normalizedVolume });
+  }, []);
+  
+  // Clean up audio subscription when component unmounts
   useEffect(() => {
-    // Setup audio data handler
-    const handleAudioData = (data) => {
-      // Only process data if we're actively recording
-      if (!isActivelyRecording.current) return;
-      
-      console.log(`Audio data received, data length: ${data.length}`);
-      
-      // Decode base64 once
-      const binaryString = atob(data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      // If WebSocket is open, send immediately, otherwise buffer
-      if (ws.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(bytes.buffer);
-      } else {
-        audioBuffer.current.push(bytes.buffer);
-      }
-      
-      // Calculate volume from PCM data
-      const pcmData = new Int16Array(bytes.buffer);
-      let sum = 0;
-      for (let i = 0; i < pcmData.length; i++) {
-        sum += Math.abs(pcmData[i]);
-      }
-      const average = sum / pcmData.length;
-      const normalizedVolume = Math.min(average / 32768, 1);
-      
-      console.log(`Setting volume to ${normalizedVolume.toFixed(3)}`);
-      dispatch({ type: ACTIONS.SET_VOLUME, payload: normalizedVolume });
-    };
-    
-    console.log('Adding audio data listener');
-    AudioRecord.on('data', handleAudioData);
-    
     return () => {
-      console.log('Removing audio data listener');
-      // Check if removeListener exists before calling it
-      if (AudioRecord && typeof AudioRecord.removeListener === 'function') {
-        AudioRecord.removeListener('data', handleAudioData);
-      } else {
-        console.warn('AudioRecord.removeListener is not available');
+      if (audioSubscriptionRef.current) {
+        console.log('Removing audio data listener on unmount');
+        audioSubscriptionRef.current.remove();
+        audioSubscriptionRef.current = null;
       }
     };
   }, []);
@@ -266,7 +266,6 @@ export function VoiceRoomProvider({ children }) {
     }
 
     isStartingRecording.current = true;
-    isActivelyRecording.current = true;
     
     try {
       console.log('Starting recording flow...');
@@ -280,6 +279,10 @@ export function VoiceRoomProvider({ children }) {
       // Start audio recording directly
       AudioRecord.start();
       console.log('AudioRecord.start() called');
+      
+      // Set up the audio data listener
+      console.log('Adding audio data listener');
+      audioSubscriptionRef.current = AudioRecord.on('data', handleAudioData);
 
       // Create a new AbortController for this recording session
       const controller = new AbortController();
@@ -486,6 +489,13 @@ export function VoiceRoomProvider({ children }) {
     } catch (error) {
       console.error('Error starting recording:', error);
       onError?.(error.message);
+      
+      // Clean up audio subscription if there's an error
+      if (audioSubscriptionRef.current) {
+        audioSubscriptionRef.current.remove();
+        audioSubscriptionRef.current = null;
+      }
+      
       cleanup();
     } finally {
       isStartingRecording.current = false;
@@ -500,9 +510,6 @@ export function VoiceRoomProvider({ children }) {
   // Stop recording function - decoupled from GenerationContext
   const stopRecording = useCallback(() => {
     console.log('stopRecording called');
-    
-    // Set recording state to false
-    isActivelyRecording.current = false;
     
     // Always clean up WebSocket resources
     cleanup();
@@ -522,9 +529,6 @@ export function VoiceRoomProvider({ children }) {
     isCancelling.current = true;
     
     try {
-      // Set recording state to false
-      isActivelyRecording.current = false;
-      
       // Clean up resources
       cleanup();
     } finally {
