@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { useVoiceRoom } from './VoiceRoomContext';
 import { useSettings } from '../hooks/useSettings';
 import { useComponentHistory } from './ComponentHistoryContext';
@@ -14,7 +14,7 @@ export function AssistantProvider({ children }) {
   // Access external contexts
   const voiceRoom = useVoiceRoom();
   const { selectedModel } = useSettings();
-  const { addToHistory } = useComponentHistory();
+  const { addToHistory, activeConversationId } = useComponentHistory();
   
   // Direct state management for the assistant
   const [status, setStatus] = useState('IDLE'); // IDLE, LISTENING, THINKING, ERROR
@@ -23,6 +23,32 @@ export function AssistantProvider({ children }) {
   const [responseStream, setResponseStream] = useState('');
   const [modificationIntent, setModificationIntent] = useState(null);
   const abortControllerRef = useRef(null);
+  
+  // Reset state when conversation changes
+  useEffect(() => {
+    console.log('[AssistantContext] Conversation changed, resetting state');
+    
+    // Stop recording if active
+    if (status === 'LISTENING') {
+      console.log('[AssistantContext] Stopping active recording due to conversation change');
+      voiceRoom.stopRecording();
+    }
+    
+    // Abort any in-progress generation
+    if (abortControllerRef.current) {
+      console.log('[AssistantContext] Aborting active generation due to conversation change');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    // Reset state
+    setStatus('IDLE');
+    setError(null);
+    setTranscribedText('');
+    setResponseStream('');
+    setModificationIntent(null);
+    
+  }, [activeConversationId, status, voiceRoom]);
   
   // Derived value for transcript (either partial results during listening or final transcribed text)
   const transcript = status === 'LISTENING' 
