@@ -139,37 +139,46 @@ export function VoiceRoomProvider({ children }) {
     } else {
       console.log('No active WebSocket to clean up');
     }
-  }, []);
+  }, [state.isRecording]);
 
   // Main cleanup function
   const cleanup = useCallback(() => {
+    console.log('CLEANUP: Function called, isCleaningUp.current =', isCleaningUp.current);
+    
     if (isCleaningUp.current) {
-      console.log('Cleanup already in progress, skipping');
+      console.log('CLEANUP: Already in progress, skipping');
       return;
     }
     
     isCleaningUp.current = true;
     
     try {
-      console.log('Full cleanup of voice room...');
+      console.log('CLEANUP: Starting full cleanup of voice room...');
       cleanupWebSocket();
-      console.log('Stopping AudioRecord');
+      console.log('CLEANUP: WebSocket cleaned up, now stopping AudioRecord');
       AudioRecord.stop();
+      console.log('CLEANUP: AudioRecord.stop() called successfully');
       
       // Replace the active listener with our no-op listener
       if (audioSubscriptionRef.current) {
-        console.log('Replacing audio data listener with no-op');
+        console.log('CLEANUP: Replacing audio data listener with no-op');
         AudioRecord.on('data', noopAudioListener);
         audioSubscriptionRef.current = null;
+        console.log('CLEANUP: Audio listener replaced and ref cleared');
+      } else {
+        console.log('CLEANUP: No audio subscription ref to clean up');
       }
       
-      console.log('Setting volume to 0');
+      console.log('CLEANUP: Setting volume to 0');
       dispatch({ type: ACTIONS.SET_CONNECTING, payload: false });
       dispatch({ type: ACTIONS.SET_VOLUME, payload: 0 });
       audioBuffer.current = [];
-      console.log('Cleanup complete');
+      console.log('CLEANUP: Cleanup complete');
+    } catch (error) {
+      console.error('CLEANUP ERROR:', error);
     } finally {
       isCleaningUp.current = false;
+      console.log('CLEANUP: Reset isCleaningUp flag to false');
     }
   }, [cleanupWebSocket]);
 
@@ -216,7 +225,13 @@ export function VoiceRoomProvider({ children }) {
   
   // Define the audio data handler function
   const handleAudioData = useCallback((data) => {
-    console.log(`Audio data received, data length: ${data.length}`);
+    // Add this check at the beginning
+    if (!state.isRecording) {
+      console.log('AUDIO: Received data while not recording, ignoring');
+      return;
+    }
+    
+    console.log(`AUDIO: Data received, data length: ${data.length}`);
     
     // Decode base64 once
     const binaryString = atob(data);
@@ -524,13 +539,16 @@ export function VoiceRoomProvider({ children }) {
 
   // Stop recording function
   const stopRecording = useCallback(() => {
-    console.log(`[VoiceRoom] [${Date.now()}] stopRecording called, isRecording=${state.isRecording}, isConnecting=${state.isConnecting}`);
+    console.log(`STOP_RECORDING: Called with isRecording=${state.isRecording}, isConnecting=${state.isConnecting}`);
     
     // Always clean up WebSocket resources
+    console.log('STOP_RECORDING: Calling cleanup()');
     cleanup();
     
     // Update recording state
+    console.log('STOP_RECORDING: Setting isRecording=false');
     dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
+    console.log('STOP_RECORDING: Complete');
     
   }, [cleanup, state.isRecording, state.isConnecting]);
 

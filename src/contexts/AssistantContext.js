@@ -78,15 +78,21 @@ export function AssistantProvider({ children }) {
   
   // Stop method
   const stop = useCallback(() => {
-    console.log(`[AssistantContext] stop() called with status=${status}`);
+    console.log(`ASSISTANT: stop() called with status=${status}`);
     
     // First stop recording
+    console.log('ASSISTANT: Calling voiceRoom.stopRecording()');
     voiceRoom.stopRecording();
+    console.log('ASSISTANT: voiceRoom.stopRecording() completed');
     
     // Then abort generation if needed
     if (status === 'THINKING') {
+      console.log('ASSISTANT: Calling generation.abortGeneration() because status is THINKING');
       generation.abortGeneration();
+      console.log('ASSISTANT: generation.abortGeneration() completed');
     }
+    
+    console.log('ASSISTANT: stop() completed');
   }, [status, voiceRoom, generation]);
   
   // Reset method
