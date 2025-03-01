@@ -72,8 +72,7 @@ export function VoiceRoomProvider({ children }) {
   // Refs for mutable state that shouldn't trigger re-renders
   const ws = useRef(null);
   const audioBuffer = useRef([]);
-  const isCleaningUp = useRef(false);
-  const isCancelling = useRef(false);
+  const isCleaningUp = useRef(false); // Used for both cleanup and cancellation
   const isStartingRecording = useRef(false);
   
   // Check microphone permission
@@ -520,20 +519,14 @@ export function VoiceRoomProvider({ children }) {
   const cancelRecording = useCallback(() => {
     console.log('cancelRecording called');
     
-    // Use a ref to track if cancellation is in progress
-    if (isCancelling.current) {
-      console.log('Cancellation already in progress, skipping');
+    // Use isCleaningUp ref to track if cleanup/cancellation is in progress
+    if (isCleaningUp.current) {
+      console.log('Cleanup/cancellation already in progress, skipping');
       return;
     }
     
-    isCancelling.current = true;
-    
-    try {
-      // Clean up resources
-      cleanup();
-    } finally {
-      isCancelling.current = false;
-    }
+    // Just call cleanup directly - it already has the isCleaningUp guard
+    cleanup();
     
     console.log('Recording canceled');
   }, [cleanup]);
