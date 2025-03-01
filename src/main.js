@@ -157,8 +157,7 @@ export const VoiceAssistant = () => {
 
             <TranscriptionBox
                 status={assistantState.status}
-                partialResults={assistantState.transcript}
-                transcribedText={assistantState.transcript}
+                transcript={assistantState.transcript}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
             />
 

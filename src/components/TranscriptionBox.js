@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Radio } from 'lucide-react-native';
 
 const styles = {
     transcriptionBox: {
@@ -12,34 +11,23 @@ const styles = {
 };
 
 /**
- * Displays transcription and partial results during recording
+ * Displays transcription and conversation history
  * @param {Object} props - Component props
  * @param {string} props.status - Current generation status
- * @param {string} props.partialResults - Partial transcription results
- * @param {string} props.transcribedText - Complete transcribed text
+ * @param {string} props.transcript - Current transcript (either partial or complete)
  * @param {Array} props.requestHistory - History of previous requests
  */
 export const TranscriptionBox = ({ 
     status,
-    partialResults,
-    transcribedText,
+    transcript,
     requestHistory
 }) => {
     return (
         <>
-            {/* Live Transcription */}
-            {status === 'LISTENING' && partialResults && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                    <Radio size={16} color="#EF4444" />
-                    <Text style={{ marginLeft: 8, fontStyle: 'italic', color: '#666' }}>
-                        {partialResults}
-                    </Text>
-                </View>
-            )}
-
-            {/* Final Transcription */}
-            {(requestHistory.length > 0 || (transcribedText && (status === 'THINKING' || status === 'LISTENING'))) && (
+            {/* Transcription Box with History and Current Transcription */}
+            {(requestHistory.length > 0 || (transcript && (status === 'THINKING' || status === 'LISTENING'))) && (
                 <View style={styles.transcriptionBox}>
+                    {/* Previous requests */}
                     {requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
                             color: '#999',
@@ -49,12 +37,14 @@ export const TranscriptionBox = ({
                             {request}
                         </Text>
                     ))}
-                    {transcribedText && (status === 'THINKING' || status === 'LISTENING') && (
+                    
+                    {/* Current transcript */}
+                    {transcript && (status === 'THINKING' || status === 'LISTENING') && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14
                         }}>
-                            {transcribedText}
+                            {transcript}
                         </Text>
                     )}
                 </View>

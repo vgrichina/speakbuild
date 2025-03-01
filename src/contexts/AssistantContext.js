@@ -65,7 +65,7 @@ export function AssistantProvider({ children }) {
     setModificationIntent(null);
   }, [activeConversationId, status, voiceRoom]);
   
-  // Derived value for transcript (either partial results during listening or final transcribed text)
+  // Use partial results from VoiceRoom during LISTENING, otherwise use the final transcribed text
   const transcript = status === 'LISTENING' 
     ? voiceRoom.state.partialResults 
     : transcribedText;
@@ -83,6 +83,7 @@ export function AssistantProvider({ children }) {
     
     // Clear previous state
     setResponseStream('');
+    setTranscribedText('');
     setError(null);
     
     console.log('[AssistantContext] Starting recording sequence');
