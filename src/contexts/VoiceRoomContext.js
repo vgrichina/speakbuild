@@ -213,7 +213,7 @@ export function VoiceRoomProvider({ children }) {
   // Clean up when component unmounts
   useEffect(() => {
     return cleanup;
-  }, [cleanup]);
+  }, []); // Empty dependency array since cleanup is only needed on unmount
 
   // Create a ref to store the audio subscription
   const audioSubscriptionRef = useRef(null);
