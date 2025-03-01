@@ -162,11 +162,11 @@ export function VoiceRoomProvider({ children }) {
       dispatch({ type: ACTIONS.SET_CONNECTING, payload: false });
       dispatch({ type: ACTIONS.SET_VOLUME, payload: 0 });
       audioBuffer.current = [];
-      console.log('Cleanup complete, status:', generationState.status);
+      console.log('Cleanup complete');
     } finally {
       isCleaningUp.current = false;
     }
-  }, [cleanupWebSocket, generationState.status]);
+  }, [cleanupWebSocket]);
 
   // Initialize AudioRecord
   useEffect(() => {
@@ -193,14 +193,12 @@ export function VoiceRoomProvider({ children }) {
       console.log('Component unmounting, stopping AudioRecord');
       AudioRecord.stop();
     };
-  }, [handleGenerationError]);
+  }, []);
 
   // Clean up when component unmounts
   useEffect(() => {
     return cleanup;
   }, [cleanup]);
-
-  // VoiceRoomContext is only concerned with its own state
 
   // Create a ref to store the audio subscription
   const audioSubscriptionRef = useRef(null);
