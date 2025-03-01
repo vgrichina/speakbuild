@@ -2,6 +2,8 @@ import React, { createContext, useContext, useMemo, useCallback } from 'react';
 import { useVoiceRoom } from './VoiceRoomContext';
 import { useGeneration } from './GenerationContext';
 import { useSettings } from '../hooks/useSettings';
+import { useComponentHistory } from './ComponentHistoryContext';
+import { processWithClaudeStream } from '../services/processStream';
 
 // Create the unified context
 const AssistantContext = createContext(null);
@@ -15,6 +17,7 @@ export function AssistantProvider({ children }) {
   const voiceRoom = useVoiceRoom();
   const generation = useGeneration();
   const { selectedModel } = useSettings();
+  const { addToHistory } = useComponentHistory();
   
   // Create a unified status
   const status = useMemo(() => {
@@ -72,7 +75,7 @@ export function AssistantProvider({ children }) {
     
     // Then start actual recording
     voiceRoom.startRecording({
-      onTranscription: (analysis) => {
+      onTranscription: async (analysis) => {
         console.log(`[AssistantContext] onTranscription callback with analysis:`, analysis.transcription);
         
         // First update the transcribed text in generation context
@@ -80,9 +83,46 @@ export function AssistantProvider({ children }) {
         
         // Then start generation with selectedModel from settings
         console.log(`[AssistantContext] Starting generation with model: ${selectedModel}`);
-        generation.startGeneration(analysis, { 
-          selectedModel: selectedModel 
-        });
+        
+        try {
+          // Update state to start generation
+          generation.startGeneration();
+          
+          // Create an abort controller
+          const abortController = new AbortController();
+          
+          // Generate the component directly
+          const result = await processWithClaudeStream({
+            analysis,
+            selectedModel,
+            currentComponentCode: null,
+            abortController,
+            onResponseStream: (content) => {
+              generation.updateGenerationProgress(content);
+            }
+          });
+          
+          // Create the component history entry
+          const componentEntry = {
+            component: result.component,
+            code: result.code,
+            request: analysis.transcription,
+            params: analysis.params || {},
+            widgetUrl: analysis.widgetUrl,
+            intent: analysis.intent
+          };
+          
+          // Add to history
+          console.log(`[AssistantContext] Adding component to history:`, componentEntry);
+          addToHistory(componentEntry);
+          
+          // Complete generation
+          generation.completeGeneration();
+          
+        } catch (error) {
+          console.error(`[AssistantContext] Generation error:`, error);
+          generation.handleError(error.message);
+        }
       },
       onError: (error) => {
         console.log(`[AssistantContext] onError callback with error:`, error);

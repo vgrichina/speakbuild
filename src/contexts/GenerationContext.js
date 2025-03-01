@@ -180,53 +180,17 @@ export function useGeneration() {
     return controller;
   }, []);
   
-  const startGeneration = useCallback(async (analysis, options = {}) => {
-    console.log('GenerationContext: Starting generation with analysis:', analysis);
+  const startGeneration = useCallback((abortController = null) => {
+    console.log('GenerationContext: Setting state to GENERATING');
     
-    // Create an abort controller for this generation process
-    const abortController = createAbortController();
+    // If no controller provided, create one
+    if (!abortController) {
+      abortController = createAbortController();
+    }
     
-    // Update state to indicate generation has started
+    // Just update state to indicate generation has started
     dispatch({ type: 'START_GENERATION', abortController });
-    
-    // Set the modification intent if present
-    if (analysis.intent) {
-      setModificationIntent(analysis.intent);
-    }
-    
-    try {
-      // Get selectedModel from options, or use default
-      const { selectedModel = 'anthropic/claude-3.5-sonnet', currentComponentCode = null } = options;
-      
-      console.log('GenerationContext: Calling processWithClaudeStream with model:', selectedModel);
-      
-      // Call the processWithClaudeStream function to generate the component
-      await processWithClaudeStream({
-        analysis,
-        selectedModel,
-        currentComponentCode,
-        abortController,
-        onResponseStream: (content) => {
-          console.log('GenerationContext: Received response chunk:', content.slice(0, 50) + '...');
-          updateGenerationProgress(content);
-        }
-      });
-      
-      // When complete, update the state
-      completeGeneration();
-      
-    } catch (error) {
-      console.error('GenerationContext: Error during generation:', error);
-      handleError(error.message);
-    }
-  }, [
-    dispatch, 
-    createAbortController, 
-    setModificationIntent, 
-    updateGenerationProgress, 
-    completeGeneration, 
-    handleError
-  ]);
+  }, [dispatch, createAbortController]);
   
   const updateGenerationProgress = useCallback((responseChunk) => {
     dispatch({ type: 'GENERATION_PROGRESS', responseChunk });
