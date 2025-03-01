@@ -66,7 +66,7 @@ export const ResponseStream = ({
 }) => {
     const scrollViewRef = React.useRef(null);
 
-    if (!responseStream && status !== 'GENERATING') return null;
+    if (!responseStream && status !== 'THINKING') return null;
 
     return (
         <View style={[
@@ -84,7 +84,7 @@ export const ResponseStream = ({
                          modificationIntent === 'new' ? 'Creating New Component:' : 
                          'Response:'}
                     </Text>
-                    {status === 'GENERATING' && <LoadingSpinner />}
+                    {status === 'THINKING' && <LoadingSpinner />}
                 </View>
                 <ScrollView 
                     style={{ minHeight: 100 }}

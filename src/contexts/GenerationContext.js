@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 
 /**
- * @typedef {'IDLE'|'RECORDING'|'GENERATING'|'ERROR'} GenerationStatus
+ * @typedef {'IDLE'|'GENERATING'|'ERROR'} GenerationStatus
  * 
  * @typedef {Object} GenerationState
  * @property {GenerationStatus} status - Current state of the generation process
@@ -42,26 +42,21 @@ function generationReducer(state, action) {
       if (state.status !== 'IDLE' && state.status !== 'ERROR') return state;
       newState = { 
         ...state, 
-        status: 'RECORDING', 
+        status: 'IDLE', // We no longer track RECORDING state here
         error: undefined,
         transcribedText: '',
         responseStream: ''
       };
-      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      console.log(`GenerationContext: Status reset to ${newState.status} for recording`);
       return newState;
       
     case 'STOP_RECORDING':
-      // Only allow stopping recording from RECORDING state
-      if (state.status !== 'RECORDING') {
-        console.log(`Ignoring STOP_RECORDING - current status is ${state.status}`);
-        return state;
-      }
+      // Set transcribed text but don't change state
       newState = { 
         ...state, 
-        status: 'GENERATING', 
         transcribedText: action.transcribedText 
       };
-      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      console.log(`GenerationContext: Set transcribed text: ${action.transcribedText}`);
       return newState;
       
     case 'START_GENERATION':
@@ -173,7 +168,6 @@ export function useGeneration() {
   
   const startRecording = useCallback(() => {
     dispatch({ type: 'START_RECORDING' });
-    // Additional logic for recording will be implemented in the hook consumer
   }, [dispatch]);
   
   const stopRecording = useCallback((transcribedText = '') => {

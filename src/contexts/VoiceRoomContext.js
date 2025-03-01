@@ -5,7 +5,6 @@ import { Platform } from 'react-native';
 import { storage, SETTINGS_KEY } from '../services/storage';
 import { analysisPrompt } from '../services/analysis';
 import { parse, STR, OBJ } from 'partial-json';
-import { useGeneration } from './GenerationContext';
 
 // Audio recording options
 const options = {
@@ -21,6 +20,8 @@ const initialState = {
   volume: 0,
   partialResults: '',
   isConnecting: false,
+  isRecording: false,
+  error: null
 };
 
 // Action types
@@ -28,6 +29,8 @@ const ACTIONS = {
   SET_VOLUME: 'SET_VOLUME',
   SET_PARTIAL_RESULTS: 'SET_PARTIAL_RESULTS',
   SET_CONNECTING: 'SET_CONNECTING',
+  SET_RECORDING: 'SET_RECORDING',
+  SET_ERROR: 'SET_ERROR',
   RESET: 'RESET',
 };
 
@@ -40,6 +43,10 @@ function voiceRoomReducer(state, action) {
       return { ...state, partialResults: action.payload };
     case ACTIONS.SET_CONNECTING:
       return { ...state, isConnecting: action.payload };
+    case ACTIONS.SET_RECORDING:
+      return { ...state, isRecording: action.payload };
+    case ACTIONS.SET_ERROR:
+      return { ...state, error: action.payload };
     case ACTIONS.RESET:
       return { ...initialState };
     default:
@@ -60,14 +67,6 @@ const cleanJsonText = (text) => {
  */
 export function VoiceRoomProvider({ children }) {
   const [state, dispatch] = useReducer(voiceRoomReducer, initialState);
-  const { 
-    state: generationState, 
-    startRecording: startGenerationRecording,
-    stopRecording: stopGenerationRecording,
-    handleError: handleGenerationError,
-    setTranscribedText,
-    abortGeneration
-  } = useGeneration();
   
   // Refs for mutable state that shouldn't trigger re-renders
   const ws = useRef(null);
@@ -105,6 +104,7 @@ export function VoiceRoomProvider({ children }) {
       return result === RESULTS.GRANTED;
     } catch (err) {
       console.error('Permission check failed:', err);
+      dispatch({ type: ACTIONS.SET_ERROR, payload: 'Microphone permission is required' });
       return false;
     }
   };
@@ -173,7 +173,7 @@ export function VoiceRoomProvider({ children }) {
     const initAudio = async () => {
       const hasPermission = await checkPermission();
       if (!hasPermission) {
-        handleGenerationError('Microphone permission is required');
+        dispatch({ type: ACTIONS.SET_ERROR, payload: 'Microphone permission is required' });
         return;
       }
       
@@ -183,7 +183,7 @@ export function VoiceRoomProvider({ children }) {
         console.log('AudioRecord initialized successfully');
       } catch (error) {
         console.error('AudioRecord initialization failed:', error);
-        handleGenerationError('Failed to initialize audio recording');
+        dispatch({ type: ACTIONS.SET_ERROR, payload: 'Failed to initialize audio recording' });
       }
     };
 
@@ -200,8 +200,7 @@ export function VoiceRoomProvider({ children }) {
     return cleanup;
   }, [cleanup]);
 
-  // We don't need to watch generationState.status anymore
-  // VoiceRoomContext should only be concerned with its own state
+  // VoiceRoomContext is only concerned with its own state
 
   // Create a ref to store the audio subscription
   const audioSubscriptionRef = useRef(null);
@@ -287,6 +286,7 @@ export function VoiceRoomProvider({ children }) {
       const controller = new AbortController();
 
       dispatch({ type: ACTIONS.SET_CONNECTING, payload: true });
+      dispatch({ type: ACTIONS.SET_RECORDING, payload: true });
 
       // Get the analysis prompt
       const messages = analysisPrompt({ 
@@ -438,17 +438,17 @@ export function VoiceRoomProvider({ children }) {
                 console.log('Received final analysis, closing WebSocket connection');
                 cleanupWebSocket();
           
-                // Set transcribed text directly in the context
-                setTranscribedText(analysis.transcription);
+                // Call the transcription callback with the analysis
                 onTranscription?.(analysis);
-          
-                // Now update the state
-                stopGenerationRecording(analysis.transcription);
+                
+                // Update recording state
+                dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
               }
             } catch (error) {
               console.error('Error parsing final transcript:', error);
               console.error('Raw JSON:', accumulatedJson);
               if (ws.current === wsInstance) {
+                dispatch({ type: ACTIONS.SET_ERROR, payload: 'Failed to parse transcript' });
                 onError?.('Failed to parse transcript');
                 stopRecording();
               }
@@ -468,8 +468,9 @@ export function VoiceRoomProvider({ children }) {
         });
         
         // Only handle error if this is still the active WebSocket
-        if (ws.current === wsInstance && generationState.status === 'RECORDING') {
+        if (ws.current === wsInstance) {
           console.log('WebSocket error triggering stopRecording');
+          dispatch({ type: ACTIONS.SET_ERROR, payload: 'Connection error' });
           onError?.('Connection error');
           stopRecording();
         }
@@ -479,14 +480,15 @@ export function VoiceRoomProvider({ children }) {
         console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
   
         // Only handle close if this is still the active WebSocket
-        if (ws.current === wsInstance && generationState.status === 'RECORDING') {
+        if (ws.current === wsInstance && state.isRecording) {
           console.log('WebSocket close triggering cleanup while recording is active');
           cleanup();
-          stopGenerationRecording(); // Update generation context
+          dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
         }
       };
     } catch (error) {
       console.error('Error starting recording:', error);
+      dispatch({ type: ACTIONS.SET_ERROR, payload: error.message });
       onError?.(error.message);
       
       // Clean up audio subscription if there's an error
@@ -500,18 +502,21 @@ export function VoiceRoomProvider({ children }) {
       isStartingRecording.current = false;
     }
   }, [
-    state.isConnecting, 
+    state.isConnecting,
+    state.isRecording,
     cleanupWebSocket, 
-    cleanup, 
-    setTranscribedText
+    cleanup
   ]);
 
-  // Stop recording function - decoupled from GenerationContext
+  // Stop recording function
   const stopRecording = useCallback(() => {
     console.log('stopRecording called');
     
     // Always clean up WebSocket resources
     cleanup();
+    
+    // Update recording state
+    dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
     
   }, [cleanup]);
 
@@ -534,14 +539,17 @@ export function VoiceRoomProvider({ children }) {
   // Reset function
   const reset = useCallback(() => {
     dispatch({ type: ACTIONS.RESET });
-  }, []);
+    cleanup();
+  }, [cleanup]);
 
   // Memoize the context value to prevent unnecessary renders
   const contextValue = useMemo(() => ({
     state: {
       volume: state.volume,
       partialResults: state.partialResults,
-      isConnecting: state.isConnecting
+      isConnecting: state.isConnecting,
+      isRecording: state.isRecording,
+      error: state.error
     },
     startRecording,
     stopRecording,
@@ -551,6 +559,8 @@ export function VoiceRoomProvider({ children }) {
     state.volume,
     state.partialResults,
     state.isConnecting,
+    state.isRecording,
+    state.error,
     startRecording,
     stopRecording,
     cancelRecording,

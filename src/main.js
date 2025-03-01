@@ -5,14 +5,13 @@ import { getRequestHistory } from './services/analysis';
 import { widgetStorage } from './services/widgetStorage';
 import { processWithClaudeStream } from './services/processStream';
 import { useComponentHistory } from './contexts/ComponentHistoryContext';
-import { useGeneration } from './contexts/GenerationContext';
 import { useSettings, useApiKeyCheck } from './hooks/useSettings';
 import { EmptyState } from './components/EmptyState';
 import { createComponent, renderComponent } from './utils/componentUtils';
 import { VoiceButton } from './components/VoiceButton';
 import { ResponseStream } from './components/ResponseStream';
 import { TranscriptionBox } from './components/TranscriptionBox';
-import { useVoiceRoom } from './contexts/VoiceRoomContext';
+import { useAssistant } from './contexts/AssistantContext';
 
 
 const styles = StyleSheet.create({
@@ -47,18 +46,12 @@ export const VoiceAssistant = () => {
     console.log('Rendering VoiceAssistant');
     const scrollViewRef = React.useRef(null);
     const { checkApiKeys } = useApiKeyCheck();
-    const { 
-        state: generationState,
-        setTranscribedText,
-        setResponseStream,
-        setModificationIntent,
-        createAbortController,
-        startGeneration,
-        updateGenerationProgress,
-        completeGeneration,
-        abortGeneration,
-        handleError
-    } = useGeneration();
+    const {
+        state: assistantState,
+        listen,
+        stop,
+        reset: resetAssistant
+    } = useAssistant();
     
     const handleApiError = useCallback((error) => {
         if (error && error.message && error.message.includes('API key')) {
@@ -73,9 +66,9 @@ export const VoiceAssistant = () => {
     useEffect(() => {
         // Cleanup function to abort any ongoing streams when component unmounts
         return () => {
-            abortGeneration();
+            stop();
         };
-    }, [abortGeneration]);
+    }, [stop]);
     const [error, setError] = useState('');
     const {
         isSettingsOpen,
@@ -115,72 +108,8 @@ export const VoiceAssistant = () => {
 
     // We no longer need the stopGeneration function as it's handled by the context
 
-    const handleAnalysis = useCallback(async (analysis) => {
-        console.log('Received analysis:', analysis);
-        setTranscribedText(analysis.transcription);
-        setError('');
-        
-        try {
-            checkApiKeys();
-            
-            // Create a new controller
-            const currentController = createAbortController();
-            
-            // Start generation process (this already sets responseStream to '')
-            startGeneration(currentController);
-
-            // Check cache first
-            const cachedWidget = widgetStorage.find(analysis.widgetUrl);
-            if (cachedWidget) {
-                console.log('Found cached widget:', analysis.widgetUrl);
-                try {
-                    // Just test if it works, no need to store the component
-                    createComponent(cachedWidget.code);
-                    addToHistory({
-                        code: cachedWidget.code,
-                        request: analysis.transcription,
-                        params: analysis.params || {},
-                        intent: analysis.intent
-                    });
-                    completeGeneration();
-                    return;
-                } catch (error) {
-                    console.error('Error creating component from cache:', error);
-                }
-            }
-
-            console.log('handleAnalysis - selectedModel:', selectedModel);
-            const result = await processWithClaudeStream({
-                analysis,
-                selectedModel,
-                currentComponentCode,
-                abortController: currentController,
-                onResponseStream: updateGenerationProgress
-            });
-            
-            // Store result but don't rely on component reference persisting
-            addToHistory({
-                ...result,
-                component: undefined // Explicitly remove component reference
-            });
-            setModificationIntent(result.intent);
-            completeGeneration();
-        } catch (error) {
-            console.error('Analysis error:', error);
-            // Use the context's error handler which will update the state
-            handleError(error.message || 'An unknown error occurred');
-        }
-    }, [selectedModel, abortGeneration, createAbortController, startGeneration, 
-        updateGenerationProgress, completeGeneration, handleError, setTranscribedText, 
-        setModificationIntent]);
 
 
-    const {
-        state: { volume, partialResults },
-        startRecording,
-        stopRecording,
-        cancelRecording
-    } = useVoiceRoom();
 
 
 
@@ -190,19 +119,9 @@ export const VoiceAssistant = () => {
             {/* Floating Voice/Stop Button */}
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
-                    status={generationState.status}
+                    status={assistantState.status}
                     onStart={() => {
-                        // First update generation state
-                        startGenerationRecording();
-                        
-                        // Then start actual recording
-                        startRecording({
-                            onTranscription: handleAnalysis,
-                            onError: (error) => {
-                                handleApiError(error);
-                                // Also update generation state on error
-                                handleError(error);
-                            },
+                        listen({
                             selectedLanguage,
                             componentHistory,
                             currentHistoryIndex,
@@ -210,30 +129,26 @@ export const VoiceAssistant = () => {
                         });
                     }}
                     onStop={() => {
-                        // First stop recording
-                        stopRecording();
-                        
-                        // Then abort generation
-                        abortGeneration();
+                        stop();
                     }}
-                    volume={volume}
+                    volume={assistantState.volume}
                     disabled={!isSettingsLoaded}
                 />
             </View>
 
 
             <TranscriptionBox
-                status={generationState.status}
-                partialResults={partialResults}
-                transcribedText={generationState.transcribedText}
+                status={assistantState.status}
+                partialResults={assistantState.transcript}
+                transcribedText={assistantState.transcript}
                 requestHistory={getRequestHistory(componentHistory, currentHistoryIndex)}
             />
 
-            {(!currentComponent || generationState.status === 'GENERATING') && (
+            {(!currentComponent || assistantState.status === 'THINKING') && (
                 <ResponseStream
-                    responseStream={generationState.responseStream}
-                    status={generationState.status}
-                    modificationIntent={generationState.modificationIntent}
+                    responseStream={assistantState.response}
+                    status={assistantState.status}
+                    modificationIntent={assistantState.modificationIntent}
                 />
             )}
 
@@ -248,7 +163,7 @@ export const VoiceAssistant = () => {
 
 
             {/* Component Container */}
-            {generationState.status !== 'GENERATING' && (
+            {assistantState.status !== 'THINKING' && (
                 <View style={{ flex: 1, width: '100%' }}>
                     <View style={{ 
                         backgroundColor: '#ffffff',

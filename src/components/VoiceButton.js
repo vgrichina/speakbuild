@@ -56,7 +56,7 @@ export const VoiceButton = ({
     const [isPressed, setIsPressed] = useState(false);
     
     // Determine if button should show active state
-    const isActive = status === 'RECORDING' || status === 'GENERATING';
+    const isActive = status === 'LISTENING' || status === 'THINKING';
     console.log('VoiceButton isActive:', isActive); // Add logging
 
     // Handle button press based on current status
@@ -73,14 +73,14 @@ export const VoiceButton = ({
     // Determine the button style based on status
     let buttonStyle;
     switch (status) {
-        case 'RECORDING':
+        case 'LISTENING':
             buttonStyle = {
-                backgroundColor: '#EF4444', // Red for recording
+                backgroundColor: '#EF4444', // Red for listening
             };
             break;
-        case 'GENERATING':
+        case 'THINKING':
             buttonStyle = {
-                backgroundColor: '#F59E0B', // Amber for generating
+                backgroundColor: '#F59E0B', // Amber for thinking
             };
             break;
         case 'ERROR':
@@ -99,10 +99,10 @@ export const VoiceButton = ({
     // Determine button text based on status
     let buttonText;
     switch (status) {
-        case 'RECORDING':
-            buttonText = 'Stop recording';
+        case 'LISTENING':
+            buttonText = 'Stop listening';
             break;
-        case 'GENERATING':
+        case 'THINKING':
             buttonText = 'Cancel';
             break;
         case 'ERROR':
