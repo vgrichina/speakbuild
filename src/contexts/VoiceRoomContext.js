@@ -323,7 +323,7 @@ export function VoiceRoomProvider({ children }) {
           firstSpeaker: 'FIRST_SPEAKER_USER',
           transcriptOptional: false,
           recordingEnabled: false,
-          maxDuration: MAX_CALL_DURATION_SECONDS
+          maxDuration: MAX_CALL_DURATION_SECONDS.toString()
         })
       });
 
