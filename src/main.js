@@ -191,15 +191,31 @@ export const VoiceAssistant = () => {
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
                     status={generationState.status}
-                    onStart={() => startRecording({
-                        onTranscription: handleAnalysis,
-                        onError: handleApiError,
-                        selectedLanguage,
-                        componentHistory,
-                        currentHistoryIndex,
-                        checkApiKeys
-                    })}
-                    onStop={cancelRecording}
+                    onStart={() => {
+                        // First update generation state
+                        startGenerationRecording();
+                        
+                        // Then start actual recording
+                        startRecording({
+                            onTranscription: handleAnalysis,
+                            onError: (error) => {
+                                handleApiError(error);
+                                // Also update generation state on error
+                                handleError(error);
+                            },
+                            selectedLanguage,
+                            componentHistory,
+                            currentHistoryIndex,
+                            checkApiKeys
+                        });
+                    }}
+                    onStop={() => {
+                        // First stop recording
+                        stopRecording();
+                        
+                        // Then abort generation
+                        abortGeneration();
+                    }}
                     volume={volume}
                     disabled={!isSettingsLoaded}
                 />

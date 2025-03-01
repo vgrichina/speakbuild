@@ -193,22 +193,20 @@ export function VoiceRoomProvider({ children }) {
     return cleanup;
   }, [cleanup]);
 
-  // Clean up when recording state changes
-  useEffect(() => {
-    if (generationState.status !== 'RECORDING' && generationState.status !== 'GENERATING' && ws.current) {
-      console.log('Cleaning up because generation state changed to:', generationState.status);
-      cleanup();
-    }
-  }, [generationState.status, cleanup]);
+  // We don't need to watch generationState.status anymore
+  // VoiceRoomContext should only be concerned with its own state
 
   // Set up audio data listener when recording
   useEffect(() => {
-    if (generationState.status !== 'RECORDING') {
-      return;
-    }
+    // Track if we're actively recording with our own state
+    const isActivelyRecording = useRef(false);
     
+    // Setup audio data handler
     const handleAudioData = (data) => {
-      console.log(`Audio data received, status: ${generationState.status}, data length: ${data.length}`);
+      // Only process data if we're actively recording
+      if (!isActivelyRecording.current) return;
+      
+      console.log(`Audio data received, data length: ${data.length}`);
       
       // Decode base64 once
       const binaryString = atob(data);
@@ -233,20 +231,38 @@ export function VoiceRoomProvider({ children }) {
       const average = sum / pcmData.length;
       const normalizedVolume = Math.min(average / 32768, 1);
       
-      console.log(`Setting volume to ${normalizedVolume.toFixed(3)}, generation status: ${generationState.status}`);
+      console.log(`Setting volume to ${normalizedVolume.toFixed(3)}`);
       dispatch({ type: ACTIONS.SET_VOLUME, payload: normalizedVolume });
     };
     
     console.log('Adding audio data listener');
     AudioRecord.on('data', handleAudioData);
     
+    // Update our startRecording and stopRecording to manage isActivelyRecording
+    const originalStartRecording = startRecording;
+    startRecording = async (options) => {
+      isActivelyRecording.current = true;
+      return originalStartRecording(options);
+    };
+    
+    const originalStopRecording = stopRecording;
+    stopRecording = () => {
+      isActivelyRecording.current = false;
+      return originalStopRecording();
+    };
+    
     return () => {
       console.log('Removing audio data listener');
-      AudioRecord.removeListener('data', handleAudioData);
+      // Check if removeListener exists before calling it
+      if (AudioRecord && typeof AudioRecord.removeListener === 'function') {
+        AudioRecord.removeListener('data', handleAudioData);
+      } else {
+        console.warn('AudioRecord.removeListener is not available');
+      }
     };
-  }, [generationState.status]);
+  }, []);
 
-  // Start recording function
+  // Start recording function - decoupled from GenerationContext
   const startRecording = useCallback(async (options) => {
     const { 
       onTranscription, 
@@ -257,7 +273,7 @@ export function VoiceRoomProvider({ children }) {
       checkApiKeys 
     } = options;
     
-    if (isStartingRecording.current || state.isConnecting || generationState.status === 'RECORDING') {
+    if (isStartingRecording.current || state.isConnecting) {
       console.log('Already connecting or recording');
       return;
     }
@@ -272,12 +288,8 @@ export function VoiceRoomProvider({ children }) {
       if (!ultravoxKey) {
         throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
       }
-
-      // Update the generation context state first
-      startGenerationRecording();
       
-      // Only start recording if API keys are valid
-      console.log('Set recording state to true via generation context');
+      // Start audio recording directly
       AudioRecord.start();
       console.log('AudioRecord.start() called');
 
@@ -286,6 +298,7 @@ export function VoiceRoomProvider({ children }) {
 
       dispatch({ type: ACTIONS.SET_CONNECTING, payload: true });
 
+      // Get the analysis prompt
       const messages = analysisPrompt({ 
         text: '', // Empty since we're starting voice recording
         requestHistory: componentHistory?.map(entry => entry.request) || [],
@@ -485,47 +498,29 @@ export function VoiceRoomProvider({ children }) {
     } catch (error) {
       console.error('Error starting recording:', error);
       onError?.(error.message);
-      handleGenerationError(error.message);
       cleanup();
     } finally {
       isStartingRecording.current = false;
     }
   }, [
     state.isConnecting, 
-    generationState.status, 
-    startGenerationRecording, 
     cleanupWebSocket, 
     cleanup, 
-    stopGenerationRecording, 
-    setTranscribedText, 
-    handleGenerationError
+    setTranscribedText
   ]);
 
-  // Stop recording function
+  // Stop recording function - decoupled from GenerationContext
   const stopRecording = useCallback(() => {
-    console.log('stopRecording called with status:', generationState.status);
+    console.log('stopRecording called');
     
-    // Always clean up WebSocket resources regardless of state
+    // Always clean up WebSocket resources
     cleanup();
     
-    // Only update generation state if we were recording
-    if (generationState.status === 'RECORDING') {
-      stopGenerationRecording();
-      console.log('After stopRecording, status should be GENERATING');
-    } else {
-      console.log('Resources cleaned up, but state not changed (not in RECORDING state)');
-    }
-  }, [cleanup, stopGenerationRecording, generationState.status]);
+  }, [cleanup]);
 
-  // Cancel recording function
+  // Cancel recording function - simplified
   const cancelRecording = useCallback(() => {
     console.log('cancelRecording called');
-    
-    // Only proceed if we're in a state that can be canceled
-    if (generationState.status === 'IDLE') {
-      console.log('Ignoring cancelRecording call - already in IDLE state');
-      return;
-    }
     
     // Use a ref to track if cancellation is in progress
     if (isCancelling.current) {
@@ -536,22 +531,14 @@ export function VoiceRoomProvider({ children }) {
     isCancelling.current = true;
     
     try {
-      // First abort any ongoing operations
-      if (generationState.abortController) {
-        generationState.abortController.abort();
-      }
-      
-      // Then clean up resources
+      // Clean up resources
       cleanup();
-      
-      // Ensure we're fully reset to IDLE state
-      abortGeneration();
     } finally {
       isCancelling.current = false;
     }
     
-    console.log('After cancelRecording, status should be IDLE');
-  }, [cleanup, generationState, abortGeneration]);
+    console.log('Recording canceled');
+  }, [cleanup]);
 
   // Reset function
   const reset = useCallback(() => {
@@ -563,8 +550,7 @@ export function VoiceRoomProvider({ children }) {
     state: {
       volume: state.volume,
       partialResults: state.partialResults,
-      isConnecting: state.isConnecting,
-      generationStatus: generationState.status
+      isConnecting: state.isConnecting
     },
     startRecording,
     stopRecording,
@@ -574,7 +560,6 @@ export function VoiceRoomProvider({ children }) {
     state.volume,
     state.partialResults,
     state.isConnecting,
-    generationState.status,
     startRecording,
     stopRecording,
     cancelRecording,
