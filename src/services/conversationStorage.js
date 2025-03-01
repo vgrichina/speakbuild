@@ -77,7 +77,7 @@ export const conversationStorage = {
         return {
           ...conv,
           updatedAt: Date.now(),
-          previewText: lastEntry?.request?.slice(0, 50) || conv.previewText
+          previewText: lastEntry?.request?.slice(0, 100) || conv.previewText
         };
       }
       return conv;

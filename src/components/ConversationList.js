@@ -39,7 +39,6 @@ export function ConversationList(props) {
     if (!searchQuery.trim()) return conversations;
     
     return conversations.filter(conv => 
-      conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conv.previewText.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [conversations, searchQuery]);
@@ -53,8 +52,7 @@ export function ConversationList(props) {
       onPress={() => handleSelectConversation(item.id)}
     >
       <View style={styles.conversationContent}>
-        <Text style={styles.conversationTitle}>{item.title}</Text>
-        <Text style={styles.conversationPreview} numberOfLines={1}>
+        <Text style={styles.conversationPreview} numberOfLines={2}>
           {item.previewText || "Empty conversation"}
         </Text>
         <Text style={styles.conversationDate}>
@@ -160,15 +158,11 @@ const styles = StyleSheet.create({
   conversationContent: {
     flex: 1
   },
-  conversationTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4
-  },
   conversationPreview: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 4,
+    fontWeight: '400'
   },
   conversationDate: {
     fontSize: 12,
