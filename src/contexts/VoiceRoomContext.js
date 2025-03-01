@@ -196,11 +196,11 @@ export function VoiceRoomProvider({ children }) {
   // We don't need to watch generationState.status anymore
   // VoiceRoomContext should only be concerned with its own state
 
-  // Set up audio data listener when recording
+  // Create a ref to track if we're actively recording
+  const isActivelyRecording = useRef(false);
+  
+  // Set up audio data listener
   useEffect(() => {
-    // Track if we're actively recording with our own state
-    const isActivelyRecording = useRef(false);
-    
     // Setup audio data handler
     const handleAudioData = (data) => {
       // Only process data if we're actively recording
@@ -238,19 +238,6 @@ export function VoiceRoomProvider({ children }) {
     console.log('Adding audio data listener');
     AudioRecord.on('data', handleAudioData);
     
-    // Update our startRecording and stopRecording to manage isActivelyRecording
-    const originalStartRecording = startRecording;
-    startRecording = async (options) => {
-      isActivelyRecording.current = true;
-      return originalStartRecording(options);
-    };
-    
-    const originalStopRecording = stopRecording;
-    stopRecording = () => {
-      isActivelyRecording.current = false;
-      return originalStopRecording();
-    };
-    
     return () => {
       console.log('Removing audio data listener');
       // Check if removeListener exists before calling it
@@ -279,6 +266,7 @@ export function VoiceRoomProvider({ children }) {
     }
 
     isStartingRecording.current = true;
+    isActivelyRecording.current = true;
     
     try {
       console.log('Starting recording flow...');
@@ -513,6 +501,9 @@ export function VoiceRoomProvider({ children }) {
   const stopRecording = useCallback(() => {
     console.log('stopRecording called');
     
+    // Set recording state to false
+    isActivelyRecording.current = false;
+    
     // Always clean up WebSocket resources
     cleanup();
     
@@ -531,6 +522,9 @@ export function VoiceRoomProvider({ children }) {
     isCancelling.current = true;
     
     try {
+      // Set recording state to false
+      isActivelyRecording.current = false;
+      
       // Clean up resources
       cleanup();
     } finally {
