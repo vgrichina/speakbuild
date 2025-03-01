@@ -138,7 +138,7 @@ export function VoiceRoomProvider({ children }) {
     } else {
       console.log('No active WebSocket to clean up');
     }
-  }, [state.isRecording]);
+  }, []); // Removed state.isRecording from dependency array to prevent stale closure issues
 
   // Main cleanup function
   const cleanup = useCallback(() => {
@@ -454,9 +454,9 @@ export function VoiceRoomProvider({ children }) {
         
               // Only process if this WebSocket is still active
               if (ws.current === wsInstance) {
-                // Explicitly close the WebSocket first to prevent more messages
-                console.log('Received final analysis, closing WebSocket connection');
-                cleanupWebSocket();
+                // Explicitly close the WebSocket and stop recording to prevent more messages
+                console.log('Received final analysis, performing full cleanup');
+                cleanup();
           
                 // Call the transcription callback with the analysis
                 onTranscription?.(analysis);

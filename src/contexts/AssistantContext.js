@@ -57,6 +57,14 @@ export function AssistantProvider({ children }) {
     console.log(`[AssistantContext] listen() called with status=${status}`);
     const { checkApiKeys } = options;
     
+    // Prevent duplicate recording attempts
+    if (status === 'LISTENING') {
+      console.log('[AssistantContext] Already listening, ignoring duplicate listen request');
+      return;
+    }
+    
+    console.log('[AssistantContext] Starting recording sequence');
+    
     // First update generation state
     generation.startRecording();
     
