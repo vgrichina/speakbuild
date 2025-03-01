@@ -27,11 +27,10 @@ export function AssistantProvider({ children }) {
       newStatus = 'IDLE';
     }
     
-    console.log(`[AssistantContext] Status calculated: ${newStatus} (voiceRoom.isRecording=${voiceRoom.state.isRecording}, voiceRoom.isConnecting=${voiceRoom.state.isConnecting}, voiceRoom.volume=${voiceRoom.state.volume}, generation.status=${generation.state.status})`);
+    console.log(`[AssistantContext] Status calculated: ${newStatus} (voiceRoom.isRecording=${voiceRoom.state.isRecording}, voiceRoom.volume=${voiceRoom.state.volume}, generation.status=${generation.state.status})`);
     return newStatus;
   }, [
     voiceRoom.state.isRecording,
-    voiceRoom.state.isConnecting,
     voiceRoom.state.volume,
     generation.state.status
   ]);

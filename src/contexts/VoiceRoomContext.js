@@ -19,7 +19,6 @@ const options = {
 const initialState = {
   volume: 0,
   partialResults: '',
-  isConnecting: false,
   isRecording: false,
   error: null
 };
@@ -283,8 +282,8 @@ export function VoiceRoomProvider({ children }) {
       checkApiKeys 
     } = options;
     
-    if (isStartingRecording.current || state.isConnecting) {
-      console.log('Already connecting or recording');
+    if (isStartingRecording.current || state.isRecording) {
+      console.log('Already recording');
       return;
     }
 
@@ -310,9 +309,6 @@ export function VoiceRoomProvider({ children }) {
       // Create a new AbortController for this recording session
       const controller = new AbortController();
 
-      console.log(`[VoiceRoom] [${Date.now()}] Setting isConnecting=true`);
-      dispatch({ type: ACTIONS.SET_CONNECTING, payload: true });
-      
       console.log(`[VoiceRoom] [${Date.now()}] Setting isRecording=true`);
       dispatch({ type: ACTIONS.SET_RECORDING, payload: true });
 
@@ -532,7 +528,6 @@ export function VoiceRoomProvider({ children }) {
       isStartingRecording.current = false;
     }
   }, [
-    state.isConnecting,
     state.isRecording,
     cleanupWebSocket, 
     cleanup
@@ -540,7 +535,7 @@ export function VoiceRoomProvider({ children }) {
 
   // Stop recording function
   const stopRecording = useCallback(() => {
-    console.log(`STOP_RECORDING: Called with isRecording=${state.isRecording}, isConnecting=${state.isConnecting}`);
+    console.log(`STOP_RECORDING: Called with isRecording=${state.isRecording}`);
     
     // Always clean up WebSocket resources
     console.log('STOP_RECORDING: Calling cleanup()');
@@ -551,7 +546,7 @@ export function VoiceRoomProvider({ children }) {
     dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
     console.log('STOP_RECORDING: Complete');
     
-  }, [cleanup, state.isRecording, state.isConnecting]);
+  }, [cleanup, state.isRecording]);
 
   // Cancel recording function - simplified
   const cancelRecording = useCallback(() => {
@@ -580,7 +575,6 @@ export function VoiceRoomProvider({ children }) {
     state: {
       volume: state.volume,
       partialResults: state.partialResults,
-      isConnecting: state.isConnecting,
       isRecording: state.isRecording,
       error: state.error
     },
