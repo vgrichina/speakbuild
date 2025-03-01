@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { useComponentHistory } from '../contexts/ComponentHistoryContext';
-import { useGeneration } from '../contexts/GenerationContext';
+import { useAssistant } from '../contexts/AssistantContext';
 
 const styles = StyleSheet.create({
     container: {
@@ -30,7 +30,7 @@ export const NavigationButtons = () => {
         setCurrentIndex
     } = useComponentHistory();
     
-    const { abortGeneration } = useGeneration();
+    const { abortGeneration } = useAssistant();
 
     return (
         <View style={styles.container}>

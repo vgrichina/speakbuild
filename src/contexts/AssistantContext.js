@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
 import { useVoiceRoom } from './VoiceRoomContext';
-import { useGeneration } from './GenerationContext';
 import { useSettings } from '../hooks/useSettings';
 import { useComponentHistory } from './ComponentHistoryContext';
 import { processWithClaudeStream } from '../services/processStream';
@@ -10,52 +9,25 @@ const AssistantContext = createContext(null);
 
 /**
  * Provider component that creates a unified API for the voice assistant
- * This sits inside both the VoiceRoomProvider and GenerationProvider
  */
 export function AssistantProvider({ children }) {
-  // Access internal contexts
+  // Access external contexts
   const voiceRoom = useVoiceRoom();
-  const generation = useGeneration();
   const { selectedModel } = useSettings();
   const { addToHistory } = useComponentHistory();
   
-  // Create a unified status
-  const status = useMemo(() => {
-    let newStatus;
-    if (voiceRoom.state.isRecording) {
-      newStatus = 'LISTENING';
-    } else if (generation.state.status === 'GENERATING') {
-      newStatus = 'THINKING';
-    } else if (generation.state.status === 'ERROR') {
-      newStatus = 'ERROR';
-    } else {
-      newStatus = 'IDLE';
-    }
-    
-    console.log(`[AssistantContext] Status calculated: ${newStatus} (voiceRoom.isRecording=${voiceRoom.state.isRecording}, voiceRoom.volume=${voiceRoom.state.volume}, generation.status=${generation.state.status})`);
-    return newStatus;
-  }, [
-    voiceRoom.state.isRecording,
-    voiceRoom.state.volume,
-    generation.state.status
-  ]);
+  // Direct state management for the assistant
+  const [status, setStatus] = useState('IDLE'); // IDLE, LISTENING, THINKING, ERROR
+  const [error, setError] = useState(null);
+  const [transcribedText, setTranscribedText] = useState('');
+  const [responseStream, setResponseStream] = useState('');
+  const [modificationIntent, setModificationIntent] = useState(null);
+  const abortControllerRef = useRef(null);
   
-  // Create a unified transcript value
-  const transcript = useMemo(() => {
-    if (status === 'LISTENING') {
-      return voiceRoom.state.partialResults;
-    }
-    return generation.state.transcribedText;
-  }, [
-    status,
-    voiceRoom.state.partialResults,
-    generation.state.transcribedText
-  ]);
-  
-  // Unified error handling
-  const error = useMemo(() => {
-    return generation.state.error;
-  }, [generation.state.error]);
+  // Derived value for transcript (either partial results during listening or final transcribed text)
+  const transcript = status === 'LISTENING' 
+    ? voiceRoom.state.partialResults 
+    : transcribedText;
   
   // Start listening method
   const listen = useCallback((options = {}) => {
@@ -68,37 +40,46 @@ export function AssistantProvider({ children }) {
       return;
     }
     
+    // Clear previous state
+    setResponseStream('');
+    setError(null);
+    
     console.log('[AssistantContext] Starting recording sequence');
     
-    // First update generation state
-    generation.startRecording();
+    // Update status to LISTENING
+    setStatus('LISTENING');
     
-    // Then start actual recording
+    // Start actual recording
     voiceRoom.startRecording({
       onTranscription: async (analysis) => {
         console.log(`[AssistantContext] onTranscription callback with analysis:`, analysis.transcription);
         
-        // First update the transcribed text in generation context
-        generation.stopRecording(analysis.transcription);
+        // Update the transcribed text
+        setTranscribedText(analysis.transcription);
         
-        // Then start generation with selectedModel from settings
-        console.log(`[AssistantContext] Starting generation with model: ${selectedModel}`);
+        // Update status to THINKING
+        setStatus('THINKING');
+        
+        // Save modification intent if present
+        if (analysis.intent) {
+          setModificationIntent(analysis.intent);
+        }
         
         try {
-          // Update state to start generation
-          generation.startGeneration();
-          
           // Create an abort controller
-          const abortController = new AbortController();
+          const controller = new AbortController();
+          abortControllerRef.current = controller;
+          
+          console.log(`[AssistantContext] Starting generation with model: ${selectedModel}`);
           
           // Generate the component directly
           const result = await processWithClaudeStream({
             analysis,
             selectedModel,
             currentComponentCode: null,
-            abortController,
+            abortController: controller,
             onResponseStream: (content) => {
-              generation.updateGenerationProgress(content);
+              setResponseStream(prev => prev + content);
             }
           });
           
@@ -116,82 +97,98 @@ export function AssistantProvider({ children }) {
           console.log(`[AssistantContext] Adding component to history:`, componentEntry);
           addToHistory(componentEntry);
           
-          // Complete generation
-          generation.completeGeneration();
+          // Reset status to IDLE
+          setStatus('IDLE');
+          abortControllerRef.current = null;
           
         } catch (error) {
           console.error(`[AssistantContext] Generation error:`, error);
-          generation.handleError(error.message);
+          setError(error.message);
+          setStatus('ERROR');
         }
       },
       onError: (error) => {
         console.log(`[AssistantContext] onError callback with error:`, error);
-        generation.handleError(error);
+        setError(error);
+        setStatus('ERROR');
       },
       ...options
     });
-  }, [voiceRoom, generation, status]);
+  }, [voiceRoom, status, selectedModel, addToHistory]);
   
   // Stop method
   const stop = useCallback(() => {
     console.log(`ASSISTANT: stop() called with status=${status}`);
     
-    // First stop recording
-    console.log('ASSISTANT: Calling voiceRoom.stopRecording()');
-    voiceRoom.stopRecording();
-    console.log('ASSISTANT: voiceRoom.stopRecording() completed');
-    
-    // Then abort generation if needed
-    if (status === 'THINKING') {
-      console.log('ASSISTANT: Calling generation.abortGeneration() because status is THINKING');
-      generation.abortGeneration();
-      console.log('ASSISTANT: generation.abortGeneration() completed');
+    // Stop recording if needed
+    if (status === 'LISTENING') {
+      console.log('ASSISTANT: Stopping recording');
+      voiceRoom.stopRecording();
     }
     
+    // Abort generation if needed
+    if (status === 'THINKING' && abortControllerRef.current) {
+      console.log('ASSISTANT: Aborting generation');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    // Reset to IDLE
+    setStatus('IDLE');
+    
     console.log('ASSISTANT: stop() completed');
-  }, [status, voiceRoom, generation]);
+  }, [status, voiceRoom]);
   
   // Reset method
   const reset = useCallback(() => {
     voiceRoom.reset();
-    generation.reset();
-  }, [voiceRoom, generation]);
+    setStatus('IDLE');
+    setError(null);
+    setTranscribedText('');
+    setResponseStream('');
+    setModificationIntent(null);
+    
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, [voiceRoom]);
   
   // Text input method (bypass voice)
   const speak = useCallback((text) => {
-    generation.setTranscribedText(text);
+    setTranscribedText(text);
     // Additional logic to process text directly
-  }, [generation]);
+  }, []);
+  
+  // Abort generation method for components like NavigationButtons
+  const abortGeneration = useCallback(() => {
+    if (status === 'THINKING' && abortControllerRef.current) {
+      console.log('ASSISTANT: Explicitly aborting generation');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setStatus('IDLE');
+    }
+  }, [status]);
   
   // Create the unified API
-  const assistantAPI = useMemo(() => ({
+  const assistantAPI = {
     // Unified state
     state: {
       status,
       volume: voiceRoom.state.volume,
       transcript,
-      response: generation.state.responseStream,
+      response: responseStream,
       error,
-      modificationIntent: generation.state.modificationIntent
+      modificationIntent
     },
     
     // Unified methods
     listen,
     stop,
     reset,
-    speak
-  }), [
-    status,
-    voiceRoom.state.volume,
-    transcript,
-    generation.state.responseStream,
-    error,
-    generation.state.modificationIntent,
-    listen,
-    stop,
-    reset,
-    speak
-  ]);
+    speak,
+    abortGeneration
+  };
   
   return (
     <AssistantContext.Provider value={assistantAPI}>
