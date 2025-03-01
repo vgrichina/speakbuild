@@ -292,6 +292,7 @@ export function VoiceRoomProvider({ children }) {
         currentParams: currentHistoryIndex >= 0 ? componentHistory[currentHistoryIndex]?.params : null
       });
 
+      const MAX_CALL_DURATION_SECONDS = 60; // 1 minute
       const response = await fetch('https://api.ultravox.ai/api/calls', {
         method: 'POST',
         headers: {
@@ -320,7 +321,8 @@ export function VoiceRoomProvider({ children }) {
           },
           firstSpeaker: 'FIRST_SPEAKER_USER',
           transcriptOptional: false,
-          recordingEnabled: false
+          recordingEnabled: false,
+          maxDuration: MAX_CALL_DURATION_SECONDS
         })
       });
 
