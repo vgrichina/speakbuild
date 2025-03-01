@@ -224,13 +224,7 @@ export function VoiceRoomProvider({ children }) {
   };
   
   // Define the audio data handler function
-  const handleAudioData = useCallback((data) => {
-    // Add this check at the beginning
-    if (!state.isRecording) {
-      console.log('AUDIO: Received data while not recording, ignoring');
-      return;
-    }
-    
+  const handleAudioData = (data) => {
     console.log(`AUDIO: Data received, data length: ${data.length}`);
     
     // Decode base64 once
@@ -528,7 +522,6 @@ export function VoiceRoomProvider({ children }) {
       isStartingRecording.current = false;
     }
   }, [
-    state.isRecording,
     cleanupWebSocket, 
     cleanup
   ]);
