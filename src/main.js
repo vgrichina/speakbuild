@@ -73,14 +73,20 @@ export const VoiceAssistant = () => {
     }, []);
 
 
+    // Store the latest stop function in a ref
+    const stopRef = React.useRef(stop);
     useEffect(() => {
-        console.log(`[${componentId}] Setting up cleanup effect with stop dependency`);
-        // Cleanup function to abort any ongoing streams when component unmounts
-        return () => {
-            console.log(`[${componentId}] Cleanup effect triggered - calling stop()`);
-            stop();
-        };
+        stopRef.current = stop;
     }, [stop]);
+
+    // Use the ref in the cleanup effect with no dependencies
+    useEffect(() => {
+        console.log(`[${componentId}] Setting up cleanup effect (no dependencies)`);
+        return () => {
+            console.log(`[${componentId}] Cleanup effect triggered during unmount - calling stop()`);
+            stopRef.current();
+        };
+    }, []); // Empty dependency array
     const [error, setError] = useState('');
     const {
         isSettingsOpen,
