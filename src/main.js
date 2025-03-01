@@ -12,7 +12,7 @@ import { createComponent, renderComponent } from './utils/componentUtils';
 import { VoiceButton } from './components/VoiceButton';
 import { ResponseStream } from './components/ResponseStream';
 import { TranscriptionBox } from './components/TranscriptionBox';
-import { useVoiceRoom } from './hooks/useVoiceRoom';
+import { useVoiceRoom } from './contexts/VoiceRoomContext';
 
 
 const styles = StyleSheet.create({
@@ -176,19 +176,11 @@ export const VoiceAssistant = () => {
 
 
     const {
-        volume,
+        state: { volume, partialResults },
         startRecording,
         stopRecording,
-        cancelRecording,
-        partialResults
-    } = useVoiceRoom({
-        onTranscription: handleAnalysis,
-        onError: handleApiError,
-        selectedLanguage,
-        componentHistory,
-        currentHistoryIndex,
-        checkApiKeys
-    });
+        cancelRecording
+    } = useVoiceRoom();
 
 
 
@@ -199,7 +191,14 @@ export const VoiceAssistant = () => {
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
                     status={generationState.status}
-                    onStart={startRecording}
+                    onStart={() => startRecording({
+                        onTranscription: handleAnalysis,
+                        onError: handleApiError,
+                        selectedLanguage,
+                        componentHistory,
+                        currentHistoryIndex,
+                        checkApiKeys
+                    })}
                     onStop={cancelRecording}
                     volume={volume}
                     disabled={!isSettingsLoaded}
