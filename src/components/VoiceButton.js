@@ -61,14 +61,17 @@ export const VoiceButton = ({
 
     // Handle button press based on current status
     const handlePress = useCallback(() => {
+        console.log(`[VoiceButton] Button pressed, isActive=${isActive}, status=${status}`);
         if (isActive) {
             // If we're recording or generating, stop/cancel
+            console.log('[VoiceButton] Calling onStop()');
             onStop?.();
         } else {
             // Otherwise start recording
+            console.log('[VoiceButton] Calling onStart()');
             onStart?.();
         }
-    }, [isActive, onStart, onStop]);
+    }, [isActive, onStart, onStop, status]);
 
     // Determine the button style based on status
     let buttonStyle;

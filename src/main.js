@@ -37,13 +37,23 @@ const styles = StyleSheet.create({
 
 
 export const VoiceAssistant = () => {
+    const componentId = React.useRef(`voice-assistant-${Date.now()}`).current;
+    console.log(`[${componentId}] Component mounting`);
+    
     const renderCount = React.useRef(0);
     React.useEffect(() => {
         renderCount.current += 1;
-        console.log(`VoiceAssistant rendered ${renderCount.current} times`);
+        console.log(`[${componentId}] VoiceAssistant rendered ${renderCount.current} times`);
     });
     
-    console.log('Rendering VoiceAssistant');
+    // Add this effect to track unmounting
+    React.useEffect(() => {
+        return () => {
+            console.log(`[${componentId}] Component UNMOUNTING`);
+        };
+    }, []);
+    
+    console.log(`[${componentId}] Rendering VoiceAssistant`);
     const scrollViewRef = React.useRef(null);
     const { checkApiKeys } = useApiKeyCheck();
     const {
@@ -64,8 +74,10 @@ export const VoiceAssistant = () => {
 
 
     useEffect(() => {
+        console.log(`[${componentId}] Setting up cleanup effect with stop dependency`);
         // Cleanup function to abort any ongoing streams when component unmounts
         return () => {
+            console.log(`[${componentId}] Cleanup effect triggered - calling stop()`);
             stop();
         };
     }, [stop]);

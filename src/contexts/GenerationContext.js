@@ -47,7 +47,7 @@ function generationReducer(state, action) {
         transcribedText: '',
         responseStream: ''
       };
-      console.log(`GenerationContext: Status reset to ${newState.status} for recording`);
+      console.log(`[GenerationReducer] START_RECORDING: status=${newState.status}`);
       return newState;
       
     case 'STOP_RECORDING':
@@ -68,7 +68,7 @@ function generationReducer(state, action) {
         abortController: action.abortController,
         responseStream: '' 
       };
-      console.log(`GenerationContext: Status changed from ${state.status} to ${newState.status}`);
+      console.log(`[GenerationReducer] START_GENERATION: status=${newState.status}`);
       return newState;
       
     case 'GENERATION_PROGRESS':

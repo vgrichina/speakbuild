@@ -36,15 +36,20 @@ const ACTIONS = {
 
 // Reducer function
 function voiceRoomReducer(state, action) {
+  let newState;
   switch (action.type) {
     case ACTIONS.SET_VOLUME:
       return { ...state, volume: action.payload };
     case ACTIONS.SET_PARTIAL_RESULTS:
       return { ...state, partialResults: action.payload };
     case ACTIONS.SET_CONNECTING:
-      return { ...state, isConnecting: action.payload };
+      newState = { ...state, isConnecting: action.payload };
+      console.log(`[VoiceRoomReducer] SET_CONNECTING: ${action.payload}`);
+      return newState;
     case ACTIONS.SET_RECORDING:
-      return { ...state, isRecording: action.payload };
+      newState = { ...state, isRecording: action.payload };
+      console.log(`[VoiceRoomReducer] SET_RECORDING: ${action.payload}`);
+      return newState;
     case ACTIONS.SET_ERROR:
       return { ...state, error: action.payload };
     case ACTIONS.RESET:
@@ -283,7 +288,10 @@ export function VoiceRoomProvider({ children }) {
       // Create a new AbortController for this recording session
       const controller = new AbortController();
 
+      console.log(`[VoiceRoom] [${Date.now()}] Setting isConnecting=true`);
       dispatch({ type: ACTIONS.SET_CONNECTING, payload: true });
+      
+      console.log(`[VoiceRoom] [${Date.now()}] Setting isRecording=true`);
       dispatch({ type: ACTIONS.SET_RECORDING, payload: true });
 
       // Get the analysis prompt
@@ -338,12 +346,14 @@ export function VoiceRoomProvider({ children }) {
       }
 
       const { joinUrl } = await response.json();
+      console.log(`[VoiceRoom] [${Date.now()}] Creating WebSocket with URL: ${joinUrl}`);
       cleanupWebSocket(); // Only cleanup WebSocket before creating a new one
       const wsInstance = new WebSocket(joinUrl);
       ws.current = wsInstance;
+      console.log(`[VoiceRoom] [${Date.now()}] WebSocket created`);
       
       wsInstance.onopen = () => {
-        console.log('WebSocket opened with ID:', wsInstance.url.split('/').pop());
+        console.log(`[VoiceRoom] [${Date.now()}] WebSocket opened with ID:`, wsInstance.url.split('/').pop());
         dispatch({ type: ACTIONS.SET_CONNECTING, payload: false });
   
         // Only proceed if this is still the active WebSocket
@@ -508,7 +518,7 @@ export function VoiceRoomProvider({ children }) {
 
   // Stop recording function
   const stopRecording = useCallback(() => {
-    console.log('stopRecording called');
+    console.log(`[VoiceRoom] [${Date.now()}] stopRecording called, isRecording=${state.isRecording}, isConnecting=${state.isConnecting}`);
     
     // Always clean up WebSocket resources
     cleanup();
@@ -516,7 +526,7 @@ export function VoiceRoomProvider({ children }) {
     // Update recording state
     dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
     
-  }, [cleanup]);
+  }, [cleanup, state.isRecording, state.isConnecting]);
 
   // Cancel recording function - simplified
   const cancelRecording = useCallback(() => {

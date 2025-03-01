@@ -16,20 +16,20 @@ export function AssistantProvider({ children }) {
   
   // Create a unified status
   const status = useMemo(() => {
+    let newStatus;
     if (voiceRoom.state.isConnecting || 
         (voiceRoom.state.volume > 0 && generation.state.status === 'RECORDING')) {
-      return 'LISTENING';
+      newStatus = 'LISTENING';
+    } else if (generation.state.status === 'GENERATING') {
+      newStatus = 'THINKING';
+    } else if (generation.state.status === 'ERROR') {
+      newStatus = 'ERROR';
+    } else {
+      newStatus = 'IDLE';
     }
     
-    if (generation.state.status === 'GENERATING') {
-      return 'THINKING';
-    }
-    
-    if (generation.state.status === 'ERROR') {
-      return 'ERROR';
-    }
-    
-    return 'IDLE';
+    console.log(`[AssistantContext] Status calculated: ${newStatus} (voiceRoom.isConnecting=${voiceRoom.state.isConnecting}, voiceRoom.volume=${voiceRoom.state.volume}, generation.status=${generation.state.status})`);
+    return newStatus;
   }, [
     voiceRoom.state.isConnecting,
     voiceRoom.state.volume,
@@ -55,6 +55,7 @@ export function AssistantProvider({ children }) {
   
   // Start listening method
   const listen = useCallback((options = {}) => {
+    console.log(`[AssistantContext] listen() called with status=${status}`);
     const { checkApiKeys } = options;
     
     // First update generation state
@@ -63,18 +64,22 @@ export function AssistantProvider({ children }) {
     // Then start actual recording
     voiceRoom.startRecording({
       onTranscription: (analysis) => {
+        console.log(`[AssistantContext] onTranscription callback with analysis:`, analysis.transcription);
         generation.stopRecording(analysis.transcription);
         generation.startGeneration(analysis);
       },
       onError: (error) => {
+        console.log(`[AssistantContext] onError callback with error:`, error);
         generation.handleError(error);
       },
       ...options
     });
-  }, [voiceRoom, generation]);
+  }, [voiceRoom, generation, status]);
   
   // Stop method
   const stop = useCallback(() => {
+    console.log(`[AssistantContext] stop() called with status=${status}`);
+    
     // First stop recording
     voiceRoom.stopRecording();
     
