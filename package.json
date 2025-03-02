@@ -9,10 +9,12 @@
     "web": "expo start --web",
     "clean": "rm -rf node_modules/.cache && yarn cache clean",
     "evaluate-analysis": "bun scripts/evaluate-analysis.js",
-    "evaluate-generation": "bun scripts/evaluate-generation.js"
+    "evaluate-generation": "bun scripts/evaluate-generation.js",
+    "inject-keys": "node scripts/inject-test-keys.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
+    "dotenv": "^16.0.3",
     "@react-navigation/drawer": "^7.1.1",
     "expo": "~52.0.36",
     "expo-av": "~15.0.2",

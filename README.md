@@ -232,6 +232,51 @@ For full list of dependencies, see `package.json`.
 
 MIT License
 
+## TestFlight Builds with Test API Keys
+
+For TestFlight builds, you may want to include test API keys so testers don't need to enter their own keys.
+This app supports injecting test API keys at build time using the following process:
+
+1. Create a `.env` file with your test API keys:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit the .env file with your test keys
+# TEST_ULTRAVOX_KEY=your-ultravox-test-key
+# TEST_OPENROUTER_KEY=your-openrouter-test-key
+```
+
+2. Inject the test API keys from the .env file:
+
+```bash
+# This reads from .env and creates a gitignored secrets file
+yarn inject-keys
+```
+
+3. Prebuild the iOS project:
+
+```bash
+yarn expo prebuild --platform ios --clean
+```
+
+4. Open the project in Xcode:
+
+```bash
+open ios/VoiceAssistant.xcworkspace
+```
+
+5. Build and archive in Xcode, then submit to TestFlight.
+
+6. After your build is complete, you may want to remove the secrets file (optional):
+
+```bash
+rm src/config/buildTimeSecrets.js
+```
+
+The secrets file is already in .gitignore, so it won't be committed to the repository.
+
 ## Contributing
 
 1. Fork the repository

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { storage, SETTINGS_KEY } from '../services/storage';
+import { BUILD_TIME_CONSTANTS } from '../config/buildTimeConstants';
+
+// Test keys from build-time constants
+const TEST_KEYS = {
+  ultravox: BUILD_TIME_CONSTANTS.TEST_ULTRAVOX_KEY,
+  openrouter: BUILD_TIME_CONSTANTS.TEST_OPENROUTER_KEY
+};
 
 // Default settings
 const DEFAULT_SETTINGS = {
@@ -21,8 +28,19 @@ export function useApiKeyCheck() {
         try {
             const settingsJson = storage.getString(SETTINGS_KEY);
             const settings = settingsJson ? JSON.parse(settingsJson) : DEFAULT_SETTINGS;
-            const { ultravoxApiKey, openrouterApiKey } = settings;
-
+            let { ultravoxApiKey, openrouterApiKey } = settings;
+            
+            // Use test keys if user hasn't provided their own and test keys are available
+            if (!ultravoxApiKey && TEST_KEYS.ultravox) {
+                console.log('Using test Ultravox API key');
+                ultravoxApiKey = TEST_KEYS.ultravox;
+            }
+            
+            if (!openrouterApiKey && TEST_KEYS.openrouter) {
+                console.log('Using test OpenRouter API key');
+                openrouterApiKey = TEST_KEYS.openrouter;
+            }
+            
             const missingKeys = [];
             if (!ultravoxApiKey) missingKeys.push('Ultravox');
             if (!openrouterApiKey) missingKeys.push('OpenRouter');
