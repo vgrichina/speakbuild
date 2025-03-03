@@ -287,8 +287,8 @@ export function VoiceRoomProvider({ children }) {
       console.log('Starting recording flow...');
 
       // Check API keys BEFORE starting any recording
-      const { ultravoxKey } = checkApiKeys();
-      if (!ultravoxKey) {
+      const { ultravoxKey, openrouterKey } = checkApiKeys();
+      if (!ultravoxKey || !openrouterKey) {
         throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
       }
       

@@ -96,31 +96,15 @@ ${examplesText}`
     return messages;
 };
 
-export async function* streamComponent(analysis, currentComponentCode, selectedModel, abortController) {
+export async function* streamComponent(analysis, currentComponentCode, selectedModel, abortController, apiKey) {
     console.log('streamComponent - selectedModel:', selectedModel);
     if (!selectedModel) {
         throw new Error('No model specified for component generation');
     }
     
-    // Try to get API key from environment first
-    let currentApiKey = process.env.OPENROUTER_API_KEY;
-    
-    // If not found in environment, try to get from MMKV storage
-    if (!currentApiKey) {
-        try {
-            const settingsJson = storage.getString(SETTINGS_KEY);
-            if (settingsJson) {
-                const settings = JSON.parse(settingsJson);
-                currentApiKey = settings.openrouterApiKey;
-                console.log('Using API key from storage');
-            }
-        } catch (error) {
-            console.error('Error reading settings from storage:', error);
-        }
-    }
-    
-    if (!currentApiKey) {
-        throw new Error('API key not found in environment or settings. Please add your OpenRouter API key in the settings.');
+    // Use the provided API key parameter
+    if (!apiKey) {
+        throw new Error('API key not provided. Please add your OpenRouter API key in the settings.');
     }
 
     const messages = await componentPrompt({ 
@@ -131,7 +115,7 @@ export async function* streamComponent(analysis, currentComponentCode, selectedM
 
     let fullResponse = '';
 
-    for await (const chunk of api.streamCompletion(currentApiKey, messages, {
+    for await (const chunk of api.streamCompletion(apiKey, messages, {
         abortController,
         model: selectedModel
     })) {

@@ -10,7 +10,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 
 import { createComponent, renderComponent } from '../utils/componentUtils';
 
-const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
+const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => {
   const router = useRouter();
   const [widgets, setWidgets] = useState([]);
   const [generating, setGenerating] = useState(null);
@@ -43,7 +43,8 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel }, ref) => {
         testCase,
         null,
         selectedModel,
-        new AbortController()
+        new AbortController(),
+        apiKey
       )) {
         if (chunk.done && chunk.code) {
           await widgetStorage.store(testCase.widgetUrl, chunk.code);

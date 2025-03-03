@@ -5,6 +5,7 @@ import { streamComponent } from './componentGenerator';
 export async function processWithClaudeStream({
     analysis,
     selectedModel,
+    apiKey,
     currentComponentCode,
     abortController,
     onResponseStream
@@ -13,13 +14,17 @@ export async function processWithClaudeStream({
     if (!selectedModel) {
         throw new Error('No model selected');
     }
+    if (!apiKey) {
+        throw new Error('No API key provided to processWithClaudeStream');
+    }
 
     try {
         for await (const { content, code, done } of streamComponent(
             analysis,
             currentComponentCode,
             selectedModel,
-            abortController
+            abortController,
+            apiKey
         )) {
             if (abortController?.signal.aborted) {
                 throw new Error('Stream aborted');

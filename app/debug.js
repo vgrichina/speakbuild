@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
 export default function DebugScreen() {
     const router = useRouter();
     const navigation = useNavigation();
-    const { selectedModel } = useSettings();
+    const { selectedModel, openrouterApiKey } = useSettings();
     const debugGenerationRef = useRef();
 
     useEffect(() => {
@@ -33,6 +33,7 @@ export default function DebugScreen() {
                 ref={debugGenerationRef}
                 onClose={() => router.dismiss()}
                 selectedModel={selectedModel}
+                apiKey={openrouterApiKey}
             />
         </SafeAreaView>
     );

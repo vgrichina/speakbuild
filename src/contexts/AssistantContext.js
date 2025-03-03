@@ -13,8 +13,9 @@ const AssistantContext = createContext(null);
 export function AssistantProvider({ children }) {
   // Access external contexts
   const voiceRoom = useVoiceRoom();
-  const { selectedModel } = useSettings();
+  const { selectedModel, openrouterApiKey } = useSettings();
   const { addToHistory, activeConversationId } = useComponentHistory();
+  
   
   // Direct state management for the assistant
   const [status, setStatus] = useState('IDLE'); // IDLE, LISTENING, THINKING, ERROR
@@ -27,6 +28,7 @@ export function AssistantProvider({ children }) {
   // Track previous conversation ID to detect actual changes
   const prevConversationIdRef = useRef(null);
   
+
   // Reset state when conversation changes
   useEffect(() => {
     // Skip the effect on initial mount
@@ -118,6 +120,7 @@ export function AssistantProvider({ children }) {
           const result = await processWithClaudeStream({
             analysis,
             selectedModel,
+            apiKey: openrouterApiKey,
             currentComponentCode: null,
             abortController: controller,
             onResponseStream: (content) => {
@@ -156,7 +159,7 @@ export function AssistantProvider({ children }) {
       },
       ...options
     });
-  }, [voiceRoom, status, selectedModel, addToHistory]);
+  }, [voiceRoom, status, selectedModel, openrouterApiKey, addToHistory]);
   
   // Stop method
   const stop = useCallback(() => {

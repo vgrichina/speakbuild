@@ -19,12 +19,19 @@ async function runEvaluation({
         const caseStartTime = Date.now();
         
         try {
+            // Get API key from environment variable for evaluation
+            const apiKey = process.env.OPENROUTER_API_KEY;
+            if (!apiKey) {
+                throw new Error('OPENROUTER_API_KEY environment variable must be set for evaluation');
+            }
+            
             const analysis = await analyzeRequest(
                 testCase.request,
                 new AbortController(),
                 testCase.history || [],
                 (testCase.history?.length || 0) - 1,
-                testCase.history?.length ? testCase.history[testCase.history.length - 1].params : null
+                testCase.history?.length ? testCase.history[testCase.history.length - 1].params : null,
+                apiKey
             );
 
             results.push({

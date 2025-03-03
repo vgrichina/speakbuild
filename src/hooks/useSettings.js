@@ -13,7 +13,7 @@ const TEST_KEYS = {
 const DEFAULT_SETTINGS = {
     ultravoxApiKey: '',
     openrouterApiKey: '',
-    selectedModel: 'anthropic/claude-3.5-sonnet',
+    selectedModel: 'anthropic/claude-3.7-sonnet',
     selectedLanguage: 'en'
 };
 
@@ -63,7 +63,7 @@ export function useSettings() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [ultravoxApiKey, setUltravoxApiKey] = useState(null);
     const [openrouterApiKey, setOpenrouterApiKey] = useState(null);
-    const [selectedModel, setSelectedModel] = useState(null);
+    const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.7-sonnet');
     const [selectedLanguage, setSelectedLanguage] = useState('en');
     const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
     const [error, setError] = useState('');
@@ -71,30 +71,45 @@ export function useSettings() {
     useEffect(() => {
         try {
             const settingsJson = storage.getString(SETTINGS_KEY);
+            let settings = {};
+            
             if (settingsJson) {
-                const settings = JSON.parse(settingsJson);
-                
-                // Set API keys
-                setUltravoxApiKey(settings.ultravoxApiKey || '');
-                setOpenrouterApiKey(settings.openrouterApiKey || '');
-                setSelectedLanguage(settings.selectedLanguage || 'en');
-                
-                // Set model with default
-                console.log('Loading settings - saved model:', settings.selectedModel);
-                const modelToUse = settings.selectedModel || 'anthropic/claude-3.5-sonnet';
-                console.log('Using model:', modelToUse);
-                setSelectedModel(modelToUse);
-                console.log('Model set in state:', modelToUse);
-                
-                // Mark settings as loaded
-                setIsSettingsLoaded(true);
+                settings = JSON.parse(settingsJson);
+            }
+            
+            // Apply test keys if user has not provided their own
+            let ultravoxKeyToUse = settings.ultravoxApiKey || '';
+            let openrouterKeyToUse = settings.openrouterApiKey || '';
+            
+            // Use test keys if available and user hasn't provided their own
+            if (!ultravoxKeyToUse && TEST_KEYS.ultravox) {
+                console.log('Using test Ultravox API key');
+                ultravoxKeyToUse = TEST_KEYS.ultravox;
+            }
+            
+            if (!openrouterKeyToUse && TEST_KEYS.openrouter) {
+                console.log('Using test OpenRouter API key');
+                openrouterKeyToUse = TEST_KEYS.openrouter;
+            }
+            
+            // Set API keys in state
+            setUltravoxApiKey(ultravoxKeyToUse);
+            setOpenrouterApiKey(openrouterKeyToUse);
+            setSelectedLanguage(settings.selectedLanguage || 'en');
+            
+            // Set model with default
+            console.log('Loading settings - saved model:', settings.selectedModel);
+            const modelToUse = settings.selectedModel || 'anthropic/claude-3.7-sonnet';
+            console.log('Using model:', modelToUse);
+            setSelectedModel(modelToUse);
+            console.log('Model set in state:', modelToUse);
+            
+            // Mark settings as loaded
+            setIsSettingsLoaded(true);
 
-                // Show settings modal if no API keys
-                if (!settings.ultravoxApiKey || !settings.openrouterApiKey) {
-                    setIsSettingsOpen(true);
-                }
-            } else {
-                setIsSettingsLoaded(true);
+            // Show settings modal if no API keys (and no test keys)
+            if ((!ultravoxKeyToUse || !openrouterKeyToUse) && 
+                (!TEST_KEYS.ultravox || !TEST_KEYS.openrouter)) {
                 setIsSettingsOpen(true);
             }
         } catch (error) {

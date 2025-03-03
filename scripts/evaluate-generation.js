@@ -21,11 +21,18 @@ async function runEvaluation({
         
         try {
             let generatedCode = '';
+            // Get API key from environment variable for evaluation
+            const apiKey = process.env.OPENROUTER_API_KEY;
+            if (!apiKey) {
+                throw new Error('OPENROUTER_API_KEY environment variable must be set for evaluation');
+            }
+            
             for await (const { content, code, done } of streamComponent(
                 testCase,
                 testCase.currentComponentCode || null,
                 model,
-                new AbortController()
+                new AbortController(),
+                apiKey
             )) {
                 if (content) {
                     process.stdout.write(content); // Show progress
