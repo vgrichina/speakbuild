@@ -10,6 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.voiceassistant.app",
+      "buildNumber": "2",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone for voice commands",
         "UIBackgroundModes": ["audio"],
