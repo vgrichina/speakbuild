@@ -36,24 +36,35 @@ const styles = StyleSheet.create({
 
 
 
-export const VoiceAssistant = () => {
+// Helper function to track renders - outside the component to avoid recreation
+const renderCounts = {};
+
+export const VoiceAssistant = React.memo(() => {
     const componentId = React.useRef(`voice-assistant-${Date.now()}`).current;
-    console.log(`[${componentId}] Component mounting`);
     
-    const renderCount = React.useRef(0);
-    React.useEffect(() => {
-        renderCount.current += 1;
-        console.log(`[${componentId}] VoiceAssistant rendered ${renderCount.current} times`);
-    });
+    // Initialize render counter if it doesn't exist
+    if (!renderCounts[componentId]) {
+        renderCounts[componentId] = 0;
+        console.log(`[${componentId}] Component FIRST MOUNT`);
+    }
+    
+    const prevStatusRef = React.useRef(null);
+    const prevResponseStreamRef = React.useRef(null);
+    
+    // Track renders only in development
+    if (process.env.NODE_ENV !== 'production') {
+        renderCounts[componentId]++;
+        console.log(`[${componentId}] VoiceAssistant rendered ${renderCounts[componentId]} times`);
+    }
     
     // Add this effect to track unmounting
     React.useEffect(() => {
         return () => {
             console.log(`[${componentId}] Component UNMOUNTING`);
+            delete renderCounts[componentId];
         };
-    }, []);
+    }, [componentId]);
     
-    console.log(`[${componentId}] Rendering VoiceAssistant`);
     const scrollViewRef = React.useRef(null);
     const { checkApiKeys } = useApiKeyCheck();
     const {
@@ -62,6 +73,20 @@ export const VoiceAssistant = () => {
         stop,
         reset: resetAssistant
     } = useAssistant();
+    
+    // Log status changes to help debug re-renders
+    if (prevStatusRef.current !== assistantState.status) {
+        console.log(`[${componentId}] Status changed from ${prevStatusRef.current} to ${assistantState.status}`);
+        prevStatusRef.current = assistantState.status;
+    }
+    
+    // Log response text length changes
+    if (assistantState.response !== prevResponseStreamRef.current) {
+        const prevLength = prevResponseStreamRef.current ? prevResponseStreamRef.current.length : 0;
+        const currentLength = assistantState.response ? assistantState.response.length : 0;
+        console.log(`[${componentId}] Response length changed from ${prevLength} to ${currentLength}`);
+        prevResponseStreamRef.current = assistantState.response;
+    }
     
     const handleApiError = useCallback((error) => {
         if (error && error.message && error.message.includes('API key')) {
@@ -138,17 +163,17 @@ export const VoiceAssistant = () => {
             <View style={styles.floatingButtonContainer}>
                 <VoiceButton
                     status={assistantState.status}
-                    onStart={() => {
+                    onStart={useCallback(() => {
                         listen({
                             selectedLanguage,
                             componentHistory,
                             currentHistoryIndex,
                             checkApiKeys
                         });
-                    }}
-                    onStop={() => {
+                    }, [listen, selectedLanguage, componentHistory, currentHistoryIndex, checkApiKeys])}
+                    onStop={useCallback(() => {
                         stop();
-                    }}
+                    }, [stop])}
                     volume={assistantState.volume}
                     disabled={!isSettingsLoaded}
                 />
@@ -216,4 +241,13 @@ export const VoiceAssistant = () => {
 
         </View>
     );
-};
+}, (prevProps, nextProps) => {
+    // In app/(drawer)/index.js, VoiceAssistant is used without any props: <VoiceAssistant />
+    // When we add React.memo with this comparison function, we're telling React:
+    // "Don't re-render this component unless its props change"
+    // Since it receives no props, there's nothing to compare, so we can safely return true
+    // to prevent all prop-based re-renders. The component will still re-render when its
+    // internal state or context dependencies change.
+    console.log('VoiceAssistant memo comparison function called');
+    return true;
+});

@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useVoiceRoom } from './VoiceRoomContext';
 import { useSettings } from '../hooks/useSettings';
 import { useComponentHistory } from './ComponentHistoryContext';
 import { processWithClaudeStream } from '../services/processStream';
+
 
 // Create the unified context
 const AssistantContext = createContext(null);
@@ -116,6 +117,46 @@ export function AssistantProvider({ children }) {
           
           console.log(`[AssistantContext] Starting generation with model: ${selectedModel}`);
           
+          // Create an accumulating response buffer with throttling
+          let responseBuffer = '';
+          let lastUpdateTime = 0;
+          const UPDATE_INTERVAL = 250; // Update UI at most every 250ms
+          
+          // Function to process the buffer and update the UI
+          const processBuffer = () => {
+            if (responseBuffer.length === 0) {
+              return;
+            }
+            
+            // Save buffer content before processing to check it was fully added
+            const bufferToProcess = responseBuffer;
+            
+            setResponseStream(prev => {
+              const newValue = prev + bufferToProcess;
+              // Only keep critical error logging
+              if (newValue.length !== prev.length + bufferToProcess.length) {
+                console.error(`[ProcessBuffer] Content length mismatch: Expected ${prev.length + bufferToProcess.length} but got ${newValue.length}`);
+              }
+              return newValue;
+            });
+            
+            // Clear the buffer after updating
+            responseBuffer = '';
+          };
+          
+          // Custom response handler with throttling
+          const throttledResponseHandler = (content) => {
+            // Always add new content to the buffer
+            responseBuffer += content;
+            
+            // Check if we should update now
+            const now = Date.now();
+            if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+              lastUpdateTime = now;
+              processBuffer();
+            }
+          };
+          
           // Generate the component directly
           const result = await processWithClaudeStream({
             analysis,
@@ -123,10 +164,17 @@ export function AssistantProvider({ children }) {
             apiKey: openrouterApiKey,
             currentComponentCode: null,
             abortController: controller,
-            onResponseStream: (content) => {
-              setResponseStream(prev => prev + content);
-            }
+            onResponseStream: throttledResponseHandler
           });
+          
+          // Process any remaining buffer content at the end of generation
+          processBuffer();
+          
+          // Safety check - verify content was processed (should never happen)
+          if (responseBuffer.length > 0) {
+            console.warn(`Remaining buffer content found (${responseBuffer.length} chars), processing again`);
+            processBuffer();
+          }
           
           // Create the component history entry
           const componentEntry = {
@@ -215,8 +263,8 @@ export function AssistantProvider({ children }) {
     }
   }, [status]);
   
-  // Create the unified API
-  const assistantAPI = {
+  // Create the unified API with memoization to prevent unnecessary re-renders
+  const assistantAPI = useMemo(() => ({
     // Unified state
     state: {
       status,
@@ -233,7 +281,19 @@ export function AssistantProvider({ children }) {
     reset,
     speak,
     abortGeneration
-  };
+  }), [
+    status, 
+    voiceRoom.state.volume,
+    transcript,
+    responseStream,
+    error,
+    modificationIntent,
+    listen,
+    stop,
+    reset,
+    speak,
+    abortGeneration
+  ]);
   
   return (
     <AssistantContext.Provider value={assistantAPI}>

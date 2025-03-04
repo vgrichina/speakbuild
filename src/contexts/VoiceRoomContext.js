@@ -6,6 +6,7 @@ import { storage, SETTINGS_KEY } from '../services/storage';
 import { analysisPrompt } from '../services/analysis';
 import { parse, STR, OBJ } from 'partial-json';
 
+
 // Audio recording options
 const options = {
   sampleRate: 16000,
@@ -223,6 +224,12 @@ export function VoiceRoomProvider({ children }) {
     console.log('No-op audio listener called - ignoring data');
   };
   
+  // Track the last update times - use refs so they persist between renders
+  const lastVolumeUpdateTime = useRef(0);
+  const lastPartialResultsUpdateTime = useRef(0);
+  const VOLUME_UPDATE_INTERVAL = 100; // Update volume at most every 100ms
+  const PARTIAL_RESULTS_UPDATE_INTERVAL = 300; // Update partial results at most every 300ms
+
   // Define the audio data handler function
   function handleAudioData(data) {
     console.log(`AUDIO: Data received, data length: ${data.length}`);
@@ -250,8 +257,12 @@ export function VoiceRoomProvider({ children }) {
     const average = sum / pcmData.length;
     const normalizedVolume = Math.min(average / 32768, 1);
     
-    console.log(`Setting volume to ${normalizedVolume.toFixed(3)}`);
-    dispatch({ type: ACTIONS.SET_VOLUME, payload: normalizedVolume });
+    // Direct throttling for volume updates based on time
+    const now = Date.now();
+    if (now - lastVolumeUpdateTime.current >= VOLUME_UPDATE_INTERVAL) {
+      dispatch({ type: ACTIONS.SET_VOLUME, payload: normalizedVolume });
+      lastVolumeUpdateTime.current = now;
+    }
   }
   
   // Clean up audio subscription when component unmounts
@@ -432,8 +443,16 @@ export function VoiceRoomProvider({ children }) {
               // Try to parse partial JSON
               const partialResult = parse(cleanedJson, STR | OBJ);
               if (partialResult?.transcription) {
-                console.log('Setting partial results:', partialResult.transcription);
-                dispatch({ type: ACTIONS.SET_PARTIAL_RESULTS, payload: partialResult.transcription });
+                // Only update partial results if it's changed AND enough time has passed
+                const now = Date.now();
+                const contentChanged = partialResult.transcription !== state.partialResults;
+                
+                if (contentChanged && now - lastPartialResultsUpdateTime.current >= PARTIAL_RESULTS_UPDATE_INTERVAL) {
+                  // Only log when actually updating
+                  console.log('Setting partial results:', partialResult.transcription);
+                  dispatch({ type: ACTIONS.SET_PARTIAL_RESULTS, payload: partialResult.transcription });
+                  lastPartialResultsUpdateTime.current = now;
+                }
               }
             } catch (error) {
               // Ignore parsing errors for partial JSON

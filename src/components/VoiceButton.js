@@ -45,7 +45,7 @@ const PulsatingCircle = ({ isActive, volume }) => {
  * @param {number} props.volume - Current audio volume (0-1)
  * @param {boolean} props.disabled - Whether the button is disabled
  */
-export const VoiceButton = ({ 
+export const VoiceButton = React.memo(({ 
     disabled,
     status,
     onStart,
@@ -153,4 +153,14 @@ export const VoiceButton = ({
             </Text>
         </View>
     );
-};
+}, (prevProps, nextProps) => {
+    // Only re-render in these cases:
+    // 1. Status has changed
+    // 2. Disabled state has changed
+    // 3. Volume has changed AND we're in LISTENING mode
+    const shouldSkip = prevProps.status === nextProps.status &&
+                      prevProps.disabled === nextProps.disabled &&
+                      (prevProps.status !== 'LISTENING' || prevProps.volume === nextProps.volume);
+                      
+    return shouldSkip;
+});
