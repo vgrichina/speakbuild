@@ -34,29 +34,28 @@
 
 ## 2. Call Mode
 - **Interaction Flow**:
-  - User initiates call with "Call AI" button
+  - User initiates call with a tap on main button
   - Both user and AI can speak freely
   - Explicit "End Call" action required to terminate
 
 - **UI Components**:
   ```
   +-------------------+
-  | [CALL AI]         |
   |                   |
-  | +---------------+ |
-  | | Active Call   | |
-  | | 00:02:45      | |
-  | +---------------+ |
   |                   |
-  | [HANG UP]         |
+  |                   |
+  |      [CALL        |
+  |     ACTIVE]       | <- Same button, different state
+  |    00:02:45       |
+  |                   |
   +-------------------+
   ```
 
 - **States**:
-  - Pre-call: "Call AI" button visible
+  - Pre-call: Tap button once to start call
   - Connecting: Animation showing connection
   - Active call: Call timer, visual indicators for who is speaking
-  - Ending: "Call ended" confirmation
+  - Ending: Tap button again to end call
 
 - **Benefits**:
   - Natural conversational flow
@@ -66,26 +65,31 @@
 
 ## 3. Silent Mode (Keyboard)
 - **Interaction Flow**:
-  - User types query in text input
-  - Sends with submit button/enter key
-  - AI responds with text only
+  - User taps keyboard toggle in corner
+  - Keyboard slides up, covering voice button
+  - User types query and sends with send button/enter key
+  - Tap microphone toggle to dismiss keyboard
 
 - **UI Components**:
   ```
-  +-------------------+
-  |                   |
-  | Chat History      |
-  |                   |
-  +-------------------+
-  | [Type here...   ] |
-  | [Send]            |
-  +-------------------+
+  Before keyboard:                After keyboard activation:
+  +-------------------+           +-------------------+
+  |                   |           |                   |
+  |                   |           |                   |
+  |                   |           |                   |
+  |     [🎤]          |           |                   |
+  |                   |           |                   |
+  |                   |           |              [🎤↓]|
+  |              [⌨️↑]|           +-------------------+
+  +-------------------+           |[Type here...][→]  |
+                                  +-------------------+
   ```
 
 - **States**:
-  - Input: Text field active
+  - Input: Text field active, keyboard visible
   - Sending: Animation or indicator
   - Response: Text appears in conversation
+  - Toggle: Keyboard toggle changes to microphone when active
 
 - **Benefits**:
   - Works in quiet environments
@@ -93,13 +97,33 @@
   - Precise input formatting
   - Good for technical queries
 
-## Switching Between Modes
-- Toggle control in settings
-- Quick access button to change modes
-- Context-aware suggestions (e.g., "Switch to silent mode?" in library)
+## Unified Input Approach
+
+### Gesture-Based Controls
+- **Tap**: Start/end call mode
+- **Press and hold**: Push-to-talk mode
+- **Keyboard toggle**: Tap corner button to switch to keyboard
+
+### Visual Consistency
+- Same primary button location for voice interactions
+- Clear state indicators for current mode
+- Consistent positioning of controls
+
+### Mode Transitions
+- Seamless switching between input methods
+- Keyboard covers voice button when active
+- Voice button reveals when keyboard dismisses
+- No jarring layout changes during transitions
+
+## Contextual Suggestions
+- System detects environment (noise level, public place)
+- Suggests appropriate mode with subtle notification
+- "Noisy here? Try Call Mode" or "In a meeting? Try Silent Mode"
+- User can accept or dismiss suggestion
 
 ## Accessibility Considerations
 - Voice control alternatives for push-to-talk
 - Visual indicators for audio feedback
 - Keyboard shortcuts for all actions
 - High contrast mode for buttons
+- Large touch targets for all interactive elements
