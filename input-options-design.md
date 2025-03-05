@@ -97,6 +97,167 @@
   - Precise input formatting
   - Good for technical queries
 
+## State Transitions
+
+### Push-to-Talk Mode State Diagram
+```
+                           +----------------+
+                           |                |
+                           |      IDLE      |<-----+
+                           |                |      |
+                           +--------+-------+      |
+                                    |              |
+        +-------------------------+ | +------------+
+        |                         | | |
++-------v-------+          +------v-v------+
+|               |  Release |                |
+| PTT LISTENING +--------->+   PROCESSING   |
+|               |          |                |
++-------+-------+          +------+-+------+
+        |                         | |
+        | Cancel                  | | Complete
+        |                         | |
+        |              +----------+ |
+        |              |            |
+        +------------->+            |
+                       |    DISPLAY |
+                       | COMPONENT  |
+                       |            |
+                       +------------+
+```
+
+### Call Mode State Diagram
+```
+                           +----------------+
+                           |                |
+               +---------->+      IDLE      +----------+
+               |           |                |          |
+               |           +--------+-------+          |
+               |                    |                  |
+               | End Call           | Tap              |
+               |                    |                  |
+               |           +--------v-------+          |
+               |           |                |          |
+               +-----------+   CALL ACTIVE   <---------+
+                           |                |          
+                           +--------+-------+          
+                                    |                  
+                                    | Speech Detected  
+                                    |               
+                           +--------v-------+          
+                           |                |          
+                           |   PROCESSING   |          
+                           |                |          
+                           +--------+-------+          
+                                    |                  
+                                    | Complete
+                                    |               
+                           +--------v-------+          
+                           |    DISPLAY     |          
+                           |   COMPONENT    |          
+                           |                |          
+                           +----------------+          
+```
+
+### Keyboard Mode State Diagram
+```
+                           +----------------+
+                           |                |
+                  +------->+      IDLE      <---------+
+                  |        |                |         |
+                  |        +--------+-------+         |
+                  |                 |                 |
+                  | Close Keyboard  | Open Keyboard   |
+                  |                 |                 |
+                  |        +--------v-------+         |
+        +---------+        |                |         |
+        |                  |    KEYBOARD    |         |
+        |                  |     ACTIVE     |         |
+        |                  |                |         |
+        |                  +--------+-------+         |
+        |                           |                 |
+        |                           | Send Text       |
+        |                           |                 |
+        |                  +--------v-------+         |
+        |                  |                |         |
+        |                  |   PROCESSING   +-------->+
+        |                  |                |         |
+        |                  +--------+-------+         |
+        |                           |                 |
+        |                           | Complete        |
+        |                           |                 |
+        |                  +--------v-------+         |
+        |                  |    DISPLAY     |         |
+        +----------------->+   COMPONENT    |         |
+                           |                |         |
+                           +----------------+         |
+```
+
+### Key State Transitions
+
+#### Push-to-Talk Mode
+* **IDLE → PTT LISTENING**
+  - Trigger: User presses and holds voice button
+  - UI Change: Button expands with pulsating animation
+  - System: Voice recognition begins immediately
+
+* **PTT LISTENING → PROCESSING**
+  - Trigger: User releases button
+  - UI Change: Button changes color, shows processing indicator
+  - System: Transcription finalized, sent to AI for processing
+
+* **PTT LISTENING → IDLE**
+  - Trigger: User cancels by tapping cancel button
+  - UI Change: Button returns to idle state
+  - System: Discards partial recording, resets
+
+* **PROCESSING → DISPLAY COMPONENT**
+  - Trigger: AI completes generation
+  - UI Change: Component appears, button returns to idle state
+  - System: Renders interactive component from generated code
+
+#### Call Mode
+* **IDLE → CALL ACTIVE**
+  - Trigger: User taps voice button once
+  - UI Change: Button shows call active state with timer
+  - System: Continuous listening mode activated
+
+* **CALL ACTIVE → PROCESSING**
+  - Trigger: User's speech pauses (silence threshold)
+  - UI Change: Processing indicator appears alongside call timer
+  - System: Processes speech segment while still listening
+
+* **CALL ACTIVE → IDLE**
+  - Trigger: User taps button again to end call
+  - UI Change: Button returns to idle state
+  - System: Ends listening session, finalizes any pending processing
+
+* **PROCESSING → DISPLAY COMPONENT (during call)**
+  - Trigger: AI generates response for speech segment
+  - UI Change: Component appears while call remains active
+  - System: Maintains call state while displaying result
+
+#### Keyboard Mode
+* **IDLE → KEYBOARD ACTIVE**
+  - Trigger: User taps keyboard toggle
+  - UI Change: Keyboard slides up, voice button covered
+  - System: Switches to text input mode
+
+* **KEYBOARD ACTIVE → PROCESSING**
+  - Trigger: User sends text message
+  - UI Change: Send button shows processing state
+  - System: Sends text to AI for processing
+
+* **KEYBOARD ACTIVE → IDLE**
+  - Trigger: User taps microphone toggle
+  - UI Change: Keyboard dismisses, voice button revealed
+  - System: Returns to voice input mode
+
+* **PROCESSING → DISPLAY COMPONENT**
+  - Trigger: AI completes generation from text input
+  - UI Change: Component appears, keyboard remains visible
+  - System: Renders interactive component while maintaining keyboard state
+
 ## Unified Input Approach
 
 ### Gesture-Based Controls
@@ -114,6 +275,13 @@
 - Keyboard covers voice button when active
 - Voice button reveals when keyboard dismisses
 - No jarring layout changes during transitions
+
+### Critical Transition Considerations
+- Context preservation across mode switches
+- Interruption handling for all processing states
+- Error state transitions with recovery paths
+- Multi-turn conversation flow in call mode
+- Rules for switching input modes during active states
 
 ## Contextual Suggestions
 - System detects environment (noise level, public place)
