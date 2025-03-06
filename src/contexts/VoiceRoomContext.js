@@ -283,8 +283,11 @@ export function VoiceRoomProvider({ children }) {
       onError, 
       selectedLanguage, 
       componentHistory, 
-      currentHistoryIndex, 
-      checkApiKeys 
+      currentHistoryIndex,
+      ultravoxKey,
+      openrouterKey,
+      continuousListening = false,
+      silenceThreshold = 1.5
     } = options;
     
     if (isStartingRecording.current || state.isRecording) {
@@ -298,7 +301,6 @@ export function VoiceRoomProvider({ children }) {
       console.log('Starting recording flow...');
 
       // Check API keys BEFORE starting any recording
-      const { ultravoxKey, openrouterKey } = checkApiKeys();
       if (!ultravoxKey || !openrouterKey) {
         throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
       }
