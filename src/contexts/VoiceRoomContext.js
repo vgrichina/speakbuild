@@ -278,17 +278,30 @@ export function VoiceRoomProvider({ children }) {
 
   // Start recording function - decoupled from GenerationContext
   const startRecording = useCallback(async (options) => {
+    // Log the entire options object first
+    console.log('VoiceRoomContext.startRecording options:', JSON.stringify(options, null, 2));
+    
     const { 
       onTranscription, 
       onError, 
       selectedLanguage, 
       componentHistory, 
       currentHistoryIndex,
-      ultravoxKey,
-      openrouterKey,
+      apiKeys, // Using apiKeys object instead of separate keys
       continuousListening = false,
       silenceThreshold = 1.5
     } = options;
+    
+    // Extract keys from apiKeys object
+    const ultravoxKey = apiKeys?.ultravox;
+    const openrouterKey = apiKeys?.openrouter;
+    
+    // Log the values of the keys
+    console.log('VoiceRoomContext.startRecording received keys:', {
+      ultravoxKey: ultravoxKey ? `Key present (length: ${ultravoxKey.length})` : 'Missing',
+      openrouterKey: openrouterKey ? `Key present (length: ${openrouterKey.length})` : 'Missing',
+      options: Object.keys(options).join(', ')
+    });
     
     if (isStartingRecording.current || state.isRecording) {
       console.log('Already recording');
@@ -302,6 +315,10 @@ export function VoiceRoomProvider({ children }) {
 
       // Check API keys BEFORE starting any recording
       if (!ultravoxKey || !openrouterKey) {
+        console.error('API keys check failed:', { 
+          ultravoxKey: ultravoxKey ? 'present' : 'missing', 
+          openrouterKey: openrouterKey ? 'present' : 'missing'
+        });
         throw new Error('Please set your Ultravox and OpenRouter API keys in settings');
       }
       
@@ -478,12 +495,15 @@ export function VoiceRoomProvider({ children }) {
         
               // Only process if this WebSocket is still active
               if (ws.current === wsInstance) {
-                // Explicitly close the WebSocket and stop recording to prevent more messages
-                console.log('Received final analysis, performing full cleanup');
-                cleanup();
-          
-                // Call the transcription callback with the analysis
+                console.log('Received final analysis, calling onTranscription FIRST');
+                
+                // IMPORTANT: Call the transcription callback BEFORE cleanup
+                // This ensures the component generation process starts before WebSocket is closed
                 onTranscription?.(analysis);
+                
+                // After transcription is processed, then clean up
+                console.log('Transcription processed, now performing cleanup');
+                cleanup();
                 
                 // Update recording state
                 dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
@@ -524,10 +544,23 @@ export function VoiceRoomProvider({ children }) {
         console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
   
         // Only handle close if this is still the active WebSocket
-        if (ws.current === wsInstance && state.isRecording) {
-          console.log('WebSocket close triggering cleanup while recording is active');
-          cleanup();
-          dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
+        if (ws.current === wsInstance) {
+          if (state.isRecording) {
+            console.log('WebSocket close triggering cleanup while recording is active');
+            // We only directly clean up here if we're still recording
+            // This avoids cleaning up twice for normal button release flows
+            cleanup();
+            dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
+          } else {
+            console.log('WebSocket closed while not recording - cleanup should have happened already');
+          }
+          
+          // Always clear the WebSocket reference on close
+          // Only do this if we haven't already done it in cleanup()
+          if (ws.current === wsInstance) {
+            console.log('Clearing WebSocket reference in onclose');
+            ws.current = null;
+          }
         }
       };
     } catch (error) {
@@ -554,9 +587,23 @@ export function VoiceRoomProvider({ children }) {
   const stopRecording = useCallback(() => {
     console.log(`STOP_RECORDING: Called with isRecording=${state.isRecording}`);
     
-    // Always clean up WebSocket resources
-    console.log('STOP_RECORDING: Calling cleanup()');
-    cleanup();
+    if (ws.current) {
+      console.log('STOP_RECORDING: Active WebSocket found, closing gracefully');
+      // Send close frame but let onclose event handler do the actual cleanup
+      // This allows any in-flight final messages to be processed
+      try {
+        ws.current.close(1000, "User stopped recording");
+        console.log('STOP_RECORDING: WebSocket close initiated');
+      } catch (err) {
+        console.error('STOP_RECORDING: Error closing WebSocket:', err);
+        // Fall back to immediate cleanup on error
+        cleanup();
+      }
+    } else {
+      // No active WebSocket, clean up immediately
+      console.log('STOP_RECORDING: No active WebSocket, calling cleanup() directly');
+      cleanup();
+    }
     
     // Update recording state
     console.log('STOP_RECORDING: Setting isRecording=false');

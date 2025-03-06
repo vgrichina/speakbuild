@@ -91,27 +91,36 @@ export const VoiceAssistant = React.memo(() => {
     // Recreate component from code whenever history entry changes
     const currentComponent = React.useMemo(() => {
         if (currentHistoryEntry?.code) {
+            console.log('Attempting to recreate component from history entry code');
             try {
-                return createComponent(currentHistoryEntry.code);
+                const component = createComponent(currentHistoryEntry.code);
+                console.log('Component successfully recreated from code');
+                return component;
             } catch (error) {
                 console.error('Error recreating component from history:', error);
                 return null;
             }
+        } else {
+            console.log('No component code available in current history entry');
+            return null;
         }
-        return null;
     }, [currentHistoryEntry?.code]);
 
     return (
         <View style={styles.container}>
             {/* Component Container */}
-            {assistantState.status !== 'THINKING' && (
+            {assistantState.status !== 'THINKING' ? (
                 <View style={styles.componentContainer}>
                     {currentComponent ? (
                         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                             {(() => {
+                                console.log(`Rendering component with status: ${assistantState.status}`);
                                 const params = (currentHistoryIndex >= 0 && componentHistory[currentHistoryIndex]?.params) || {};
+                                console.log(`Component params:`, params);
                                 try {
-                                    return renderComponent(currentComponent, params);
+                                    const renderedComponent = renderComponent(currentComponent, params);
+                                    console.log('Component rendered successfully');
+                                    return renderedComponent;
                                 } catch (error) {
                                     console.error('Render error:', error);
                                     return null;
@@ -121,8 +130,14 @@ export const VoiceAssistant = React.memo(() => {
                     ) : (
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                             <EmptyState />
+                            <Text style={{ marginTop: 10 }}>Status: {assistantState.status}</Text>
                         </View>
                     )}
+                </View>
+            ) : (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text>Thinking...</Text>
+                    <Text style={{ marginTop: 10 }}>Status: {assistantState.status}</Text>
                 </View>
             )}
 

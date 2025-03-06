@@ -3,6 +3,7 @@ import { useVoiceRoom } from './VoiceRoomContext';
 import { useSettings } from '../hooks/useSettings';
 import { useComponentHistory } from './ComponentHistoryContext';
 import { processWithClaudeStream } from '../services/processStream';
+import { getApiKeys, hasApiKeys } from '../services/settings';
 
 // Create the unified context
 const AssistantContext = createContext(null);
@@ -14,6 +15,7 @@ export function AssistantProvider({ children }) {
   // Access external contexts
   const voiceRoom = useVoiceRoom();
   const { selectedModel, openrouterApiKey, ultravoxApiKey } = useSettings();
+  console.log('AssistantProvider', { selectedModel, openrouterApiKey, ultravoxApiKey });
   const { addToHistory, activeConversationId } = useComponentHistory();
   
   // Direct state management for the assistant
@@ -81,11 +83,14 @@ export function AssistantProvider({ children }) {
   // Function to process transcribed text and generate response
   const processTranscription = useCallback(async (analysis) => {
     console.log(`[AssistantContext] Processing transcription:`, analysis.transcription);
+    console.log(`[AssistantContext] Intent:`, analysis.intent);
+    console.log(`[AssistantContext] Widget URL:`, analysis.widgetUrl);
     
     // Update the transcribed text
     setTranscribedText(analysis.transcription);
     
     // Update status to THINKING
+    console.log(`[AssistantContext] Changing status to THINKING before component generation`);
     setStatus('THINKING');
     
     // Save modification intent if present
@@ -97,6 +102,14 @@ export function AssistantProvider({ children }) {
       // Create an abort controller
       const controller = new AbortController();
       abortControllerRef.current = controller;
+      
+      // Get API keys directly from settings storage
+      const apiKeys = getApiKeys();
+      
+      // Check API keys before proceeding with generation
+      if (!apiKeys.ultravox || !apiKeys.openrouter) {
+        throw new Error('Please set your API keys in settings');
+      }
       
       console.log(`[AssistantContext] Starting generation with model: ${selectedModel}`);
       
@@ -141,14 +154,17 @@ export function AssistantProvider({ children }) {
       };
       
       // Generate the component directly
+      console.log(`[AssistantContext] Starting component generation with model: ${selectedModel}`);
       const result = await processWithClaudeStream({
         analysis,
         selectedModel,
-        apiKey: openrouterApiKey,
+        apiKey: apiKeys.openrouter, // Use directly from apiKeys
         currentComponentCode: null,
         abortController: controller,
         onResponseStream: throttledResponseHandler
       });
+      
+      console.log(`[AssistantContext] Component generation completed successfully`);
       
       // Process any remaining buffer content at the end of generation
       processBuffer();
@@ -175,9 +191,11 @@ export function AssistantProvider({ children }) {
       
       // If not in call mode, reset to IDLE
       if (!callActive) {
+        console.log(`[AssistantContext] Setting status back to IDLE after component generation`);
         setStatus('IDLE');
       } else {
         // If in call mode, go back to LISTENING
+        console.log(`[AssistantContext] Setting status back to LISTENING (call mode) after component generation`);
         setStatus('LISTENING');
       }
       
@@ -190,11 +208,27 @@ export function AssistantProvider({ children }) {
     }
   }, [voiceRoom, selectedModel, openrouterApiKey, addToHistory, callActive]);
   
-  // Handle press in for Push-to-Talk mode
-  const handlePressIn = useCallback(() => {
+  // Handle press in for Push-to-Talk mode - using direct settings access
+  const handlePressIn = () => {
     if (callActive || keyboardActive) return; // Don't start PTT during call/keyboard
     
     console.log('[AssistantContext] Starting PTT recording');
+    
+    // Get API keys directly from settings storage
+    const apiKeys = getApiKeys();
+    
+    console.log('[AssistantContext] handlePressIn with API keys:', {
+      ultravox: apiKeys.ultravox ? `Key present (length: ${apiKeys.ultravox.length})` : 'Missing',
+      openrouter: apiKeys.openrouter ? `Key present (length: ${apiKeys.openrouter.length})` : 'Missing',
+      callTime: new Date().toISOString()
+    });
+    
+    // Check API keys before proceeding
+    if (!apiKeys.ultravox || !apiKeys.openrouter) {
+      setError('Please set your API keys in settings');
+      setStatus('ERROR');
+      return;
+    }
     
     // Clear previous state
     setResponseStream('');
@@ -213,24 +247,38 @@ export function AssistantProvider({ children }) {
         setStatus('ERROR');
       },
       continuousListening: false,
-      ultravoxKey: ultravoxApiKey,
-      openrouterKey: openrouterApiKey
+      apiKeys // Pass the entire keys object
     });
-  }, [callActive, keyboardActive, voiceRoom, processTranscription, ultravoxApiKey, openrouterApiKey]);
+  };
   
-  // Handle press out for Push-to-Talk mode
-  const handlePressOut = useCallback(() => {
+  // Handle press out for Push-to-Talk mode - removed useCallback
+  const handlePressOut = () => {
     if (callActive) return; // Don't end recording if in call mode
     
     console.log('[AssistantContext] Stopping PTT recording');
     voiceRoom.stopRecording();
-  }, [callActive, voiceRoom]);
+  };
   
-  // Handle press for Call mode toggle
-  const handlePress = useCallback(() => {
+  // Handle press for Call mode toggle - using direct settings access
+  const handlePress = () => {
     if (keyboardActive) return; // Don't toggle call if keyboard is active
     
+    // Get API keys directly from settings storage
+    const apiKeys = getApiKeys();
+    
+    console.log('[AssistantContext] handlePress with API keys:', {
+      ultravox: apiKeys.ultravox ? `Key present (length: ${apiKeys.ultravox.length})` : 'Missing',
+      openrouter: apiKeys.openrouter ? `Key present (length: ${apiKeys.openrouter.length})` : 'Missing'
+    });
+    
     if (!callActive) {
+      // Check API keys before starting call
+      if (!apiKeys.ultravox || !apiKeys.openrouter) {
+        setError('Please set your API keys in settings');
+        setStatus('ERROR');
+        return;
+      }
+      
       // Start call
       console.log('[AssistantContext] Starting call');
       setCallActive(true);
@@ -254,8 +302,7 @@ export function AssistantProvider({ children }) {
         },
         continuousListening: true,
         silenceThreshold: 1.5,
-        ultravoxKey: ultravoxApiKey,
-        openrouterKey: openrouterApiKey
+        apiKeys // Pass the entire keys object
       });
     } else {
       // End call
@@ -265,10 +312,10 @@ export function AssistantProvider({ children }) {
       voiceRoom.stopRecording();
       setStatus('IDLE');
     }
-  }, [keyboardActive, callActive, voiceRoom, processTranscription, ultravoxApiKey, openrouterApiKey]);
+  };
   
-  // Toggle keyboard
-  const toggleKeyboard = useCallback(() => {
+  // Toggle keyboard - removed useCallback
+  const toggleKeyboard = () => {
     setKeyboardActive(prev => !prev);
     
     // If enabling keyboard and call is active, keep call going
@@ -276,19 +323,29 @@ export function AssistantProvider({ children }) {
     if (!keyboardActive && !callActive) {
       setStatus('IDLE');
     }
-  }, [keyboardActive, callActive]);
+  };
   
-  // Start listening method (for backward compatibility)
-  const listen = useCallback((options = {}) => {
+  // Start listening method (for backward compatibility) - removed useCallback
+  const listen = (options = {}) => {
     console.log(`[AssistantContext] listen() called with status=${status}`);
     
     // Use the new handlePress method to handle listening
     handlePress();
-  }, [status, handlePress]);
+  };
   
-  // Submit text method (for keyboard input)
-  const submitText = useCallback((text) => {
+  // Submit text method (for keyboard input) - using direct settings access
+  const submitText = (text) => {
     console.log(`[AssistantContext] submitText() called with text:`, text);
+    
+    // Get API keys directly from settings storage
+    const apiKeys = getApiKeys();
+    
+    // Check API keys before proceeding
+    if (!apiKeys.ultravox || !apiKeys.openrouter) {
+      setError('Please set your API keys in settings');
+      setStatus('ERROR');
+      return;
+    }
     
     // Clear previous state
     setResponseStream('');
@@ -305,10 +362,10 @@ export function AssistantProvider({ children }) {
     };
     
     processTranscription(analysis);
-  }, [processTranscription]);
+  };
   
-  // Stop method
-  const stop = useCallback(() => {
+  // Stop method - removed useCallback
+  const stop = () => {
     console.log(`ASSISTANT: stop() called with status=${status}`);
     
     // If in call mode, end the call
@@ -334,10 +391,10 @@ export function AssistantProvider({ children }) {
     setStatus('IDLE');
     
     console.log('ASSISTANT: stop() completed');
-  }, [status, voiceRoom, callActive]);
+  };
   
-  // Reset method
-  const reset = useCallback(() => {
+  // Reset method - removed useCallback
+  const reset = () => {
     voiceRoom.reset();
     setStatus('IDLE');
     setError(null);
@@ -352,10 +409,10 @@ export function AssistantProvider({ children }) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-  }, [voiceRoom]);
+  };
   
-  // Abort generation method for components like NavigationButtons
-  const abortGeneration = useCallback(() => {
+  // Abort generation method for components like NavigationButtons - removed useCallback
+  const abortGeneration = () => {
     if (status === 'THINKING' && abortControllerRef.current) {
       console.log('ASSISTANT: Explicitly aborting generation');
       abortControllerRef.current.abort();
@@ -364,10 +421,16 @@ export function AssistantProvider({ children }) {
       // If in call mode, go back to LISTENING, otherwise go to IDLE
       setStatus(callActive ? 'LISTENING' : 'IDLE');
     }
-  }, [status, callActive]);
+  };
   
-  // Create the unified API with memoization to prevent unnecessary re-renders
-  const assistantAPI = useMemo(() => ({
+  // Log API keys on each render to track their values
+  console.log('[AssistantContext] Render with API keys:', {
+    ultravoxApiKey: ultravoxApiKey ? `Set (length: ${ultravoxApiKey.length})` : 'Missing',
+    openrouterApiKey: openrouterApiKey ? `Set (length: ${openrouterApiKey.length})` : 'Missing'
+  });
+
+  // Create context value directly without useMemo to avoid stale closures
+  const assistantAPI = {
     // Unified state
     state: {
       status,
@@ -393,26 +456,7 @@ export function AssistantProvider({ children }) {
     handlePressOut,
     handlePress,
     toggleKeyboard
-  }), [
-    status, 
-    voiceRoom.state.volume,
-    transcript,
-    responseStream,
-    error,
-    modificationIntent,
-    callActive,
-    keyboardActive,
-    callStartTime,
-    listen,
-    stop,
-    reset,
-    submitText,
-    abortGeneration,
-    handlePressIn,
-    handlePressOut,
-    handlePress,
-    toggleKeyboard
-  ]);
+  };
   
   return (
     <AssistantContext.Provider value={assistantAPI}>

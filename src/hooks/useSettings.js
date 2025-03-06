@@ -92,6 +92,11 @@ export function useSettings() {
                 openrouterKeyToUse = TEST_KEYS.openrouter;
             }
             
+            console.log('Loading API keys:', {
+                ultravox: ultravoxKeyToUse ? `Set (length: ${ultravoxKeyToUse.length})` : 'Not set',
+                openrouter: openrouterKeyToUse ? `Set (length: ${openrouterKeyToUse.length})` : 'Not set'
+            });
+            
             // Set API keys in state
             setUltravoxApiKey(ultravoxKeyToUse);
             setOpenrouterApiKey(openrouterKeyToUse);

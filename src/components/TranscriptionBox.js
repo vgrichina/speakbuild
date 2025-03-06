@@ -13,22 +13,22 @@ const styles = {
 /**
  * Displays transcription and conversation history
  * @param {Object} props - Component props
- * @param {string} props.status - Current generation status
- * @param {string} props.transcript - Current transcript (either partial or complete)
- * @param {Array} props.requestHistory - History of previous requests
+ * @param {string} props.text - Current transcript text
+ * @param {boolean} props.isListening - Whether the system is currently listening
+ * @param {Array} props.requestHistory - History of previous requests (optional)
  */
 export const TranscriptionBox = ({ 
-    status,
-    transcript,
-    requestHistory
+    text,
+    isListening,
+    requestHistory = []
 }) => {
     return (
         <>
             {/* Transcription Box with History and Current Transcription */}
-            {(requestHistory.length > 0 || (transcript && (status === 'THINKING' || status === 'LISTENING'))) && (
+            {(requestHistory.length > 0 || text) && (
                 <View style={styles.transcriptionBox}>
                     {/* Previous requests */}
-                    {requestHistory.map((request, index) => (
+                    {requestHistory && requestHistory.length > 0 && requestHistory.map((request, index) => (
                         <Text key={index} style={{ 
                             color: '#999',
                             fontSize: 14,
@@ -39,12 +39,13 @@ export const TranscriptionBox = ({
                     ))}
                     
                     {/* Current transcript */}
-                    {transcript && (status === 'THINKING' || status === 'LISTENING') && (
+                    {text && (
                         <Text style={{ 
                             color: '#333',
                             fontSize: 14
                         }}>
-                            {transcript}
+                            {text}
+                            {isListening && <Text style={{color: '#999'}}>...</Text>}
                         </Text>
                     )}
                 </View>
