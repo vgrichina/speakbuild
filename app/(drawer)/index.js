@@ -4,7 +4,7 @@ import { VoiceAssistant } from '../../src/main';
 import { useNavigation } from 'expo-router';
 import { NavigationButtons } from '../../src/components/NavigationButtons';
 import { DebugMenuButton } from '../../src/components/DebugMenuButton';
-import { useComponentHistory } from '../../src/hooks/useComponentHistory';
+import { useAssistantState } from '../../src/hooks/useAssistantState';
 import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import { Feather } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ import { Feather } from '@expo/vector-icons';
 export default function Index() {
     const navigation = useNavigation();
     const router = useRouter();
-    const { current, history, currentIndex, goBack, goForward, clearHistory } = useComponentHistory();
+    const { current, history, currentIndex: currentHistoryIndex, goBack, goForward, clearHistory } = useAssistantState();
     
     // Set up the header
     React.useLayoutEffect(() => {

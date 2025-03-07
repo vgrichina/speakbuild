@@ -3,12 +3,12 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'r
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { Feather } from '@expo/vector-icons';
 import { conversationStorage } from '../services/conversationStorage';
-import { useComponentHistory } from '../hooks/useComponentHistory';
+import { useAssistantState } from '../hooks/useAssistantState';
 
 export function ConversationList(props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState([]);
-  const { activeConversationId, switchConversation, createNewConversation } = useComponentHistory();
+  const { activeConversationId, switchConversation, createNewConversation } = useAssistantState();
 
   useEffect(() => {
     loadConversations();

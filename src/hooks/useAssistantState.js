@@ -1,8 +1,9 @@
 /**
  * useAssistantState.js
  * 
- * React hook that connects to the AssistantService.
- * Provides a thin layer between the service and React components.
+ * Unified React hook that connects to the AssistantService and componentHistoryService.
+ * Provides a single source of truth for all assistant and history state.
+ * This combines functionality previously split between useAssistantState and useComponentHistory.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AssistantService, ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
@@ -107,9 +108,37 @@ export function useAssistantState() {
     return unsubscribe;
   }, []);
 
-  // Return hook interface
+  // Additional component history methods from componentHistoryService
+  const switchConversation = useCallback((conversationId) => {
+    componentHistoryService.switchConversation(conversationId);
+  }, []);
+  
+  const createNewConversation = useCallback(() => {
+    return componentHistoryService.createNewConversation();
+  }, []);
+  
+  const clearHistory = useCallback(() => {
+    componentHistoryService.clearHistory();
+  }, []);
+  
+  const getAllConversations = useCallback(() => {
+    return componentHistoryService.getAllConversations();
+  }, []);
+  
+  const deleteConversation = useCallback((conversationId) => {
+    componentHistoryService.deleteConversation(conversationId);
+  }, []);
+  
+  const renameConversation = useCallback((conversationId, newTitle) => {
+    componentHistoryService.renameConversation(conversationId, newTitle);
+  }, []);
+
+  // Get current conversation
+  const current = useMemo(() => componentHistoryService.getCurrent(), [historyState.current]);
+  
+  // Return unified hook interface
   return {
-    // State
+    // Assistant state
     status,
     volume,
     transcript,
@@ -119,20 +148,35 @@ export function useAssistantState() {
     callStartTime,
     responseStream,
     componentHistory,
+    
+    // History state
     currentHistoryIndex: historyState.currentIndex,
     currentComponent,
+    current,
+    activeConversationId: componentHistoryService.getState().activeConversationId,
+    history: componentHistoryService.getState().history,
     
-    // Actions
+    // Assistant actions
     startPTT,
     stopPTT,
     toggleCallMode,
     abortGeneration,
     retry,
     
-    // History navigation
+    // History navigation 
     navigateBack,
     navigateForward,
     setHistoryIndex,
+    goBack: navigateBack,       // Aliases for compatibility with useComponentHistory
+    goForward: navigateForward,
+    
+    // Conversation management
+    switchConversation,
+    createNewConversation,
+    clearHistory,
+    getAllConversations,
+    deleteConversation,
+    renameConversation,
     
     // Constants
     STATUS: ASSISTANT_STATUS,
