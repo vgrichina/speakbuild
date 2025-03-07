@@ -4,32 +4,31 @@ import { Drawer } from 'expo-router/drawer';
 import { ConversationList } from '../../src/components/ConversationList';
 import { Feather } from '@expo/vector-icons';
 import { VoiceRoomProvider } from '../../src/contexts/VoiceRoomContext';
-import { AssistantProvider } from '../../src/contexts/AssistantContext';
+// AssistantProvider removed - now using service instead of Context
 
 export default function DrawerLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <VoiceRoomProvider>
-        <AssistantProvider>
-          <Drawer
-            screenOptions={{
+        {/* AssistantProvider removed - now using AssistantService */}
+        <Drawer
+          screenOptions={{
+            headerShown: true,
+            drawerStyle: {
+              width: 300,
+            },
+          }}
+          drawerContent={(props) => <ConversationList {...props} />}
+        >
+          <Drawer.Screen
+            name="index"
+            options={{
+              drawerLabel: "Home",
               headerShown: true,
-              drawerStyle: {
-                width: 300,
-              },
+              drawerIcon: ({ color }) => <Feather name="home" size={24} color={color} />
             }}
-            drawerContent={(props) => <ConversationList {...props} />}
-          >
-            <Drawer.Screen
-              name="index"
-              options={{
-                drawerLabel: "Home",
-                headerShown: true,
-                drawerIcon: ({ color }) => <Feather name="home" size={24} color={color} />
-              }}
-            />
-          </Drawer>
-        </AssistantProvider>
+          />
+        </Drawer>
       </VoiceRoomProvider>
     </GestureHandlerRootView>
   );
