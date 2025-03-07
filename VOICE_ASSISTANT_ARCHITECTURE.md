@@ -19,450 +19,425 @@ The current implementation has several services that are already well-designed:
    - Numerous re-renders due to React's state update triggering
    - Component remounting issues ("Component FIRST MOUNT" appears repeatedly)
 
-## New Architecture
+## New Architecture: Process-Based Approach
+
+Rather than a general subscription system, we'll treat audio sessions and component generation as discrete processes with clear lifecycles and targeted event callbacks.
 
 ```
-+------------------------+       +------------------------+
-|                        |       |                        |
-|  React Components      |<----->|  Service Hooks         |
-|                        |       |                        |
-+------------------------+       +------------------------+
-          ^                                 ^
-          |                                 |
-          v                                 v
-+------------------------+       +------------------------+
-|                        |       |                        |
-|  Business Logic        |<----->|  Core Services         |
-|  (Controller Layer)    |       |  (Data & State)        |
-|                        |       |                        |
-+------------------------+       +------------------------+
-                                          ^
-                                          |
-                                          v
-                                 +------------------------+
-                                 |                        |
-                                 |  Storage Layer         |
-                                 |  (MMKV)               |
-                                 |                        |
-                                 +------------------------+
++-----------------------------------+          +----------------------------------+
+|                                   |          |                                  |
+|       AudioSession (Singleton)    |          |  ComponentGeneration (Multiple)  |
+|                                   |          |                                  |
++-----------------------------------+          +----------------------------------+
+| - Can be in PTT or Call mode      |          | - One per transcription          |
+| - Manages mic and WebSocket       |          | - Streaming generation process   |
+| - Emits: volume, partialTranscript,|         | - Emits: progress, result, error |
+|   finalTranscript, error          |          | - Controls: start(), abort()     |
+| - Controls: start(), stop()       |          |                                  |
++-----------------------------------+          +----------------------------------+
 ```
 
-## Core Services (Plain JavaScript)
+## Event Flow
 
-### 1. VoiceService
+### AudioSession Events:
+- **onVolumeChange(volume)**: 
+  * Target: VoiceButton
+  * Purpose: Update volume visualization
 
-```
-+------------------+
-| VoiceService     |
-+------------------+
-| - state          |
-| - subscribers    |
-|                  |
-| + subscribe()    |
-| + unsubscribe()  |
-| + startRecording()|
-| + stopRecording()|
-| + cancelRecording()|
-| + processAudio() |
-+------------------+
-        ^
-        |
-        v
-+------------------+
-| WebSocket        |
-| & Audio Handling |
-+------------------+
-```
+- **onPartialTranscript(text)**:
+  * Target: TranscriptionBox
+  * Purpose: Show real-time text as user speaks
 
-### 2. ComponentService
+- **onFinalTranscript(transcript)**:
+  * Target: TranscriptionBox, Parent Controller
+  * Purpose: Display final transcript, trigger component generation
 
-```
-+------------------+
-| ComponentService |
-+------------------+
-| - state          |
-| - subscribers    |
-|                  |
-| + subscribe()    |
-| + unsubscribe()  |
-| + generate()     |
-| + getHistory()   |
-| + addToHistory() |
-| + setIndex()     |
-+------------------+
-        ^
-        |
-        v
-+------------------+
-| conversationStorage|
-| widgetStorage    |
-+------------------+
-```
+- **onError(error)**:
+  * Target: VoiceButton, ErrorBoundary 
+  * Purpose: Show error state, display error message
 
-### Subscription System
+### ComponentGeneration Events:
+- **onProgress(partialResult)**:
+  * Target: ResponseStream
+  * Purpose: Show streaming generation result
+
+- **onComplete(result)**:
+  * Target: ResponseStream, ConversationList
+  * Purpose: Display final component, add to history
+
+- **onError(error)**:
+  * Target: ResponseStream, ErrorBoundary
+  * Purpose: Show error state, display error message
+
+## Push-to-Talk Flow with Partial Transcription
 
 ```
-+------------------+    subscribe()    +------------------+
-| Service          |------------------>| React Component  |
-|                  |<------------------|                  |
-+------------------+   notification    +------------------+
-
-// Implementation
-function subscribe(callback) {
-  this.subscribers.add(callback);
-  return () => this.subscribers.delete(callback);
-}
-
-function setState(updates) {
-  Object.assign(this.state, updates);
-  this.notifySubscribers();
-}
+┌─────────┐         ┌────────────┐        ┌──────────────┐        ┌─────────────┐
+│         │         │            │        │              │        │             │
+│  User   │ press   │VoiceButton │ start  │ AudioSession │ record │ WebSocket   │
+│         ├────────►│            ├───────►│              ├───────►│             │
+└─────────┘         └────────────┘        └──────────────┘        └─────────────┘
+                          ▲                      │ ▲                     │
+                          │                      │ │                     │
+                          │                      │ │                     │
+                          │    onVolumeChange    │ │                     │
+                          │◄─────────────────────┘ │                     │
+                                                   │                     │
+                                                   │                     │
+┌─────────────────┐                               │                     │
+│                 │ update                        │                     │
+│TranscriptionBox │◄──────────────────────────────┘                     │
+│                 │ onPartialTranscript                                 │
+└─────────────────┘                                                     │
+                                                                        │
+                                                                        │
+┌─────────┐         ┌─────────────┐       ┌──────────────┐        ┌────┴──────────┐
+│         │ release │             │ stop  │              │ finish │                │
+│  User   ├────────►│ VoiceButton ├──────►│ AudioSession │◄───────┤   WebSocket    │
+│         │         │             │       │              │        │                │
+└─────────┘         └─────────────┘       └──────────────┘        └────────────────┘
+                                                   │
+                                                   │ onFinalTranscript
+                                                   ▼
+┌─────────────────┐        ┌────────────────┐        ┌───────────────┐
+│                 │ update │                │ create │               │
+│TranscriptionBox │◄───────┤ Parent Control ├───────►│ComponentGenera│
+│                 │        │                │        │tion           │
+└─────────────────┘        └────────────────┘        └───────────────┘
 ```
 
-## Voice Recording Flow
+## Call Mode Flow
 
 ```
-User presses button
-       |
-       v
-+------------------+
-| VoiceButton      |
-| onPressIn()      |
-+------------------+
-       |
-       v
-+------------------+
-| VoiceService     |
-| startRecording() |
-+------------------+
-       |
-       v
-Create WebSocket connection
-       |
-       v
-Set status = LISTENING
-Notify subscribers
-       |
-       v
-Process audio & partial transcripts
-       |
-       v
-User releases button
-       |
-       v
-+------------------+
-| VoiceButton      |
-| onPressOut()     |
-+------------------+
-       |
-       v
-+------------------+
-| VoiceService     |
-| stopRecording()  |
-+------------------+
-       |
-       v
-WebSocket receives final message
-       |
-       v
-Process transcript & analysis
-Set status = THINKING
-Notify subscribers
-       |
-       v
-+------------------+
-| VoiceService     |
-| -> onTranscription() |
-+------------------+
-       |
-       v
-+------------------+
-| ComponentService |
-| generate()       |
-+------------------+
-       |
-       v
-Component generation completes
-       |
-       v
-Set status = IDLE
-Add to history
-Notify subscribers
+┌─────────┐         ┌────────────┐        ┌──────────────┐        ┌─────────────┐
+│         │ start   │            │ start  │              │ record │             │
+│  User   ├────────►│ Call UI    ├───────►│ AudioSession ├───────►│ WebSocket   │
+│         │ call    │            │ mode   │              │        │             │
+└─────────┘         └────────────┘        └──────────────┘        └─────────────┘
+                                                 │                        │
+                                                 │                        │
+                         +---------------------+ │                        │
+                         |  Speech Segment 1  |◄┘                        │
+                         +---------------------+                          │
+                                 │                                        │
+                                 │ onFinalTranscript(1)                   │
+                                 ▼                                        │
+┌─────────────────┐        ┌────────────────┐                            │
+│                 │ update │                │                            │
+│TranscriptionBox │◄───────┤ Generation 1   │                            │
+│                 │        │                │                            │
+└─────────────────┘        └────────────────┘                            │
+                                 │                                        │
+                                 │ start()                                │
+                                 ▼                                        │
+┌─────────────────┐        ┌────────────────┐                            │
+│                 │ update │                │                            │
+│ ResponseStream  │◄───────┤ API Streaming  │                            │
+│                 │        │                │                            │
+└─────────────────┘        └────────────────┘                            │
+                                                                          │
+                                                                          │
+                         +---------------------+                          │
+                         |  Speech Segment 2  |◄─────────────────────────┘
+                         +---------------------+
+                                 │
+                                 │ onFinalTranscript(2)
+                                 ▼
+┌─────────────────┐        ┌────────────────┐
+│                 │ update │                │
+│TranscriptionBox │◄───────┤ Generation 2   │
+│                 │        │                │
+└─────────────────┘        └────────────────┘
 ```
 
 ## Implementation Plan
 
-### 1. Create Base Service Framework
+### 1. Create AudioSession Singleton
 
 ```javascript
-// baseService.js
-export class BaseService {
-  constructor(initialState = {}) {
-    this.state = { ...initialState };
-    this.subscribers = new Set();
-  }
-
-  // Subscribe to state changes and return unsubscribe function
-  subscribe(callback) {
-    this.subscribers.add(callback);
-    return () => this.subscribers.delete(callback);
-  }
-
-  // Update state and notify subscribers
-  setState(updates) {
-    // Create a new state object with the updates
-    Object.assign(this.state, updates);
-    this.notifySubscribers();
-  }
-
-  // Notify all subscribers
-  notifySubscribers() {
-    this.subscribers.forEach(subscriber => subscriber(this.state));
-  }
-}
-```
-
-### 2. Implement VoiceService
-
-```javascript
-// voiceService.js
-import { BaseService } from './baseService';
-import { getApiKeys } from './settings';
-
-export class VoiceServiceClass extends BaseService {
+// audioSession.js
+class AudioSession {
   constructor() {
-    super({
-      status: 'IDLE',  // IDLE, LISTENING, THINKING, ERROR
-      isRecording: false,
-      volume: 0,
-      partialResults: '',
-      transcribedText: '',
+    this.active = false;
+    this.mode = null;
+    this.callbacks = {
+      volumeChange: null,
+      partialTranscript: null,
+      finalTranscript: null,
       error: null
-    });
-    
-    this.ws = null;
-    this.audioBuffer = [];
-    this.cleanup = this.cleanup.bind(this);
-    // ...other initialization
+    };
   }
-  
-  // Start recording
-  startRecording(options = {}) {
-    // Get API keys directly - no React state dependency
-    const apiKeys = getApiKeys();
+
+  // Start audio session with all callback types
+  start({
+    mode = 'ptt', // 'ptt' or 'call'
+    onVolumeChange,
+    onPartialTranscript,
+    onFinalTranscript,
+    onError
+  }) {
+    if (this.active) {
+      this.stop(); // Stop existing session
+    }
     
-    // Implementation
+    this.active = true;
+    this.mode = mode;
+    this.callbacks = {
+      volumeChange: onVolumeChange,
+      partialTranscript: onPartialTranscript,
+      finalTranscript: onFinalTranscript,
+      error: onError
+    };
+    
+    // Start recording, setup WebSocket etc.
     // ...
     
-    // Update state
-    this.setState({
-      status: 'LISTENING',
-      isRecording: true
-    });
+    return {
+      stop: () => this.stop(),
+      isActive: () => this.active,
+      getMode: () => this.mode
+    };
   }
-  
-  // Handle transcription
-  handleTranscription(analysis) {
-    // Update state
-    this.setState({
-      transcribedText: analysis.transcription,
-      status: 'THINKING'
-    });
+
+  stop() {
+    if (!this.active) return;
     
-    // Call component generation
-    ComponentService.generateComponent(analysis)
-      .then(() => {
-        this.setState({ status: 'IDLE' });
-      })
-      .catch(error => {
-        this.setState({
-          status: 'ERROR',
-          error: error.message
-        });
-      });
+    // Cleanup WebSocket, mic, etc.
+    // ...
+    
+    this.active = false;
   }
-  
-  // ...other methods
+
+  // Handle WebSocket messages including partial transcripts
+  handleWebSocketMessage(message) {
+    // For volume/audio level updates
+    if (message.type === 'volume') {
+      if (this.callbacks.volumeChange) {
+        this.callbacks.volumeChange(message.level);
+      }
+    }
+    
+    // For transcript updates during recording
+    if (message.type === 'partial') {
+      if (this.callbacks.partialTranscript) {
+        this.callbacks.partialTranscript(message.text);
+      }
+    }
+    
+    // For final transcript after recording stops
+    if (message.type === 'final') {
+      if (this.callbacks.finalTranscript) {
+        this.callbacks.finalTranscript(message.text);
+      }
+    }
+  }
 }
 
-// Export singleton instance
-export const VoiceService = new VoiceServiceClass();
+// Export singleton
+export const audioSession = new AudioSession();
 ```
 
-### 3. Implement ComponentService
+### 2. Create ComponentGeneration Factory
 
 ```javascript
-// componentService.js
-import { BaseService } from './baseService';
+// componentGeneration.js
 import { conversationStorage } from './conversationStorage';
-import { widgetStorage } from './widgetStorage';
 import { processWithClaudeStream } from './processStream';
 import { getApiKeys } from './settings';
 
-export class ComponentServiceClass extends BaseService {
-  constructor() {
-    super({
-      currentIndex: -1,
-      history: [],
-      activeConversationId: null,
-      isGenerating: false
-    });
-    
-    // Initialize conversations
-    this.initConversation();
-  }
+// Component generation factory
+export function createComponentGeneration(transcription, options = {}) {
+  const id = generateUniqueId();
+  let status = 'idle'; // idle, generating, complete, error
+  let result = null;
+  let error = null;
+  let abortController = new AbortController();
   
-  // Initialize or load active conversation
-  async initConversation() {
-    // Get active conversation ID
-    let activeId = conversationStorage.getActiveId();
-    
-    // If no active conversation, create one
-    if (!activeId) {
-      const newConversation = conversationStorage.create();
-      activeId = newConversation.id;
-    }
-    
-    // Load conversation history
-    const conversationHistory = conversationStorage.getHistory(activeId);
-    
-    // Update state
-    this.setState({
-      history: conversationHistory,
-      currentIndex: conversationHistory.length - 1,
-      activeConversationId: activeId
-    });
-  }
+  // Callback stores
+  const progressCallbacks = new Set();
+  const completeCallbacks = new Set();
+  const errorCallbacks = new Set();
   
-  // Generate component
-  async generateComponent(analysis) {
-    this.setState({ isGenerating: true });
+  // Generation process controller
+  return {
+    id,
     
-    try {
-      // Get API keys directly
-      const apiKeys = getApiKeys();
+    // Start generation
+    async start() {
+      if (status !== 'idle') return;
       
-      // Generate component
-      const result = await processWithClaudeStream({
-        analysis,
-        apiKey: apiKeys.openrouter,
-        // ...other options
-      });
-      
-      // Add to history
-      this.addToHistory(result);
-      
-      return result;
-    } catch (error) {
-      console.error('Component generation error:', error);
-      throw error;
-    } finally {
-      this.setState({ isGenerating: false });
-    }
-  }
-  
-  // Add component to history
-  addToHistory(entry) {
-    const newHistory = [
-      ...this.state.history,
-      entry
-    ];
+      try {
+        status = 'generating';
+        
+        // Get API keys directly - no React state dependency
+        const apiKeys = getApiKeys();
+        
+        // Process with streaming API
+        const stream = await processWithClaudeStream({
+          transcription, 
+          apiKey: apiKeys.openrouter,
+          signal: abortController.signal,
+          onProgress: (chunk) => {
+            progressCallbacks.forEach(cb => cb(chunk));
+          }
+        });
+        
+        result = await stream.result;
+        status = 'complete';
+        completeCallbacks.forEach(cb => cb(result));
+        
+        return result;
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          status = 'aborted';
+        } else {
+          error = err;
+          status = 'error';
+          errorCallbacks.forEach(cb => cb(err));
+        }
+      }
+    },
     
-    this.setState({
-      history: newHistory,
-      currentIndex: newHistory.length - 1
-    });
+    // Register callbacks
+    onProgress(callback) {
+      progressCallbacks.add(callback);
+      return () => progressCallbacks.delete(callback);
+    },
     
-    // Save to persistent storage
-    if (this.state.activeConversationId) {
-      conversationStorage.saveHistory(
-        this.state.activeConversationId,
-        newHistory
-      );
+    onComplete(callback) {
+      completeCallbacks.add(callback);
+      if (status === 'complete' && result) {
+        callback(result);
+      }
+      return () => completeCallbacks.delete(callback);
+    },
+    
+    onError(callback) {
+      errorCallbacks.add(callback);
+      if (status === 'error' && error) {
+        callback(error);
+      }
+      return () => errorCallbacks.delete(callback);
+    },
+    
+    // Cancel generation
+    abort() {
+      abortController.abort();
+    },
+    
+    // Get current status
+    getStatus() {
+      return {
+        status,
+        result: status === 'complete' ? result : null,
+        error: status === 'error' ? error : null
+      };
     }
-  }
-  
-  // ...other methods
+  };
 }
 
-// Export singleton instance
-export const ComponentService = new ComponentServiceClass();
+// Helper for component history management
+export const ComponentHistory = {
+  addToHistory(component) {
+    const activeId = conversationStorage.getActiveId();
+    if (!activeId) return;
+    
+    const history = conversationStorage.getHistory(activeId);
+    const newHistory = [...history, component];
+    
+    conversationStorage.saveHistory(activeId, newHistory);
+    return newHistory;
+  },
+  
+  getHistory() {
+    const activeId = conversationStorage.getActiveId();
+    if (!activeId) return [];
+    
+    return conversationStorage.getHistory(activeId);
+  }
+};
 ```
 
-### 4. Create React Hooks
+### 3. Implement Input Mode Support
 
 ```javascript
-// useVoiceService.js
-import { useEffect, useReducer } from 'react';
-import { VoiceService } from '../services/voiceService';
-
-// Simple hook to force re-render
-function useForceUpdate() {
-  return useReducer(x => x + 1, 0)[1];
-}
-
-export function useVoiceService() {
-  const forceUpdate = useForceUpdate();
-  
-  useEffect(() => {
-    // Subscribe to voice service
-    return VoiceService.subscribe(forceUpdate);
-  }, [forceUpdate]);
-  
-  // Return current state and methods
-  return {
-    ...VoiceService.state,
-    startRecording: VoiceService.startRecording.bind(VoiceService),
-    stopRecording: VoiceService.stopRecording.bind(VoiceService),
-    // ...other methods
+// voiceButton.js
+export function VoiceButton({ 
+  onPressIn, 
+  onPressOut, 
+  onPress, 
+  status, 
+  volume, 
+  callActive 
+}) {
+  // Determine mode-specific button appearance
+  const getButtonContent = () => {
+    if (callActive) {
+      // Show call status and duration
+      return (
+        <>
+          <Phone size={28} color="white" />
+          <Text style={styles.callDuration}>{callDuration}</Text>
+        </>
+      );
+    } else if (status === 'LISTENING') {
+      // Show volume visualization
+      return (
+        <VolumeVisualization level={volume} />
+      );
+    } else if (status === 'PROCESSING') {
+      // Show processing indicator
+      return (
+        <ActivityIndicator color="white" size="large" />
+      );
+    } else {
+      // Show default mic icon
+      return <Mic size={32} color="white" />;
+    }
   };
-}
-
-// useComponentService.js
-import { useEffect, useReducer } from 'react';
-import { ComponentService } from '../services/componentService';
-
-export function useComponentService() {
-  const forceUpdate = useForceUpdate();
   
-  useEffect(() => {
-    // Subscribe to component service
-    return ComponentService.subscribe(forceUpdate);
-  }, [forceUpdate]);
-  
-  // Return current state and methods
-  return {
-    ...ComponentService.state,
-    generateComponent: ComponentService.generateComponent.bind(ComponentService),
-    addToHistory: ComponentService.addToHistory.bind(ComponentService),
-    // ...other methods
-  };
+  return (
+    <Pressable
+      onPressIn={onPressIn} // Start PTT
+      onPressOut={onPressOut} // End PTT
+      onPress={onPress} // Toggle call mode
+      style={[
+        styles.button,
+        callActive && styles.callActiveButton,
+        status === 'LISTENING' && styles.listeningButton,
+        status === 'PROCESSING' && styles.processingButton
+      ]}
+    >
+      {getButtonContent()}
+    </Pressable>
+  );
 }
 ```
 
 ## Migration Strategy
 
-1. Create the base service framework and service implementations without modifying existing code
-2. Add React hooks to integrate with the services
-3. Modify small components to use the hooks first (VoiceButton, etc.)
-4. Refactor the main VoiceAssistant component
-5. Remove React contexts after all components have been migrated
-6. Test thoroughly and optimize
+1. Implement AudioSession singleton
+2. Create ComponentGeneration factory
+3. Update VoiceButton to support both PTT and Call modes
+4. Implement TranscriptionBox that handles partial and final transcripts
+5. Create main controller that coordinates AudioSession and ComponentGeneration
+6. Test thoroughly in both modes
 
 ## Benefits
 
-- **Performance**: Significant reduction in React renders
-- **Reliability**: Elimination of race conditions and stale closures
-- **Simplicity**: Clear division between state management and UI
-- **Maintainability**: Easier to debug and extend
-- **Reusability**: Services can be used across different UI components
+- **Clear Process Boundaries**: Each audio session and generation has defined lifecycle
+- **Explicit Event Flow**: Components only receive events they need
+- **Mode-Specific Handling**: PTT and Call modes handled appropriately
+- **Independent Processes**: Multiple component generations can run in parallel
+- **Resource Management**: Audio hardware accessed through single entry point
+- **Performance**: Significant reduction in React renders by avoiding global state updates
+- **Reliability**: Elimination of race conditions with callback-based architecture
 
-## Considerations
+## Accessibility and UX Considerations
 
-- Keep existing storage services that work well
-- Leverage current settings.js which already uses direct MMKV access
-- Focus on fixing the problematic areas (audio recording, WebSocket, component generation)
-- Add comprehensive logging for debugging
-- Ensure backwards compatibility during migration
+- Support both PTT and Call modes with clear visual indicators
+- Keyboard mode for quiet environments
+- Seamless mode switching with natural gestures
+- Clear visual feedback for all states
 
 By implementing this architecture, we'll solve the core issues while maintaining what already works well in the codebase.
