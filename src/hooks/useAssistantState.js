@@ -75,7 +75,7 @@ export function useAssistantState() {
   // Use a single state object for current history data
   // This reduces the number of React state updates and potential race conditions
   const [historyState, setHistoryState] = useState({
-    currentIndex: componentHistoryService.getCurrentIndex(),
+    currentIndex: componentHistoryService.getState().currentIndex,
     current: componentHistoryService.getCurrent()
   });
 

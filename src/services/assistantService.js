@@ -55,9 +55,9 @@ class AssistantServiceClass extends EventEmitter {
   getError() { return this._state.error; }
   getCallStartTime() { return this._state.callStartTime; }
   getResponseStream() { return this._state.responseStream; }
-  getComponentHistory() { return componentHistoryService.getComponents(); }
-  getCurrentComponent() { return componentHistoryService.getCurrentComponent(); }
-  getCurrentHistoryIndex() { return componentHistoryService.getCurrentIndex(); }
+  getComponentHistory() { return componentHistoryService.getState().history; }
+  getCurrentComponent() { return componentHistoryService.getCurrent(); }
+  getCurrentHistoryIndex() { return componentHistoryService.getState().currentIndex; }
   isCallActive() { return this._state.mode === ASSISTANT_MODE.CALL && audioSession.isActive(); }
   
   // State update methods
@@ -193,7 +193,7 @@ class AssistantServiceClass extends EventEmitter {
     // Get analysis prompt
     const messages = analysisPrompt({ 
       text: '', 
-      requestHistory: this.getComponentHistory()?.map(entry => entry.transcription || entry.transcript).slice(0, 5) || []
+      requestHistory: this.getComponentHistory()?.map(entry => entry.transcript || '').slice(0, 5) || []
     });
     
     // Start audio session
@@ -256,7 +256,7 @@ class AssistantServiceClass extends EventEmitter {
     // Get analysis prompt
     const messages = analysisPrompt({ 
       text: '', 
-      requestHistory: this.getComponentHistory()?.map(entry => entry.transcription || entry.transcript).slice(0, 5) || []
+      requestHistory: this.getComponentHistory()?.map(entry => entry.transcript || '').slice(0, 5) || []
     });
     
     // Start audio session
@@ -304,25 +304,25 @@ class AssistantServiceClass extends EventEmitter {
   
   // History navigation methods
   navigateBack() {
-    const success = componentHistoryService.back();
+    const success = componentHistoryService.goBack();
     if (success) {
-      this.emit('historyChange', componentHistoryService.getComponents());
+      this.emit('historyChange', componentHistoryService.getState().history);
     }
     return success;
   }
   
   navigateForward() {
-    const success = componentHistoryService.forward();
+    const success = componentHistoryService.goForward();
     if (success) {
-      this.emit('historyChange', componentHistoryService.getComponents());
+      this.emit('historyChange', componentHistoryService.getState().history);
     }
     return success;
   }
   
   setHistoryIndex(index) {
-    const success = componentHistoryService.setComponentIndex(index);
+    const success = componentHistoryService.setCurrentIndex(index);
     if (success) {
-      this.emit('historyChange', componentHistoryService.getComponents());
+      this.emit('historyChange', componentHistoryService.getState().history);
     }
     return success;
   }

@@ -1,22 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
-import { storage, SETTINGS_KEY } from '../services/storage';
-import { BUILD_TIME_CONSTANTS } from '../config/buildTimeConstants';
+import { getSettings, getApiKeys, saveSettings as saveSettingsService, hasApiKeys } from '../services/settings';
 
-// Test keys from build-time constants
-const TEST_KEYS = {
-  ultravox: BUILD_TIME_CONSTANTS.TEST_ULTRAVOX_KEY,
-  openrouter: BUILD_TIME_CONSTANTS.TEST_OPENROUTER_KEY
-};
-
-// Default settings
-const DEFAULT_SETTINGS = {
-    ultravoxApiKey: '',
-    openrouterApiKey: '',
-    selectedModel: 'anthropic/claude-3.7-sonnet',
-    selectedLanguage: 'en'
-};
-
+/**
+ * Hook for checking API keys and redirecting to settings if needed
+ * Uses the settings service as the single source of truth
+ */
 export function useApiKeyCheck() {
     const [isChecking, setIsChecking] = useState(false);
     const router = useRouter();
@@ -26,31 +15,20 @@ export function useApiKeyCheck() {
         setIsChecking(true);
         
         try {
-            const settingsJson = storage.getString(SETTINGS_KEY);
-            const settings = settingsJson ? JSON.parse(settingsJson) : DEFAULT_SETTINGS;
-            let { ultravoxApiKey, openrouterApiKey } = settings;
+            // Get API keys from the settings service
+            const keys = getApiKeys();
             
-            // Use test keys if user hasn't provided their own and test keys are available
-            if (!ultravoxApiKey && TEST_KEYS.ultravox) {
-                console.log('Using test Ultravox API key');
-                ultravoxApiKey = TEST_KEYS.ultravox;
-            }
-            
-            if (!openrouterApiKey && TEST_KEYS.openrouter) {
-                console.log('Using test OpenRouter API key');
-                openrouterApiKey = TEST_KEYS.openrouter;
-            }
-            
-            const missingKeys = [];
-            if (!ultravoxApiKey) missingKeys.push('Ultravox');
-            if (!openrouterApiKey) missingKeys.push('OpenRouter');
-
-            if (missingKeys.length > 0) {
+            // Check if keys are missing
+            if (!keys.ultravox || !keys.openrouter) {
                 router.push('settings');
+                const missingKeys = [];
+                if (!keys.ultravox) missingKeys.push('Ultravox');
+                if (!keys.openrouter) missingKeys.push('OpenRouter');
+                
                 throw new Error(`Please set your ${missingKeys.join(' and ')} API key${missingKeys.length > 1 ? 's' : ''} in settings`);
             }
 
-            return { ultravoxKey: ultravoxApiKey, openrouterKey: openrouterApiKey };
+            return { ultravoxKey: keys.ultravox, openrouterKey: keys.openrouter };
         } finally {
             setIsChecking(false);
         }
@@ -59,6 +37,10 @@ export function useApiKeyCheck() {
     return { checkApiKeys, isChecking };
 }
 
+/**
+ * Hook for managing settings in React components
+ * Uses the settings service as the single source of truth
+ */
 export function useSettings() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [ultravoxApiKey, setUltravoxApiKey] = useState(null);
@@ -68,53 +50,33 @@ export function useSettings() {
     const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
     const [error, setError] = useState('');
 
+    // Load settings from service on component mount
     useEffect(() => {
         try {
-            const settingsJson = storage.getString(SETTINGS_KEY);
-            let settings = {};
-            
-            if (settingsJson) {
-                settings = JSON.parse(settingsJson);
-            }
-            
-            // Apply test keys if user has not provided their own
-            let ultravoxKeyToUse = settings.ultravoxApiKey || '';
-            let openrouterKeyToUse = settings.openrouterApiKey || '';
-            
-            // Use test keys if available and user hasn't provided their own
-            if (!ultravoxKeyToUse && TEST_KEYS.ultravox) {
-                console.log('Using test Ultravox API key');
-                ultravoxKeyToUse = TEST_KEYS.ultravox;
-            }
-            
-            if (!openrouterKeyToUse && TEST_KEYS.openrouter) {
-                console.log('Using test OpenRouter API key');
-                openrouterKeyToUse = TEST_KEYS.openrouter;
-            }
+            // Get settings from service
+            const settings = getSettings();
+            const keys = getApiKeys();
             
             console.log('Loading API keys:', {
-                ultravox: ultravoxKeyToUse ? `Set (length: ${ultravoxKeyToUse.length})` : 'Not set',
-                openrouter: openrouterKeyToUse ? `Set (length: ${openrouterKeyToUse.length})` : 'Not set'
+                ultravox: keys.ultravox ? `Set (length: ${keys.ultravox.length})` : 'Not set',
+                openrouter: keys.openrouter ? `Set (length: ${keys.openrouter.length})` : 'Not set'
             });
             
             // Set API keys in state
-            setUltravoxApiKey(ultravoxKeyToUse);
-            setOpenrouterApiKey(openrouterKeyToUse);
-            setSelectedLanguage(settings.selectedLanguage || 'en');
+            setUltravoxApiKey(keys.ultravox || '');
+            setOpenrouterApiKey(keys.openrouter || '');
+            setSelectedLanguage(settings.selectedLanguage);
             
             // Set model with default
             console.log('Loading settings - saved model:', settings.selectedModel);
-            const modelToUse = settings.selectedModel || 'anthropic/claude-3.7-sonnet';
-            console.log('Using model:', modelToUse);
-            setSelectedModel(modelToUse);
-            console.log('Model set in state:', modelToUse);
+            console.log('Using model:', settings.selectedModel);
+            setSelectedModel(settings.selectedModel);
             
             // Mark settings as loaded
             setIsSettingsLoaded(true);
 
-            // Show settings modal if no API keys (and no test keys)
-            if ((!ultravoxKeyToUse || !openrouterKeyToUse) && 
-                (!TEST_KEYS.ultravox || !TEST_KEYS.openrouter)) {
+            // Show settings modal if API keys are not set
+            if (!hasApiKeys()) {
                 setIsSettingsOpen(true);
             }
         } catch (error) {
@@ -124,16 +86,16 @@ export function useSettings() {
         }
     }, []);
 
+    // Save settings through the service
     const saveSettings = (ultravoxKey, openrouterKey, newModel, newLanguage) => {
-        const settings = {
+        saveSettingsService({
             ultravoxApiKey: ultravoxKey,
             openrouterApiKey: openrouterKey,
             selectedModel: newModel,
             selectedLanguage: newLanguage
-        };
+        });
         
-        storage.set(SETTINGS_KEY, JSON.stringify(settings));
-        
+        // Update local state
         setUltravoxApiKey(ultravoxKey);
         setOpenrouterApiKey(openrouterKey);
         setSelectedModel(newModel);
