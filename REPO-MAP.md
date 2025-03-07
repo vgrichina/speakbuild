@@ -6,7 +6,6 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 - [Application Entry Points](#application-entry-points)
 - [Components](#components)
-- [Contexts](#contexts)
 - [Services](#services)
 - [Controllers](#controllers)
 - [Hooks](#hooks)
@@ -51,12 +50,12 @@ This document provides a comprehensive overview of the codebase structure, modul
 - Default component for the main screen
 
 **State Management**:
-- Uses component history context
+- Uses componentHistoryService for history management
 
 **Dependencies**:
 - React, expo-router
 - Components: various UI components
-- Contexts: ComponentHistoryContext
+- Services: componentHistoryService
 
 ## Components
 
@@ -184,7 +183,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Dependencies**:
 - React, React Native
-- AssistantContext
+- AssistantService via useAssistantState hook
 
 ### ViewCode.js
 
@@ -200,15 +199,11 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Dependencies**:
 - React, React Native
 
-## Contexts
-
-> **Note**: All contexts have been replaced by services in the new service-based architecture. This section is kept for historical reference only.
-
-## Services (New Architecture)
+## Services
 
 ### assistantService.js
 
-**Purpose**: Central service for voice assistant functionality, replacing AssistantContext
+**Purpose**: Central service for voice assistant functionality
 
 **Exports**:
 - `AssistantService` singleton
@@ -239,7 +234,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ### audioSession.js
 
-**Purpose**: Manages audio recording and transcription, replacing VoiceRoomContext
+**Purpose**: Manages audio recording and transcription
 
 **Exports**:
 - `audioSession` singleton
