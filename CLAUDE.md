@@ -14,7 +14,7 @@
 ## Code Style Guidelines
 - Use functional components with hooks, not class components
 - Export components as named exports
-- Use context for shared state (AssistantContext, ComponentHistoryContext)
+- Use services and hooks for state management (service-based architecture)
 - Style with StyleSheet.create, not inline styles
 - Optimize renders with useCallback/useMemo for functions/objects
 - Handle errors with ErrorBoundary components

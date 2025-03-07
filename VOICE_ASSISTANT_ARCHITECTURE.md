@@ -608,12 +608,15 @@ The migration to a service-based architecture has been completed successfully:
 - ✅ Removed `GenerationContext.js` (functionality in `AssistantService`)
 - ✅ Removed `AssistantContext.js` (migrated to service-based architecture)
 - ✅ Removed `VoiceRoomContext.js` (replaced by `audioSession` service)
+- ✅ Removed `ComponentHistoryContext.js` (replaced by `componentHistoryService`)
 
 ### 2. Service-Based State Management:
 - ✅ `AssistantService`: Central service for coordinating voice assistant functionality
 - ✅ `audioSession`: Manages audio recording and transcription
 - ✅ `componentGeneration`: Factory for component generation processes
+- ✅ `componentHistoryService`: Manages component history with persistence
 - ✅ `useAssistantState`: Bridge hook connecting services to React components
+- ✅ `useComponentHistory`: Hook for accessing componentHistoryService
 
 ### 3. Updated Component Architecture:
 ```
@@ -628,11 +631,11 @@ The migration to a service-based architecture has been completed successfully:
 └─────────────┬───────────────┬─────┘   └───────────────────────────┘
               │               │
               ▼               ▼
-    ┌─────────────────┐ ┌─────────────────┐
-    │ AssistantService│ │ComponentHistory │
-    └────────┬────────┘ └────────┬────────┘
-             │                   │
-             ▼                   ▼
+    ┌─────────────────┐ ┌─────────────────────┐
+    │ AssistantService│ │componentHistoryService│
+    └────────┬────────┘ └──────────┬──────────┘
+             │                    │
+             ▼                    ▼
     ┌────────────────┐  ┌─────────────────┐
     │  audioSession  │  │ conversationStorage
     └────────────────┘  └─────────────────┘

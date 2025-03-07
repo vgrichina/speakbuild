@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'r
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { Feather } from '@expo/vector-icons';
 import { conversationStorage } from '../services/conversationStorage';
-import { useComponentHistory } from '../contexts/ComponentHistoryContext';
+import { useComponentHistory } from '../hooks/useComponentHistory';
 
 export function ConversationList(props) {
   const [searchQuery, setSearchQuery] = useState('');

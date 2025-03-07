@@ -6,7 +6,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { AssistantService, ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
-import { ComponentHistory } from '../services/componentGeneration';
+import { componentHistoryService } from '../services/componentHistoryService';
 
 export function useAssistantState() {
   // Initialize state from the service
@@ -72,14 +72,14 @@ export function useAssistantState() {
   const setHistoryIndex = useCallback((index) => AssistantService.setHistoryIndex(index), []);
   
   // Get current history index
-  const [currentHistoryIndex, setCurrentHistoryIndexState] = useState(ComponentHistory.getCurrentIndex());
-  const [currentComponent, setCurrentComponent] = useState(ComponentHistory.getCurrentComponent());
+  const [currentHistoryIndex, setCurrentHistoryIndexState] = useState(componentHistoryService.getCurrentIndex());
+  const [currentComponent, setCurrentComponent] = useState(componentHistoryService.getCurrentComponent());
 
   // Listen for history index changes
   useEffect(() => {
-    const unsubscribe = ComponentHistory.onIndexChange((index) => {
+    const unsubscribe = componentHistoryService.onIndexChange((index) => {
       setCurrentHistoryIndexState(index);
-      setCurrentComponent(ComponentHistory.getCurrentComponent());
+      setCurrentComponent(componentHistoryService.getCurrentComponent());
     });
     return unsubscribe;
   }, []);

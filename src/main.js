@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { EmptyState } from './components/EmptyState';
@@ -8,11 +8,17 @@ import { ResponseStream } from './components/ResponseStream';
 import { hasApiKeys } from './services/settings';
 import { createComponent, renderComponent } from './utils/componentUtils';
 import { useAssistantState } from './hooks/useAssistantState';
+import { componentHistoryService } from './services/componentHistoryService';
 
 /**
  * Main Voice Assistant component
  * Orchestrates audio, transcription, and component generation
  */
+// Initialize componentHistoryService
+console.log('Initializing componentHistoryService...');
+componentHistoryService.initialize();
+console.log('ComponentHistoryService initialized successfully');
+
 export const VoiceAssistant = React.memo(() => {
   // Track renders
   const renderCounter = React.useRef(0);

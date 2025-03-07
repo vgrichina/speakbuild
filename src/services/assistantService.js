@@ -6,16 +6,18 @@
  * Uses EventEmitter pattern for UI updates instead of React state.
  */
 import { audioSession } from './audioSession';
-import { createComponentGeneration, ComponentHistory } from './componentGeneration';
+import { createComponentGeneration } from './componentGeneration';
 import { analysisPrompt } from './analysis';
 import { getApiKeys, getSettings } from './settings';
 import { EventEmitter } from './eventEmitter';
+import { componentHistoryService } from './componentHistoryService';
 
 // Status and mode constants
 export const ASSISTANT_STATUS = {
   IDLE: 'idle',
   LISTENING: 'listening',
-  PROCESSING: 'processing',
+  THINKING: 'thinking',     // Intermediate state waiting for final transcript
+  PROCESSING: 'processing', // Component generation in progress
   ERROR: 'error'
 };
 
@@ -53,9 +55,9 @@ class AssistantServiceClass extends EventEmitter {
   getError() { return this._state.error; }
   getCallStartTime() { return this._state.callStartTime; }
   getResponseStream() { return this._state.responseStream; }
-  getComponentHistory() { return ComponentHistory.getComponents(); }
-  getCurrentComponent() { return ComponentHistory.getCurrentComponent(); }
-  getCurrentHistoryIndex() { return ComponentHistory.getCurrentIndex(); }
+  getComponentHistory() { return componentHistoryService.getComponents(); }
+  getCurrentComponent() { return componentHistoryService.getCurrentComponent(); }
+  getCurrentHistoryIndex() { return componentHistoryService.getCurrentIndex(); }
   isCallActive() { return this._state.mode === ASSISTANT_MODE.CALL && audioSession.isActive(); }
   
   // State update methods
@@ -88,11 +90,11 @@ class AssistantServiceClass extends EventEmitter {
   _handleFinalTranscript = (analysis) => {
     console.log('Final transcript received:', analysis);
     
-    // Update state with transcript
+    // Update state with transcript - first set to THINKING
     this._setState({
       transcript: analysis.transcription,
       partialTranscript: '',
-      status: ASSISTANT_STATUS.PROCESSING,
+      status: ASSISTANT_STATUS.THINKING,
       responseStream: ''
     });
     
@@ -108,6 +110,10 @@ class AssistantServiceClass extends EventEmitter {
     
     // Start component generation
     const generation = createComponentGeneration(analysis, {
+      onStart: () => {
+        // Transition from THINKING to PROCESSING when generation actually starts
+        this._setState({ status: ASSISTANT_STATUS.PROCESSING });
+      },
       onProgress: (content) => {
         this._state.responseStream += content;
         this.emit('responseStream', this._state.responseStream);
@@ -116,7 +122,7 @@ class AssistantServiceClass extends EventEmitter {
         console.log('Component generation complete:', result);
         
         // Add to history with both component and analysis data
-        ComponentHistory.addToHistory(result, analysis);
+        componentHistoryService.addToHistory(result, analysis);
         
         // Update state
         this._setState({
@@ -277,7 +283,10 @@ class AssistantServiceClass extends EventEmitter {
   }
   
   abortGeneration() {
-    if (this._state.status === ASSISTANT_STATUS.PROCESSING && this._currentGeneration) {
+    // Allow abortion in both THINKING and PROCESSING states
+    if ((this._state.status === ASSISTANT_STATUS.THINKING || 
+         this._state.status === ASSISTANT_STATUS.PROCESSING) && 
+        this._currentGeneration) {
       console.log('Aborting generation');
       this._currentGeneration.abort();
       this._setState({ status: ASSISTANT_STATUS.IDLE });
@@ -295,25 +304,25 @@ class AssistantServiceClass extends EventEmitter {
   
   // History navigation methods
   navigateBack() {
-    const success = ComponentHistory.back();
+    const success = componentHistoryService.back();
     if (success) {
-      this.emit('historyChange', ComponentHistory.getComponents());
+      this.emit('historyChange', componentHistoryService.getComponents());
     }
     return success;
   }
   
   navigateForward() {
-    const success = ComponentHistory.forward();
+    const success = componentHistoryService.forward();
     if (success) {
-      this.emit('historyChange', ComponentHistory.getComponents());
+      this.emit('historyChange', componentHistoryService.getComponents());
     }
     return success;
   }
   
   setHistoryIndex(index) {
-    const success = ComponentHistory.setCurrentIndex(index);
+    const success = componentHistoryService.setComponentIndex(index);
     if (success) {
-      this.emit('historyChange', ComponentHistory.getComponents());
+      this.emit('historyChange', componentHistoryService.getComponents());
     }
     return success;
   }

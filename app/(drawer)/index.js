@@ -4,7 +4,7 @@ import { VoiceAssistant } from '../../src/main';
 import { useNavigation } from 'expo-router';
 import { NavigationButtons } from '../../src/components/NavigationButtons';
 import { DebugMenuButton } from '../../src/components/DebugMenuButton';
-import { useComponentHistory } from '../../src/contexts/ComponentHistoryContext';
+import { useComponentHistory } from '../../src/hooks/useComponentHistory';
 import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import { Feather } from '@expo/vector-icons';
