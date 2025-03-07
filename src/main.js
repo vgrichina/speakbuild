@@ -117,7 +117,7 @@ export const VoiceAssistant = React.memo(() => {
         </View>
         
         {/* Response Stream (during generation) */}
-        {assistant.status === assistant.STATUS.PROCESSING && (
+        {(assistant.status === assistant.STATUS.PROCESSING || assistant.status === assistant.STATUS.THINKING) && (
           <ResponseStream
             responseStream={assistant.responseStream}
             status={assistant.status}
@@ -132,7 +132,7 @@ export const VoiceAssistant = React.memo(() => {
           finalTranscript={assistant.transcript}
           partialTranscript={assistant.partialTranscript}
           isListening={assistant.status === assistant.STATUS.LISTENING}
-          requestHistory={assistant.componentHistory.map(item => item.transcription).slice(0, 5)}
+          requestHistory={(assistant.history || []).map(item => item?.transcript || '').slice(0, 5)}
         />
         
         {/* Voice Button */}

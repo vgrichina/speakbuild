@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
 export const NavigationButtons = () => {
     // Use our new non-React-context state
     const { 
-        componentHistory,
+        history,
         currentHistoryIndex,
         navigateBack,
         navigateForward,
@@ -55,14 +55,14 @@ export const NavigationButtons = () => {
                     abortGeneration();
                     navigateForward();
                 }}
-                disabled={currentHistoryIndex >= componentHistory.length - 1}
+                disabled={!history || currentHistoryIndex >= (history.length - 1)}
                 style={({ pressed }) => [
                     styles.navButton,
-                    currentHistoryIndex >= componentHistory.length - 1 && styles.buttonDisabled,
+                    !history || currentHistoryIndex >= (history.length - 1) && styles.buttonDisabled,
                     pressed && styles.buttonPressed
                 ]}
             >
-                <ArrowRight size={20} color={currentHistoryIndex >= componentHistory.length - 1 ? '#999' : '#666'} />
+                <ArrowRight size={20} color={!history || currentHistoryIndex >= (history.length - 1) ? '#999' : '#666'} />
             </Pressable>
         </View>
     );

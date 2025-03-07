@@ -115,8 +115,10 @@ class AssistantServiceClass extends EventEmitter {
         this._setState({ status: ASSISTANT_STATUS.PROCESSING });
       },
       onProgress: (content) => {
-        this._state.responseStream += content;
-        this.emit('responseStream', this._state.responseStream);
+        // Use _setState to ensure proper state update and UI notification
+        this._setState({ 
+          responseStream: this._state.responseStream + content 
+        });
       },
       onComplete: (result) => {
         console.log('Component generation complete:', result);
