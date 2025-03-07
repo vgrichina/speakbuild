@@ -202,29 +202,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ## Contexts
 
-> **Note**: Most contexts have been replaced by services in the new service-based architecture
-
-### ComponentHistoryContext.js
-
-**Purpose**: Manages history of generated components
-
-**Exports**:
-- `ComponentHistoryProvider` component
-- `useComponentHistory` hook
-
-**State Management**:
-- `history`: Array of generated components
-- `currentIndex`: Index of currently displayed component
-
-**Methods**:
-- `addToHistory(component)`: Add new component to history
-- `goBack()`: Navigate to previous component
-- `goForward()`: Navigate to next component
-- `clearHistory()`: Clear component history
-
-**Dependencies**:
-- React
-- Services: conversationStorage, widgetStorage
+> **Note**: All contexts have been replaced by services in the new service-based architecture. This section is kept for historical reference only.
 
 ## Services (New Architecture)
 
@@ -285,11 +263,11 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Exports**:
 - `createComponentGeneration` factory function
-- `ComponentHistory` helper object
 
 **Factory Function Parameters**:
 - `analysis`: The analysis object with transcription and params
 - `options`: Configuration options including callbacks
+  - `onStart`: Called when generation starts
   - `onProgress`: Called with streaming updates
   - `onComplete`: Called when generation is complete
   - `onError`: Called when an error occurs
@@ -304,7 +282,6 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Dependencies**:
 - api
-- widgetStorage
 - componentExamples
 
 **State Management**:
@@ -323,13 +300,37 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ## Services
 
+### componentHistoryService.js
+
+**Purpose**: Service for managing component history and conversations
+
+**Exports**:
+- `componentHistoryService`: Singleton service object
+
+**State Management**:
+- `history`: Conversation history array
+- `currentIndex`: Index for conversation history
+- `activeConversationId`: Current conversation ID
+- `components`: Component history array
+- `componentIndex`: Index for component history
+
+**Methods**:
+- `addToHistory(component, analysis)`: Add component to history
+- `back()/forward()`: Navigate component history
+- `goBack()/goForward()`: Navigate conversation history
+- `switchConversation(id)`: Change active conversation
+- `createNewConversation()`: Create new conversation
+- `clearHistory()`: Clear history
+
+**Dependencies**:
+- Services: conversationStorage, widgetStorage
+
 ### componentGeneration.js
 
 **Purpose**: Factory for component generation processes
 
 **Exports**:
 - `createComponentGeneration`: Function to create generation controller
-- `ComponentHistory`: Object for history management
 
 **Methods**:
 - `start(input, callbacks)`: Start generation process
@@ -341,7 +342,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 - Component prompt building
 
 **Dependencies**:
-- Services: api, widgetStorage, componentExamples
+- Services: api, componentExamples
 
 ### processStream.js
 
@@ -477,7 +478,6 @@ This document provides a comprehensive overview of the codebase structure, modul
 - `callActive`: Boolean for call mode state
 - `callStartTime`: Timestamp for call start
 - `error`: Error state
-- `componentHistory`: Array of generated components
 - `currentHistoryIndex`: Index of currently displayed component
 - `currentComponent`: Currently displayed component
 
@@ -493,7 +493,33 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Dependencies**:
 - AssistantService
-- ComponentHistory from componentGeneration
+- componentHistoryService
+
+### useComponentHistory.js
+
+**Purpose**: React hook for accessing componentHistoryService
+
+**Exports**:
+- `useComponentHistory` hook
+
+**State Management**:
+- `history`: Array of conversation entries
+- `currentIndex`: Current conversation index
+- `activeConversationId`: Current conversation ID
+- `current`: Current conversation entry
+
+**Methods**:
+- `addToHistory()`: Add to conversation history
+- `setCurrentIndex()`: Set current index
+- `clearHistory()`: Clear history
+- `switchConversation()`: Switch active conversation
+- `createNewConversation()`: Create new conversation
+- `goBack()/goForward()`: Navigate conversation history
+- `getAllConversations()`: Get all conversations
+- `deleteConversation()`: Delete a conversation
+
+**Dependencies**:
+- componentHistoryService
 
 ### useErrorBoundary.js
 
@@ -560,14 +586,14 @@ This document provides a comprehensive overview of the codebase structure, modul
 4. **Component Rendering**:
    - Generated code compiled using createComponent
    - Component rendered with parameters
-   - Added to ComponentHistory
+   - Added to componentHistoryService
 
 5. **Navigation & History**:
    - User can navigate history with NavigationButtons
    - View source code with DebugMenuButton
    - Access settings and debugging tools
 
-The application follows a service-based architecture with clear separation of concerns:
+The application follows a complete service-based architecture with clear separation of concerns:
 - UI components handle display and user interaction
 - Services manage stateful application logic
 - Hooks provide React bindings to services
@@ -579,3 +605,5 @@ This architecture has several advantages:
 - Fewer re-renders due to more targeted updates
 - Clearer boundaries between concerns
 - Simpler state management through dedicated services
+- Independent lifecycle for services outside of React component tree
+- Consistent pattern for all application features
