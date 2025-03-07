@@ -36,7 +36,6 @@ export const VoiceAssistant = React.memo(() => {
   
   // Use the assistant controller
   const assistant = useAssistantController({
-    getApiKeys,
     selectedModel,
     selectedLanguage
   });

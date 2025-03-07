@@ -8,6 +8,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { audioSession } from '../services/audioSession';
 import { createComponentGeneration, ComponentHistory } from '../services/componentGeneration';
 import { analysisPrompt } from '../services/analysis';
+import { getApiKeys, getSettings } from '../services/settings';
 
 /**
  * Status states for the assistant
@@ -30,13 +31,11 @@ const MODE = {
 /**
  * Hook for controlling the voice assistant
  * @param {Object} options - Configuration options
- * @param {Function} options.getApiKeys - Function to retrieve API keys
  * @param {string} options.selectedModel - Model to use for generation
  * @param {string} options.selectedLanguage - Language for audio processing
  * @returns {Object} - Interface for controlling the assistant
  */
 export function useAssistantController({
-  getApiKeys,
   selectedModel,
   selectedLanguage = 'en'
 }) {
@@ -103,9 +102,9 @@ export function useAssistantController({
     // Reset response stream
     responseStream.current = '';
     
-    // Get API keys
+    // Get API keys directly from settings service
     const apiKeys = getApiKeys();
-    if (!apiKeys || !apiKeys.openrouter) {
+    if (!apiKeys.openrouter) {
       setError(new Error('OpenRouter API key is required'));
       setStatus(STATUS.ERROR);
       return;
@@ -149,7 +148,7 @@ export function useAssistantController({
     generation.start().catch(err => {
       console.error('Error starting generation:', err);
     });
-  }, [getApiKeys, mode, selectedModel]);
+  }, [mode, selectedModel]);
   
   /**
    * Handle audio session errors
@@ -170,9 +169,9 @@ export function useAssistantController({
       return;
     }
     
-    // Get API keys
+    // Get API keys directly from settings service
     const apiKeys = getApiKeys();
-    if (!apiKeys) {
+    if (!apiKeys.ultravox || !apiKeys.openrouter) {
       setError(new Error('API keys are required'));
       setStatus(STATUS.ERROR);
       return;
@@ -207,7 +206,6 @@ export function useAssistantController({
     }
   }, [
     status,
-    getApiKeys,
     handleVolumeChange,
     handlePartialTranscript,
     handleFinalTranscript,
@@ -247,9 +245,9 @@ export function useAssistantController({
     setError(null);
     setPartialTranscript('');
     
-    // Get API keys
+    // Get API keys directly from settings service
     const apiKeys = getApiKeys();
-    if (!apiKeys) {
+    if (!apiKeys.ultravox || !apiKeys.openrouter) {
       setError(new Error('API keys are required'));
       setStatus(STATUS.ERROR);
       return;
