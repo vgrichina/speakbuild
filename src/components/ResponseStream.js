@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ASSISTANT_STATUS } from '../services/assistantService';
 
 /**
  * Displays streaming response during generation
@@ -34,8 +35,8 @@ export const ResponseStream = React.memo(({
     }
   }, []);
 
-  // Only show when we have response content or we're in processing state
-  if (!responseStream && status !== 'processing') return null;
+  // Only show when we have response content or we're in thinking/processing state
+  if (!responseStream && status !== ASSISTANT_STATUS.PROCESSING && status !== ASSISTANT_STATUS.THINKING) return null;
 
   return (
     <View style={[
@@ -46,9 +47,10 @@ export const ResponseStream = React.memo(({
         <Text style={styles.heading}>
           {intent === 'modify' ? 'Modifying Component:' : 
            intent === 'new' ? 'Creating Component:' : 
+           status === ASSISTANT_STATUS.THINKING ? 'Processing Transcript...' :
            'Response:'}
         </Text>
-        {status === 'processing' && <LoadingSpinner />}
+        {(status === ASSISTANT_STATUS.PROCESSING || status === ASSISTANT_STATUS.THINKING) && <LoadingSpinner />}
       </View>
       
       <ScrollView 
@@ -56,10 +58,14 @@ export const ResponseStream = React.memo(({
         ref={scrollViewRef}
         onContentSizeChange={handleContentSizeChange}
       >
-        <Text style={styles.responseText}>{responseStream || ''}</Text>
+        {status === ASSISTANT_STATUS.THINKING && !responseStream ? (
+          <Text style={styles.placeholderText}>Analyzing transcript...</Text>
+        ) : (
+          <Text style={styles.responseText}>{responseStream || ''}</Text>
+        )}
       </ScrollView>
       
-      {status === 'error' && (
+      {status === ASSISTANT_STATUS.ERROR && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             An error occurred during generation
@@ -75,7 +81,7 @@ export const ResponseStream = React.memo(({
         </View>
       )}
       
-      {status === 'processing' && onCancel && (
+      {(status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING) && onCancel && (
         <View style={styles.cancelContainer}>
           <Text 
             style={styles.cancelButton}
@@ -123,6 +129,10 @@ const styles = StyleSheet.create({
   },
   responseText: {
     color: '#000'
+  },
+  placeholderText: {
+    color: '#666',
+    fontStyle: 'italic'
   },
   errorContainer: {
     marginTop: 8,

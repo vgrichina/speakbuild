@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
 import { Square, Mic, Phone, Keyboard } from 'lucide-react-native';
-import { ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
+import { ASSISTANT_STATUS } from '../services/assistantService';
 
 /**
  * Component for visualizing audio volume
@@ -112,7 +112,7 @@ export const VoiceButton = React.memo(({
   
   // Handle press in
   const handlePressIn = useCallback(() => {
-    if (disabled || keyboardActive) return;
+    if (disabled || keyboardActive || status === 'THINKING' || status === 'PROCESSING') return;
     
     setPressed(true);
     
@@ -131,11 +131,11 @@ export const VoiceButton = React.memo(({
     if (!callActive && onPressIn) {
       onPressIn();
     }
-  }, [callActive, disabled, keyboardActive, onPressIn]);
+  }, [callActive, disabled, keyboardActive, onPressIn, status]);
   
   // Handle press out
   const handlePressOut = useCallback(() => {
-    if (disabled || keyboardActive) return;
+    if (disabled || keyboardActive || status === 'THINKING' || status === 'PROCESSING') return;
     
     setPressed(false);
     
@@ -157,10 +157,10 @@ export const VoiceButton = React.memo(({
       // Long press release - stop PTT
       onPressOut();
     }
-  }, [callActive, disabled, keyboardActive, onPressOut, onToggleCall]);
+  }, [callActive, disabled, keyboardActive, onPressOut, onToggleCall, status]);
   
   // Determine if we're in an active listening state
-  const isListening = status === ASSISTANT_STATUS.LISTENING || pressed;
+  const isListening = status === ASSISTANT_STATUS.LISTENING || (pressed && !callActive);
   
   // Determine button content based on state
   const getButtonContent = () => {
@@ -178,8 +178,8 @@ export const VoiceButton = React.memo(({
     } else if (isListening) {
       // Showing volume visualization
       return <Square size={28} color="white" />;
-    } else if (status === ASSISTANT_STATUS.PROCESSING) {
-      // Processing
+    } else if (status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING) {
+      // Thinking or Processing
       return <Mic size={28} color="#FFF" />;
     } else {
       // Default state
@@ -197,23 +197,29 @@ export const VoiceButton = React.memo(({
           onPressOut={handlePressOut}
           style={[
             styles.button,
-            pressed && styles.buttonPressed,
+            pressed && !callActive && styles.buttonPressed,
             callActive && styles.callActiveButton,
             status === ASSISTANT_STATUS.LISTENING && styles.listeningButton,
+            status === ASSISTANT_STATUS.THINKING && styles.thinkingButton,
             status === ASSISTANT_STATUS.PROCESSING && styles.processingButton,
             status === ASSISTANT_STATUS.ERROR && styles.errorButton,
             disabled && styles.disabledButton
           ]}
-          disabled={disabled}
+          disabled={disabled || status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING}
         >
           {getButtonContent()}
         </Pressable>
       </View>
       
       {/* Label under button */}
-      <Text style={styles.buttonLabel}>
+      <Text style={[
+        styles.buttonLabel,
+        status === ASSISTANT_STATUS.THINKING && styles.thinkingLabel,
+        status === ASSISTANT_STATUS.PROCESSING && styles.processingLabel
+      ]}>
         {callActive ? 'Tap to end call' : 
           (status === ASSISTANT_STATUS.LISTENING ? 'Listening...' : 
+           status === ASSISTANT_STATUS.THINKING ? 'Thinking...' :
            status === ASSISTANT_STATUS.PROCESSING ? 'Processing...' : 
            'Hold to speak')}
       </Text>
@@ -277,6 +283,9 @@ const styles = StyleSheet.create({
   listeningButton: {
     backgroundColor: '#EF4444', // Red for listening
   },
+  thinkingButton: {
+    backgroundColor: '#F59E0B', // Amber for thinking
+  },
   processingButton: {
     backgroundColor: '#F59E0B', // Amber for processing
   },
@@ -318,5 +327,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: 'white',
     fontSize: 12,
+  },
+  thinkingLabel: {
+    color: '#F59E0B', // Amber to match the button color
+    fontWeight: '600',
+  },
+  processingLabel: {
+    color: '#F59E0B', // Amber to match the button color
+    fontWeight: '600',
   }
 });
