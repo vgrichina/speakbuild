@@ -144,8 +144,9 @@ export function useAssistantState() {
     componentHistoryService.renameConversation(conversationId, newTitle);
   }, []);
   
-  // Return unified hook interface with destructured values for ease of use
-  return {
+  // Memoize the complete state object to avoid unnecessary re-renders
+  // This ensures components only re-render when values they actually use change
+  const hookState = useMemo(() => ({
     // Assistant state (destructured for component convenience)
     status: assistantState.status,
     volume: assistantState.volume,
@@ -188,5 +189,24 @@ export function useAssistantState() {
     // Constants
     STATUS: ASSISTANT_STATUS,
     MODE: ASSISTANT_MODE
-  };
+  }), [
+    // Dependency array with all values that should trigger a re-render
+    assistantState.status,
+    assistantState.volume,
+    assistantState.transcript,
+    assistantState.partialTranscript,
+    assistantState.error,
+    assistantState.callActive,
+    assistantState.callStartTime,
+    assistantState.responseStream,
+    historyState.currentIndex,
+    historyState.current,
+    historyState.history,
+    historyState.activeConversationId,
+    currentComponent
+    // Note: No need to include action functions in dependency array
+    // since they're already memoized with useCallback
+  ]);
+  
+  return hookState;
 }
