@@ -110,10 +110,21 @@ export const VoiceButton = React.memo(({
     };
   }, []);
   
+  // Record press start time
+  const pressStartTimeRef = useRef(null);
+  
+  // Quick press threshold in milliseconds
+  const QUICK_PRESS_THRESHOLD = 500;
+  
   // Handle press in
   const handlePressIn = useCallback(() => {
     if (disabled || keyboardActive || status === 'THINKING' || status === 'PROCESSING') return;
     
+    // If already in call mode, do nothing on press
+    if (callActive) return;
+    
+    // Record when the press started
+    pressStartTimeRef.current = Date.now();
     setPressed(true);
     
     // Clear any existing timeout
@@ -121,26 +132,31 @@ export const VoiceButton = React.memo(({
       clearTimeout(pressTimeoutRef.current);
     }
     
-    // Set a timeout to detect long presses
+    // Set a timeout to detect long presses - just for visual feedback
     pressTimeoutRef.current = setTimeout(() => {
       // Long press detected - in this case we just maintain the pressed state
       pressTimeoutRef.current = null;
     }, 300);
     
-    // If not in call mode, start PTT
-    if (!callActive && onPressIn) {
-      onPressIn();
-    }
+    // Start recording
+    onPressIn();
   }, [callActive, disabled, keyboardActive, onPressIn, status]);
   
   // Handle press out
   const handlePressOut = useCallback(() => {
     if (disabled || keyboardActive || status === 'THINKING' || status === 'PROCESSING') return;
     
+    // If already in call mode or no press start time, do nothing
+    if (callActive || !pressStartTimeRef.current) {
+      setPressed(false);
+      return;
+    }
+    
     setPressed(false);
     
-    // If press timeout is still active, it was a short press (tap)
-    const wasShortPress = pressTimeoutRef.current !== null;
+    // Calculate press duration
+    const pressDuration = Date.now() - pressStartTimeRef.current;
+    console.log(`[VOICE_BUTTON] Button press duration: ${pressDuration}ms`);
     
     // Clear timeout
     if (pressTimeoutRef.current) {
@@ -148,16 +164,32 @@ export const VoiceButton = React.memo(({
       pressTimeoutRef.current = null;
     }
     
-    if (wasShortPress) {
-      // Short press detected - toggle call mode
-      if (onToggleCall) {
-        onToggleCall();
-      }
-    } else if (!callActive && onPressOut) {
-      // Long press release - stop PTT
-      onPressOut();
+    // Decision logic for PTT vs Call mode based on press duration
+    const { setMode, stopRecording } = onPressOut;
+    
+    if (pressDuration < QUICK_PRESS_THRESHOLD) {
+      // Short press - switch to call mode
+      console.log(`[VOICE_BUTTON] Quick press detected (${pressDuration}ms) - switching to call mode`);
+      setMode('call');
+    } else {
+      // Long press - end recording (PTT mode)
+      console.log(`[VOICE_BUTTON] Long press detected (${pressDuration}ms) - stopping recording`);
+      stopRecording();
     }
-  }, [callActive, disabled, keyboardActive, onPressOut, onToggleCall, status]);
+    
+    pressStartTimeRef.current = null;
+  }, [callActive, disabled, keyboardActive, onPressOut, status]);
+  
+  // Handle separate call button press
+  const handleCallButtonPress = useCallback(() => {
+    if (disabled || status === 'THINKING' || status === 'PROCESSING') return;
+    
+    // If in call mode, end the call
+    if (callActive && onPressOut.endCall) {
+      console.log('[VOICE_BUTTON] Ending active call');
+      onPressOut.endCall();
+    }
+  }, [callActive, disabled, onPressOut, status]);
   
   // Determine if we're in an active listening state
   const isListening = status === ASSISTANT_STATUS.LISTENING || (pressed && !callActive);
@@ -195,6 +227,7 @@ export const VoiceButton = React.memo(({
         <Pressable
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
+          onPress={callActive ? handleCallButtonPress : undefined}
           style={[
             styles.button,
             pressed && !callActive && styles.buttonPressed,

@@ -120,18 +120,14 @@ class AudioSessionSingleton {
   handleAudioData = (data) => {
     if (!this.active) return;
     
+    // Track when voice data is received
+    const startTime = Date.now();
+    
     // Decode base64 once
     const binaryString = atob(data);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    // If WebSocket is open, send immediately, otherwise buffer
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(bytes.buffer);
-    } else {
-      this.audioBuffer.push(bytes.buffer);
     }
     
     // Calculate volume from PCM data
@@ -143,13 +139,34 @@ class AudioSessionSingleton {
     const average = sum / pcmData.length;
     const normalizedVolume = Math.min(average / 32768, 1);
     
+    // If WebSocket is open, send immediately, otherwise buffer
+    let wsStatus;
+    
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(bytes.buffer);
+      wsStatus = 'sent';
+    } else {
+      this.audioBuffer.push(bytes.buffer);
+      wsStatus = `buffered:${this.audioBuffer.length}`;
+    }
+    
     // Direct throttling for volume updates based on time
     const now = Date.now();
+    let volumeUpdated = false;
     if (now - this.lastVolumeUpdateTime >= this.VOLUME_UPDATE_INTERVAL) {
       if (this.callbacks.volumeChange) {
         this.callbacks.volumeChange(normalizedVolume);
+        volumeUpdated = true;
       }
       this.lastVolumeUpdateTime = now;
+    }
+    
+    // Consolidated log message with all relevant info
+    const processingTime = Date.now() - startTime;
+    if (volumeUpdated) {
+      console.log(`[VOICE_DATA] Audio chunk: length=${data.length}, ${wsStatus}, vol=${normalizedVolume.toFixed(3)}, time=${processingTime}ms`);
+    } else {
+      console.log(`[VOICE_DATA] Audio chunk: length=${data.length}, ${wsStatus}, time=${processingTime}ms`);
     }
   }
 
@@ -192,8 +209,10 @@ class AudioSessionSingleton {
 
   /**
    * Main cleanup function
+   * @param {Object} options - Cleanup options
+   * @param {Function} options.onCleanupComplete - Optional callback when cleanup is complete
    */
-  cleanup() {
+  cleanup(options = {}) {
     console.log('CLEANUP: Function called, isCleaningUp =', this.isCleaningUp);
     
     if (this.isCleaningUp) {
@@ -202,6 +221,7 @@ class AudioSessionSingleton {
     }
     
     this.isCleaningUp = true;
+    const { onCleanupComplete } = options;
     
     try {
       // Clear any pending stop timeout
@@ -235,7 +255,15 @@ class AudioSessionSingleton {
       if (this.callbacks.volumeChange) {
         this.callbacks.volumeChange(0);
       }
+      
+      // Volume was already reset above
+      
       console.log('CLEANUP: Cleanup complete');
+      
+      // Execute completion callback if provided
+      if (typeof onCleanupComplete === 'function') {
+        onCleanupComplete();
+      }
     } catch (error) {
       console.error('CLEANUP ERROR:', error);
     } finally {
@@ -259,7 +287,7 @@ class AudioSessionSingleton {
    * @param {Object[]} options.analysisPrompt - Analysis prompt messages
    */
   async start(options) {
-    console.log('AudioSession.start called with mode:', options.mode);
+    console.log('[AUDIO_SESSION] Start called with mode:', options.mode);
     const { 
       mode = 'ptt',
       onVolumeChange = null,
@@ -408,11 +436,28 @@ class AudioSessionSingleton {
         
         // Handle agent transcripts
         if (msg.type === "transcript" && msg.role === "agent") {
+          // Create a compact log string with all message details
+          const isFinal = msg.final || false;
+          const hasText = !!msg.text;
+          const hasDelta = !!msg.delta;
+          const textLength = msg.text?.length || msg.delta?.length || 0;
+          console.log(`[TRANSCRIPTION] Msg: ${msg.role}, final=${isFinal}, text=${hasText}, delta=${hasDelta}, len=${textLength}`);
+          
           // Accumulate JSON text
           if (msg.text) {
+            // Full replacement
             this.accumulatedJson = msg.text;
+            console.log(`[TRANSCRIPTION] JSON: Set to ${msg.text.length} chars`);
           } else if (msg.delta) {
+            // Format the chunk to escape special characters for better log readability
+            const chunkDisplay = msg.delta.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+            
+            // Add the delta to accumulated JSON
+            const prevLen = this.accumulatedJson.length;
             this.accumulatedJson += msg.delta;
+            const newLen = this.accumulatedJson.length;
+            
+            console.log(`[TRANSCRIPTION] JSON: ${prevLen} + ${msg.delta.length} = ${newLen} >> ${chunkDisplay}`);
           }
           
           // Only try parsing if we have some JSON structure
@@ -422,15 +467,22 @@ class AudioSessionSingleton {
               const cleanedJson = cleanJsonText(this.accumulatedJson);
               
               // Try to parse partial JSON
+              const startParse = Date.now();
               const partialResult = parse(cleanedJson, STR | OBJ);
+              const parseTime = Date.now() - startParse;
+              console.log(`[TRANSCRIPTION] Parsing: cleaned=${cleanedJson.length}, time=${parseTime}ms`);
+              
               if (partialResult?.transcription) {
                 // Only update partial results if it's changed AND enough time has passed
                 const now = Date.now();
                 const contentChanged = partialResult.transcription !== this.lastPartialText;
+                const timeElapsed = now - this.lastPartialResultsUpdateTime >= this.PARTIAL_RESULTS_UPDATE_INTERVAL;
                 
-                if (contentChanged && now - this.lastPartialResultsUpdateTime >= this.PARTIAL_RESULTS_UPDATE_INTERVAL) {
+                console.log(`[TRANSCRIPTION] Partial: changed=${contentChanged}, elapsed=${timeElapsed}, len=${partialResult.transcription.length}, timeSince=${now - this.lastPartialResultsUpdateTime}ms`);
+                
+                if (contentChanged && timeElapsed) {
                   // Only log when actually updating
-                  console.log('Setting partial results:', partialResult.transcription);
+                  console.log('[TRANSCRIPTION] Setting partial results:', partialResult.transcription);
                   if (this.callbacks.partialTranscript) {
                     this.callbacks.partialTranscript(partialResult.transcription);
                     this.lastPartialText = partialResult.transcription;
@@ -439,32 +491,51 @@ class AudioSessionSingleton {
                 }
               }
             } catch (error) {
-              // Ignore parsing errors for partial JSON
-              console.debug('Partial JSON parse error:', error);
+              // Ignore parsing errors for partial JSON but log them
+              console.debug('[TRANSCRIPTION] Partial JSON parse error:', error);
             }
           }
           
           // Handle final message
           if (msg.final && this.accumulatedJson) {
+            console.log(`[FINAL_TRANSCRIPT] Processing final message, JSON length=${this.accumulatedJson.length}`);
+            const finalProcessingStart = Date.now();
+            
             try {
               // Clean the JSON text before parsing
               const jsonToProcess = cleanJsonText(this.accumulatedJson);
               
               // Use partial JSON parser instead of manual fixing
+              const parseStart = Date.now();
               const analysis = parse(jsonToProcess, STR | OBJ);
+              const parseTime = Date.now() - parseStart;
               
               // Validate required fields
               if (!analysis.transcription) {
                 throw new Error('Missing transcription field in response');
               }
               
+              // Create a detailed log of the analysis
+              const transcriptText = analysis.transcription;
+              const intent = analysis.intent || 'none';
+              const paramsCount = Object.keys(analysis.params || {}).length;
+              
+              // Format parameters as a compact JSON string
+              const paramsStr = JSON.stringify(analysis.params || {});
+              const widgetUrl = analysis.widgetUrl || "none";
+              
+              // Create a single comprehensive log line with all details
+              console.log(`[FINAL_TRANSCRIPT] intent="${intent}" widgetUrl="${widgetUrl}" params=${paramsStr} text="${transcriptText}"`);
+              
+              
               // Only process if this WebSocket is still active or in stopping state
               if (this.ws === wsInstance) {
-                console.log('Received final analysis, calling onFinalTranscript FIRST');
+                console.log('[FINAL_TRANSCRIPT] Received final analysis, calling onFinalTranscript FIRST');
                 
                 // IMPORTANT: Call the transcription callback BEFORE cleanup
                 // This ensures the component generation process starts before WebSocket is closed
                 if (this.callbacks.finalTranscript) {
+                  console.log(`[FINAL_TRANSCRIPT] Invoking finalTranscript callback with analysis (${Date.now() - finalProcessingStart}ms since start)`);
                   this.callbacks.finalTranscript(analysis);
                 }
                 
@@ -525,31 +596,36 @@ class AudioSessionSingleton {
           error,
           errorStack: error.stack || new Error().stack,
           wsState: wsInstance.readyState,
-          wsUrl: wsInstance.url
+          wsUrl: wsInstance.url,
+          isStopping: this.stopping,
+          isCleaningUp: this.isCleaningUp
         });
         
         // Only handle error if this is still the active WebSocket
         if (this.ws === wsInstance) {
-          console.log('WebSocket error triggering stop');
-          if (this.callbacks.error) {
-            this.callbacks.error(new Error('Connection error'));
+          // Only treat as an error if not already in stopping/cleanup state
+          if (!this.stopping && !this.isCleaningUp) {
+            console.log('[WebSocket] Error during active connection - triggering error state');
+            if (this.callbacks.error) {
+              this.callbacks.error(new Error('Connection error'));
+            }
+          } else {
+            console.log('[WebSocket] Error during normal cleanup - ignoring');
           }
           this.stop();
         }
       };
       
       wsInstance.onclose = (event) => {
-        console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
+        console.log('[AUDIO_SESSION] WebSocket connection closed with code:', event.code, 'reason:', event.reason);
   
         // Only handle close if this is still the active WebSocket
         if (this.ws === wsInstance) {
           if (this.active) {
-            console.log('WebSocket close triggering cleanup while recording is active');
-            // We only directly clean up here if we're still recording
-            // This avoids cleaning up twice for normal button release flows
+            console.log('[AUDIO_SESSION] WebSocket closed while recording is active - cleaning up session');
             this.cleanup();
           } else {
-            console.log('WebSocket closed while not recording - cleanup should have happened already');
+            console.log('[AUDIO_SESSION] WebSocket closed while not active - no additional cleanup needed');
           }
           
           // Always clear the WebSocket reference on close
@@ -581,12 +657,24 @@ class AudioSessionSingleton {
 
   /**
    * Stop audio recording and WebSocket connection
+   * @param {boolean} forceImmediateCleanup - If true, don't wait for final response
    */
-  stop() {
-    console.log(`STOP: Called with isActive=${this.active}`);
+  stop(forceImmediateCleanup = false) {
+    console.log(`[AUDIO_SESSION] Stop called with isActive=${this.active}, forceImmediate=${forceImmediateCleanup}`);
+    
+    if (!this.active) {
+      console.log('[AUDIO_SESSION] Already stopped');
+      return;
+    }
+    
+    if (forceImmediateCleanup) {
+      console.log('[AUDIO_SESSION] Force immediate cleanup requested');
+      this.cleanup();
+      return;
+    }
     
     if (this.ws) {
-      console.log('STOP: Active WebSocket found, waiting for final response');
+      console.log('[AUDIO_SESSION] Active WebSocket found, waiting for final response');
       
       // Set a state flag to indicate we're in stopping state
       // but don't close the WebSocket immediately
@@ -594,7 +682,7 @@ class AudioSessionSingleton {
       
       // Stop recording audio but keep WebSocket open
       if (this.audioSubscription) {
-        console.log('STOP: Stopping audio recording but keeping WebSocket open');
+        console.log('[AUDIO_SESSION] Stopping audio recording but keeping WebSocket open');
         AudioRecord.stop();
         
         // Replace the active listener with our no-op listener
@@ -609,25 +697,33 @@ class AudioSessionSingleton {
       
       // Set a timeout to force close after a delay if no final result arrives
       this.stopTimeoutId = setTimeout(() => {
-        console.log(`STOP: Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, force closing WebSocket`);
+        console.log(`[AUDIO_SESSION] Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, force closing WebSocket`);
         
         if (this.stopping && this.ws) {
+          // Create a timeout error and notify through the error callback
+          if (this.callbacks.error) {
+            const timeoutError = new Error("No transcript received within timeout period");
+            timeoutError.code = "TIMEOUT";
+            console.log('[AUDIO_SESSION] Triggering error for timeout');
+            this.callbacks.error(timeoutError);
+          }
+          
           try {
             this.ws.close(1000, "Timeout after stopping");
-            console.log('STOP: WebSocket close initiated after timeout');
+            console.log('[AUDIO_SESSION] WebSocket close initiated after timeout');
           } catch (err) {
-            console.error('STOP: Error closing WebSocket:', err);
+            console.error('[AUDIO_SESSION] Error closing WebSocket:', err);
             this.cleanup();
           }
         }
       }, FINAL_RESPONSE_TIMEOUT_MS);
     } else {
       // No active WebSocket, clean up immediately
-      console.log('STOP: No active WebSocket, calling cleanup() directly');
+      console.log('[AUDIO_SESSION] No active WebSocket, calling cleanup() directly');
       this.cleanup();
     }
     
-    console.log('STOP: Audio recording stopped, waiting for final response');
+    console.log('[AUDIO_SESSION] Audio recording stopped, waiting for final response');
   }
 
   /**
@@ -642,6 +738,28 @@ class AudioSessionSingleton {
    */
   getCurrentMode() {
     return this.mode;
+  }
+  
+  /**
+   * Set the audio session mode
+   * @param {string} newMode - 'ptt' or 'call'
+   */
+  setMode(newMode) {
+    if (this.mode === newMode) {
+      console.log(`[AUDIO_SESSION] Already in ${newMode} mode, no action needed`);
+      return;
+    }
+    
+    if (!this.active) {
+      console.log('[AUDIO_SESSION] No active session to set mode for');
+      return;
+    }
+    
+    console.log(`[AUDIO_SESSION] Setting audio session mode from ${this.mode} to ${newMode}`);
+    this.mode = newMode;
+    
+    // For now, this is just a state change
+    // In the future, we might need to send a mode change event to the server
   }
 }
 
