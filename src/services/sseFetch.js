@@ -7,6 +7,7 @@ export const fetchSSE = (url, options) => {
     }
 
     return new Promise((resolve, reject) => {
+        const startTime = Date.now();
         console.log('XHR: Creating SSE request');
         const xhr = new XMLHttpRequest();
         xhr.responseType = 'text';
@@ -88,8 +89,19 @@ export const fetchSSE = (url, options) => {
         };
 
         xhr.onerror = (error) => {
-            console.error('XHR: Error:', error);
-            reject(new Error('Network error'));
+            console.error('XHR: Error details:', {
+                error,
+                type: error?.type,
+                status: xhr.status,
+                statusText: xhr.statusText,
+                readyState: xhr.readyState,
+                responseType: xhr.responseType,
+                responseText: xhr.responseText?.substring(0, 500),
+                responseURL: xhr.responseURL,
+                timestamp: new Date().toISOString(),
+                timeElapsed: Date.now() - startTime
+            });
+            reject(new Error(`Network error: ${error?.type || 'unknown'}`));
         };
 
         if (options.signal) {

@@ -50,18 +50,40 @@ async function* streamCompletion(apiKey, messages, {
         })
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+        console.error(`API fetch error:`, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries([...response.headers.entries()]),
+            timestamp: new Date().toISOString()
+        });
+        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let chunkCount = 0;
+    const streamStartTime = Date.now();
 
     try {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            buffer += decoder.decode(value, { stream: true });
+            chunkCount++;
+            const chunk = decoder.decode(value, { stream: true });
+            
+            // Log chunk details every 25 chunks or if it's the first one
+            if (chunkCount === 1 || chunkCount % 25 === 0) {
+                console.log(`API stream chunk #${chunkCount}:`, {
+                    size: value?.length || 0,
+                    elapsed: Date.now() - streamStartTime,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            buffer += chunk;
             const lines = buffer.split('\n');
             
             // Keep the last partial line in buffer
@@ -88,10 +110,28 @@ async function* streamCompletion(apiKey, messages, {
                 }
             }
         }
+    } catch (err) {
+        console.error(`API stream error:`, {
+            message: err.message,
+            name: err.name,
+            type: err.type,
+            stack: err.stack?.substring(0, 500),
+            chunkCount,
+            bufferLength: buffer.length,
+            responseLength: fullResponse.length,
+            elapsed: Date.now() - streamStartTime,
+            timestamp: new Date().toISOString()
+        });
+        throw err;
     } finally {
         reader.releaseLock();
     }
 
+    console.log(`API stream complete:`, {
+        totalChunks: chunkCount,
+        responseLength: fullResponse.length,
+        totalTime: Date.now() - streamStartTime
+    });
     console.log(`<< ${truncateWithEllipsis(fullResponse, RESPONSE_PREVIEW_LENGTH)}`);
 }
 

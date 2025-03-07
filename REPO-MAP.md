@@ -346,9 +346,18 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Patterns**:
 - Direct callback pattern for streaming results
 - Component prompt building
+- Process-based lifecycle with clear state transitions
+- Comprehensive error handling with detailed context
+
+**Implementation Features**:
+- Structured logging throughout the generation lifecycle
+- Performance metrics for each stage of generation
+- Detailed error reporting with context-rich diagnostics
+- Clean resource management and error recovery
+- Validation of component format before acceptance
 
 **Dependencies**:
-- Services: api, componentExamples
+- Services: api, componentExamples, widgetStorage
 
 ### processStream.js
 
@@ -384,6 +393,12 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Methods**:
 - `completion(params)`: Make completion request
 - `streamCompletion(params, callbacks)`: Make streaming request
+
+**Implementation Features**:
+- Detailed performance monitoring for streaming chunks
+- Robust error handling with context-rich error objects
+- Tracking for stream metrics (chunks, tokens, duration)
+- Structured logging format for easier debugging
 
 **Dependencies**:
 - Services: sseFetch, settings
@@ -463,8 +478,16 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Exports**:
 - `sseFetch`: Function for SSE requests
 
+**Implementation Features**:
+- Cross-platform compatibility (Node.js, React Native, Web)
+- Enhanced error diagnostics with detailed context information
+- Performance tracking with timestamps for request lifecycle
+- Custom XMLHttpRequest implementation for React Native
+- Automatic error handling and resource release
+
 **Dependencies**:
-- Native fetch API
+- Native fetch API for non-React Native environments
+- XMLHttpRequest for React Native
 
 ## Hooks
 
@@ -601,18 +624,26 @@ This document provides a comprehensive overview of the codebase structure, modul
 3. **Component Generation**:
    - Analysis sent to Claude API through createComponentGeneration
    - AssistantService coordinates the process and manages state
-   - Streaming response shown in ResponseStream
-   - Code extracted and validated
+   - Streaming response shown in ResponseStream with real-time updates
+   - Code extracted, validated, and wrapped with proper dependencies
+   - Comprehensive error handling with detailed diagnostics
 
 4. **Component Rendering**:
    - Generated code compiled using createComponent
-   - Component rendered with parameters
-   - Added to componentHistoryService
+   - Component rendered with parameters through ErrorBoundary
+   - Added to componentHistoryService with metadata
+   - Performance metrics logged throughout process
 
 5. **Navigation & History**:
    - User can navigate history with NavigationButtons
    - View source code with DebugMenuButton
    - Access settings and debugging tools
+
+6. **Error Recovery**:
+   - Enhanced error details capture for network failures
+   - Detailed logging of error context and state
+   - Structured diagnostics for API connection issues
+   - User-friendly error presentation with retry options
 
 The application follows a complete service-based architecture with clear separation of concerns:
 - UI components handle display and user interaction
