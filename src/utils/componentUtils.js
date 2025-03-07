@@ -6,6 +6,7 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useErrorBoundary } from '../hooks/useErrorBoundary';
 
 export const createComponent = (code) => {
+    // Create the wrapper code
     const componentCode = `
         const React = arguments[0];
         const RN = arguments[1];

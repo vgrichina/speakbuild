@@ -36,16 +36,21 @@ export async function processWithClaudeStream({
             }
             
             if (done && code) {
+                console.log(`processStream: final code received`, { codeLength: code.length });
                 const GeneratedComponent = createComponent(code);
+                console.log(`processStream: component created successfully`);
                 await widgetStorage.store(analysis.widgetUrl, code);
+                console.log(`processStream: component stored in widgetStorage`);
                 
-                return {
+                const result = {
                     component: GeneratedComponent,
                     code,
                     request: analysis.transcription,
                     params: analysis.params || {},
                     intent: analysis.intent
                 };
+                console.log(`processStream: returning result with properties:`, Object.keys(result));
+                return result;
             }
         }
     } catch (error) {

@@ -9,12 +9,14 @@ import { LoadingSpinner } from './LoadingSpinner';
  * @param {string} props.status - Current generation status ('idle', 'processing', 'error')
  * @param {string} props.intent - Intent of the generation ('new', 'modify')
  * @param {Function} props.onRetry - Function to call when retry is pressed
+ * @param {Function} props.onCancel - Function to call when cancel is pressed
  */
 export const ResponseStream = React.memo(({
   responseStream,
   status,
   intent,
-  onRetry
+  onRetry,
+  onCancel
 }) => {
   const scrollViewRef = useRef(null);
   const renderCount = useRef(0);
@@ -72,6 +74,17 @@ export const ResponseStream = React.memo(({
           )}
         </View>
       )}
+      
+      {status === 'processing' && onCancel && (
+        <View style={styles.cancelContainer}>
+          <Text 
+            style={styles.cancelButton}
+            onPress={onCancel}
+          >
+            Cancel
+          </Text>
+        </View>
+      )}
     </View>
   );
 }, (prevProps, nextProps) => {
@@ -126,5 +139,17 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     fontWeight: 'bold',
     padding: 8
+  },
+  cancelContainer: {
+    marginTop: 8,
+    alignItems: 'center'
+  },
+  cancelButton: {
+    color: '#DC2626',
+    fontWeight: 'bold',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#DC2626',
+    borderRadius: 4
   }
 });

@@ -23,6 +23,9 @@ const cleanJsonText = (text) => {
   return text.replace(/^```(?:json)?\n?|\n?```$/g, '').trim();
 };
 
+// Constants
+const FINAL_RESPONSE_TIMEOUT_MS = 5000; // 5 seconds to wait for final response after stopping
+
 class AudioSessionSingleton {
   constructor() {
     // State tracking
@@ -36,6 +39,8 @@ class AudioSessionSingleton {
     this.isStartingRecording = false;
     this.audioSubscription = null;
     this.accumulatedJson = '';
+    this.stopping = false;
+    this.stopTimeoutId = null;
     
     // Throttling timestamps
     this.lastVolumeUpdateTime = 0;
@@ -199,6 +204,13 @@ class AudioSessionSingleton {
     this.isCleaningUp = true;
     
     try {
+      // Clear any pending stop timeout
+      if (this.stopTimeoutId) {
+        console.log('CLEANUP: Clearing pending stop timeout');
+        clearTimeout(this.stopTimeoutId);
+        this.stopTimeoutId = null;
+      }
+      
       console.log('CLEANUP: Starting full cleanup of audio session...');
       this.cleanupWebSocket();
       console.log('CLEANUP: WebSocket cleaned up, now stopping AudioRecord');
@@ -217,6 +229,7 @@ class AudioSessionSingleton {
       
       console.log('CLEANUP: Reset state');
       this.active = false;
+      this.stopping = false;
       this.audioBuffer = [];
       this.accumulatedJson = '';
       if (this.callbacks.volumeChange) {
@@ -378,8 +391,10 @@ class AudioSessionSingleton {
           return;
         }
         
-        if (wsInstance.readyState !== WebSocket.OPEN) {
-          console.log('Skipping message - WebSocket not open');
+        // Allow messages in CLOSING state when in stopping mode
+        if (wsInstance.readyState !== WebSocket.OPEN && 
+            !(this.stopping && wsInstance.readyState === WebSocket.CLOSING)) {
+          console.log(`Skipping message - WebSocket not open (state: ${wsInstance.readyState}, stopping: ${this.stopping})`);
           return;
         }
         
@@ -443,7 +458,7 @@ class AudioSessionSingleton {
                 throw new Error('Missing transcription field in response');
               }
               
-              // Only process if this WebSocket is still active
+              // Only process if this WebSocket is still active or in stopping state
               if (this.ws === wsInstance) {
                 console.log('Received final analysis, calling onFinalTranscript FIRST');
                 
@@ -455,7 +470,26 @@ class AudioSessionSingleton {
                 
                 // After transcription is processed, then clean up
                 console.log('Transcription processed, now performing cleanup');
-                this.stop();
+                
+                // Clear any pending timeout since we got our final response
+                if (this.stopTimeoutId) {
+                  console.log('Clearing stop timeout as final response received');
+                  clearTimeout(this.stopTimeoutId);
+                  this.stopTimeoutId = null;
+                }
+                
+                // If we were in stopping state, complete the WebSocket closure now
+                if (this.stopping && this.ws) {
+                  console.log('Final response received while in stopping state, closing WebSocket');
+                  try {
+                    this.ws.close(1000, "Final response received");
+                  } catch (err) {
+                    console.error('Error closing WebSocket after final response:', err);
+                  }
+                } else {
+                  // Normal flow, just stop
+                  this.stop();
+                }
               }
             } catch (error) {
               console.error('Error parsing final transcript:', error);
@@ -464,7 +498,20 @@ class AudioSessionSingleton {
                 if (this.callbacks.error) {
                   this.callbacks.error(new Error('Failed to parse transcript'));
                 }
-                this.stop();
+                
+                // Still need to stop even on error
+                if (this.stopping) {
+                  // Close immediately if we were waiting for this
+                  if (this.ws) {
+                    try {
+                      this.ws.close(1000, "Error in final response");
+                    } catch (err) {
+                      console.error('Error closing WebSocket after parsing error:', err);
+                    }
+                  }
+                } else {
+                  this.stop();
+                }
               }
             }
             // Reset accumulated JSON
@@ -539,24 +586,48 @@ class AudioSessionSingleton {
     console.log(`STOP: Called with isActive=${this.active}`);
     
     if (this.ws) {
-      console.log('STOP: Active WebSocket found, closing gracefully');
-      // Send close frame but let onclose event handler do the actual cleanup
-      // This allows any in-flight final messages to be processed
-      try {
-        this.ws.close(1000, "User stopped recording");
-        console.log('STOP: WebSocket close initiated');
-      } catch (err) {
-        console.error('STOP: Error closing WebSocket:', err);
-        // Fall back to immediate cleanup on error
-        this.cleanup();
+      console.log('STOP: Active WebSocket found, waiting for final response');
+      
+      // Set a state flag to indicate we're in stopping state
+      // but don't close the WebSocket immediately
+      this.stopping = true;
+      
+      // Stop recording audio but keep WebSocket open
+      if (this.audioSubscription) {
+        console.log('STOP: Stopping audio recording but keeping WebSocket open');
+        AudioRecord.stop();
+        
+        // Replace the active listener with our no-op listener
+        AudioRecord.on('data', this.noopAudioListener);
+        this.audioSubscription = null;
       }
+      
+      // Clear any existing timeout
+      if (this.stopTimeoutId) {
+        clearTimeout(this.stopTimeoutId);
+      }
+      
+      // Set a timeout to force close after a delay if no final result arrives
+      this.stopTimeoutId = setTimeout(() => {
+        console.log(`STOP: Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, force closing WebSocket`);
+        
+        if (this.stopping && this.ws) {
+          try {
+            this.ws.close(1000, "Timeout after stopping");
+            console.log('STOP: WebSocket close initiated after timeout');
+          } catch (err) {
+            console.error('STOP: Error closing WebSocket:', err);
+            this.cleanup();
+          }
+        }
+      }, FINAL_RESPONSE_TIMEOUT_MS);
     } else {
       // No active WebSocket, clean up immediately
       console.log('STOP: No active WebSocket, calling cleanup() directly');
       this.cleanup();
     }
     
-    console.log('STOP: Complete');
+    console.log('STOP: Audio recording stopped, waiting for final response');
   }
 
   /**

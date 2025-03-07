@@ -83,6 +83,7 @@ export function AssistantProvider({ children }) {
   // Function to process transcribed text and generate response
   const processTranscription = useCallback(async (analysis) => {
     console.log(`[AssistantContext] Processing transcription:`, analysis.transcription);
+    console.log(`[AssistantContext] Full analysis object:`, JSON.stringify(analysis));
     console.log(`[AssistantContext] Intent:`, analysis.intent);
     console.log(`[AssistantContext] Widget URL:`, analysis.widgetUrl);
     

@@ -499,7 +499,16 @@ export function VoiceRoomProvider({ children }) {
                 
                 // IMPORTANT: Call the transcription callback BEFORE cleanup
                 // This ensures the component generation process starts before WebSocket is closed
-                onTranscription?.(analysis);
+                console.log('Final transcription ready for processing:', JSON.stringify(analysis));
+                
+                // Call the callback with the analysis
+                if (onTranscription) {
+                  console.log('Calling onTranscription with analysis');
+                  onTranscription(analysis);
+                  console.log('onTranscription callback completed');
+                } else {
+                  console.error('No onTranscription callback provided');
+                }
                 
                 // After transcription is processed, then clean up
                 console.log('Transcription processed, now performing cleanup');
@@ -583,34 +592,98 @@ export function VoiceRoomProvider({ children }) {
     cleanup
   ]);
 
-  // Stop recording function
+  // Track two-phase shutdown process
+  const waitingForFinalTranscription = useRef(false);
+  const transcriptionTimeoutId = useRef(null);
+  const TRANSCRIPTION_TIMEOUT = 5000; // 5 seconds max wait
+
+  // Stop audio recording but keep WebSocket open for final transcription
+  const stopAudioRecording = useCallback(() => {
+    console.log('STOP_AUDIO: Stopping only audio recording, keeping WebSocket open');
+    
+    if (!state.isRecording) {
+      console.log('STOP_AUDIO: Not recording, nothing to stop');
+      return;
+    }
+    
+    try {
+      // Stop audio recording
+      AudioRecord.stop();
+      console.log('STOP_AUDIO: AudioRecord.stop() called successfully');
+      
+      // Replace the active listener with our no-op listener
+      if (audioSubscriptionRef.current) {
+        console.log('STOP_AUDIO: Replacing audio data listener with no-op');
+        AudioRecord.on('data', noopAudioListener);
+        audioSubscriptionRef.current = null;
+        console.log('STOP_AUDIO: Audio listener replaced');
+      }
+      
+      // Send an empty buffer as EOS marker if WebSocket is open
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        try {
+          console.log('STOP_AUDIO: Sending EOS marker');
+          const emptyBuffer = new ArrayBuffer(0);
+          ws.current.send(emptyBuffer);
+        } catch (error) {
+          console.error('STOP_AUDIO: Error sending EOS marker:', error);
+        }
+      }
+      
+      // Set a timeout for final transcription
+      waitingForFinalTranscription.current = true;
+      
+      // Clear any existing timeout
+      if (transcriptionTimeoutId.current) {
+        clearTimeout(transcriptionTimeoutId.current);
+      }
+      
+      transcriptionTimeoutId.current = setTimeout(() => {
+        console.log('TIMEOUT: Final transcription wait timed out after', TRANSCRIPTION_TIMEOUT, 'ms');
+        if (waitingForFinalTranscription.current) {
+          // Force cleanup if we're still waiting
+          console.log('TIMEOUT: Forcing cleanup due to transcription timeout');
+          waitingForFinalTranscription.current = false;
+          cleanup();
+          dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
+        }
+      }, TRANSCRIPTION_TIMEOUT);
+      
+      console.log('STOP_AUDIO: Audio recording stopped, waiting for final transcription');
+    } catch (error) {
+      console.error('STOP_AUDIO: Error stopping audio recording:', error);
+      // If there's an error, fall back to immediate cleanup
+      cleanup();
+      dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
+    }
+  }, [state.isRecording, cleanup]);
+  
+  // Stop recording function - modified for two-phase shutdown
   const stopRecording = useCallback(() => {
     console.log(`STOP_RECORDING: Called with isRecording=${state.isRecording}`);
     
-    if (ws.current) {
-      console.log('STOP_RECORDING: Active WebSocket found, closing gracefully');
-      // Send close frame but let onclose event handler do the actual cleanup
-      // This allows any in-flight final messages to be processed
-      try {
-        ws.current.close(1000, "User stopped recording");
-        console.log('STOP_RECORDING: WebSocket close initiated');
-      } catch (err) {
-        console.error('STOP_RECORDING: Error closing WebSocket:', err);
-        // Fall back to immediate cleanup on error
-        cleanup();
-      }
-    } else {
-      // No active WebSocket, clean up immediately
-      console.log('STOP_RECORDING: No active WebSocket, calling cleanup() directly');
-      cleanup();
+    if (!state.isRecording) {
+      console.log('STOP_RECORDING: Not recording, nothing to stop');
+      return;
     }
     
-    // Update recording state
-    console.log('STOP_RECORDING: Setting isRecording=false');
-    dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
-    console.log('STOP_RECORDING: Complete');
+    // If we're already waiting for transcription, force immediate cleanup
+    if (waitingForFinalTranscription.current) {
+      console.log('STOP_RECORDING: Already waiting for transcription, forcing cleanup');
+      waitingForFinalTranscription.current = false;
+      cleanup();
+      dispatch({ type: ACTIONS.SET_RECORDING, payload: false });
+      return;
+    }
     
-  }, [cleanup, state.isRecording]);
+    // Phase 1: Stop audio recording but keep WebSocket open
+    stopAudioRecording();
+    
+    // Don't set isRecording=false yet, we're still processing
+    // We'll set it after we get the final transcription
+    console.log('STOP_RECORDING: Complete (waiting for transcription)');
+    
+  }, [cleanup, state.isRecording, stopAudioRecording]);
 
   // Cancel recording function - simplified
   const cancelRecording = useCallback(() => {

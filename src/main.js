@@ -117,6 +117,7 @@ export const VoiceAssistant = React.memo(() => {
             status={assistant.status}
             intent={assistant.currentComponent?.intent || 'new'}
             onRetry={assistant.retry}
+            onCancel={assistant.abortGeneration}
           />
         )}
         
