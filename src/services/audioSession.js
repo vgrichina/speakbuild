@@ -42,6 +42,7 @@ class AudioSessionSingleton {
     this.stopping = false;
     this.stopTimeoutId = null;
     this.serverListening = false; // Flag to track server "listening" state
+    this.transcript = null; // Track if we've received a transcript
     
     // Throttling timestamps
     this.lastVolumeUpdateTime = 0;
@@ -256,6 +257,7 @@ class AudioSessionSingleton {
       this.audioBuffer = [];
       this.accumulatedJson = '';
       this.serverListening = false; // Reset server listening state
+      this.transcript = null; // Reset transcript tracking
       if (this.callbacks.volumeChange) {
         this.callbacks.volumeChange(0);
       }
@@ -569,6 +571,8 @@ class AudioSessionSingleton {
                 // This ensures the component generation process starts before WebSocket is closed
                 if (this.callbacks.finalTranscript) {
                   console.log(`[FINAL_TRANSCRIPT] Invoking finalTranscript callback with analysis (${Date.now() - finalProcessingStart}ms since start)`);
+                  // Set our transcript flag to indicate we received valid transcript
+                  this.transcript = analysis.transcription;
                   this.callbacks.finalTranscript(analysis);
                 }
                 
@@ -728,20 +732,43 @@ class AudioSessionSingleton {
       
       // Set a timeout to force close after a delay if no final result arrives
       this.stopTimeoutId = setTimeout(() => {
-        console.log(`[AUDIO_SESSION] Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, force closing WebSocket`);
+        console.log(`[AUDIO_SESSION] Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, checking transcript status`);
         
-        if (this.stopping && this.ws) {
-          // Create a timeout error and notify through the error callback
+        // First check if we already have a transcript - if so, don't trigger an error
+        if (this.transcript) {
+          console.log('[AUDIO_SESSION] Transcript was already received, ignoring timeout');
+          // Just perform cleanup without triggering error
+          if (this.stopping && this.ws) {
+            try {
+              // Only close if the WebSocket is still open
+              if (this.ws.readyState === WebSocket.OPEN) {
+                this.ws.close(1000, "Timeout after stopping - transcript already received");
+                console.log('[AUDIO_SESSION] WebSocket close initiated after timeout (already had transcript)');
+              } else {
+                console.log('[AUDIO_SESSION] WebSocket already closed/closing, no action needed');
+              }
+            } catch (err) {
+              console.error('[AUDIO_SESSION] Error closing WebSocket:', err);
+              this.cleanup();
+            }
+          }
+        } else if (this.stopping && this.ws) {
+          // No transcript received, trigger error
           if (this.callbacks.error) {
             const timeoutError = new Error("No transcript received within timeout period");
             timeoutError.code = "TIMEOUT";
-            console.log('[AUDIO_SESSION] Triggering error for timeout');
+            console.log('[AUDIO_SESSION] Triggering error for timeout - no transcript received');
             this.callbacks.error(timeoutError);
           }
           
           try {
-            this.ws.close(1000, "Timeout after stopping");
-            console.log('[AUDIO_SESSION] WebSocket close initiated after timeout');
+            // Only close if the WebSocket is still open
+            if (this.ws.readyState === WebSocket.OPEN) {
+              this.ws.close(1000, "Timeout after stopping");
+              console.log('[AUDIO_SESSION] WebSocket close initiated after timeout');
+            } else {
+              console.log('[AUDIO_SESSION] WebSocket already closed/closing, no action needed');
+            }
           } catch (err) {
             console.error('[AUDIO_SESSION] Error closing WebSocket:', err);
             this.cleanup();

@@ -4,16 +4,12 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 /**
  * Displays transcription and conversation history
  * @param {Object} props - Component props
- * @param {string} props.finalTranscript - Current final transcript text
- * @param {string} props.partialTranscript - Current partial transcript text
+ * @param {Array} props.transcripts - List of transcripts to display (already filtered)
  * @param {boolean} props.isListening - Whether the system is currently listening
- * @param {Array} props.requestHistory - History of previous requests (optional)
  */
 export const TranscriptionBox = React.memo(({ 
-  finalTranscript = '',
-  partialTranscript = '',
-  isListening = false,
-  requestHistory = []
+  transcripts = [],
+  isListening = false
 }) => {
   const scrollViewRef = useRef(null);
   
@@ -22,16 +18,12 @@ export const TranscriptionBox = React.memo(({
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollToEnd({ animated: true });
     }
-  }, [finalTranscript, partialTranscript, requestHistory]);
+  }, [transcripts]);
   
   // Determine whether to show the box
   const shouldShow = useMemo(() => {
-    return (
-      finalTranscript || 
-      partialTranscript || 
-      (requestHistory && requestHistory.length > 0)
-    );
-  }, [finalTranscript, partialTranscript, requestHistory]);
+    return transcripts.length > 0;
+  }, [transcripts]);
   
   if (!shouldShow) return null;
   
@@ -42,30 +34,22 @@ export const TranscriptionBox = React.memo(({
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
       >
-        {/* Previous requests */}
-        {requestHistory && requestHistory.length > 0 && (
-          <View style={styles.historyContainer}>
-            {requestHistory.map((request, index) => (
-              <Text key={index} style={styles.historyText}>
-                {request}
-              </Text>
-            ))}
-          </View>
-        )}
-        
-        {/* Final transcript */}
-        {finalTranscript && (
-          <Text style={styles.finalTranscript}>
-            {finalTranscript}
-          </Text>
-        )}
-        
-        {/* Partial transcript */}
-        {partialTranscript && (
-          <Text style={styles.partialTranscript}>
-            {partialTranscript}{isListening && <Text style={styles.ellipsis}>...</Text>}
-          </Text>
-        )}
+        <View style={styles.transcriptsContainer}>
+          {/* All transcripts except the latest */}
+          {transcripts.slice(0, -1).map((transcript, index) => (
+            <Text key={`history-${index}`} style={styles.historyText}>
+              {transcript}
+            </Text>
+          ))}
+          
+          {/* Latest transcript */}
+          {transcripts.length > 0 && (
+            <Text style={styles.currentTranscript}>
+              {transcripts[transcripts.length - 1]}
+              {isListening && <Text style={styles.ellipsis}>...</Text>}
+            </Text>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -85,22 +69,19 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
   },
-  historyContainer: {
-    marginBottom: 8
+  transcriptsContainer: {
+    width: '100%'
   },
   historyText: {
     color: '#6B7280',
     fontSize: 14,
     marginBottom: 4
   },
-  finalTranscript: {
+  currentTranscript: {
     color: '#111827',
-    fontSize: 16
-  },
-  partialTranscript: {
-    color: '#4B5563',
-    fontSize: 16,
-    fontStyle: 'italic'
+    fontSize: 18,
+    fontWeight: '500',
+    marginTop: 4
   },
   ellipsis: {
     color: '#9CA3AF'

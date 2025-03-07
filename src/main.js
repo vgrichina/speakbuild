@@ -131,10 +131,30 @@ export const VoiceAssistant = React.memo(() => {
         
         {/* Transcription Display */}
         <TranscriptionBox
-          finalTranscript={assistant.transcript}
-          partialTranscript={assistant.partialTranscript}
           isListening={assistant.status === assistant.STATUS.LISTENING}
-          requestHistory={(assistant.history || []).map(item => item?.transcript || '').slice(0, 5)}
+          transcripts={useMemo(() => {
+            // Get transcripts from history
+            const historyTranscripts = (assistant.history || [])
+              .map(item => item?.transcript || '')
+              .slice(0, 5);
+            
+            // Only include history items up to the current index
+            const filteredHistory = assistant.currentHistoryIndex > 0
+              ? historyTranscripts.slice(0, assistant.currentHistoryIndex)
+              : historyTranscripts;
+            
+            // Add current transcript to the list if it exists and isn't already in history
+            const allTranscripts = [...filteredHistory];
+            if (assistant.partialTranscript) {
+              allTranscripts.push(assistant.partialTranscript);
+            } else if (assistant.transcript && 
+                      (!filteredHistory.length || 
+                        filteredHistory[filteredHistory.length - 1] !== assistant.transcript)) {
+              allTranscripts.push(assistant.transcript);
+            }
+            
+            return allTranscripts;
+          }, [assistant.history, assistant.currentHistoryIndex, assistant.transcript, assistant.partialTranscript])}
         />
         
         {/* Voice Button */}
