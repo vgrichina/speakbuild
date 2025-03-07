@@ -302,25 +302,31 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ### componentHistoryService.js
 
-**Purpose**: Service for managing component history and conversations
+**Purpose**: Service for managing unified component history and conversations
 
 **Exports**:
 - `componentHistoryService`: Singleton service object
 
+**Implementation Pattern**:
+- Event-based state management
+- Unified history model (see [UNIFIED_HISTORY_MODEL.md](UNIFIED_HISTORY_MODEL.md))
+- Single source of truth for history state
+
 **State Management**:
-- `history`: Conversation history array
-- `currentIndex`: Index for conversation history
+- `history`: Unified history array with transcript+component pairs
+- `currentIndex`: Index for current position in history
 - `activeConversationId`: Current conversation ID
-- `components`: Component history array
-- `componentIndex`: Index for component history
 
 **Methods**:
-- `addToHistory(component, analysis)`: Add component to history
-- `back()/forward()`: Navigate component history
-- `goBack()/goForward()`: Navigate conversation history
+- `getState()`: Get complete current state
+- `getCurrent()`: Get current history entry
+- `addToHistory(component, analysis)`: Add component and analysis to history
+- `goBack()/goForward()`: Navigate history
+- `setCurrentIndex(index)`: Set history position directly
 - `switchConversation(id)`: Change active conversation
 - `createNewConversation()`: Create new conversation
 - `clearHistory()`: Clear history
+- `onIndexChange(callback)`: Subscribe to index change events
 
 **Dependencies**:
 - Services: conversationStorage, widgetStorage
@@ -469,8 +475,15 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Exports**:
 - `useAssistantState` hook
 
+**Implementation Pattern**:
+- Follows the [Service-Hook Pattern](SERVICE_HOOK_PATTERN.md)
+- Thin adapter layer over services
+- Uses consolidated state objects
+- Memoized return value for optimal rendering performance
+- Subscribes to service events instead of duplicating state
+
 **State Management**:
-- **Assistant State**
+- **Assistant State** (from AssistantService)
   - `status`: Current assistant status
   - `volume`: Audio volume level
   - `transcript`: Voice input transcription
@@ -479,13 +492,12 @@ This document provides a comprehensive overview of the codebase structure, modul
   - `callActive`: Boolean for call mode state
   - `callStartTime`: Timestamp for call start
   - `error`: Error state
-- **History State**
+- **History State** (from componentHistoryService)
   - `currentHistoryIndex`: Index of currently displayed component
   - `currentComponent`: Currently displayed component
   - `current`: Current unified history entry (transcript + component)
   - `activeConversationId`: Current conversation ID
   - `history`: All history entries for current conversation
-  - `componentHistory`: All generated components
 
 **Methods**:
 - **Assistant Actions**
@@ -508,6 +520,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Dependencies**:
 - AssistantService
 - componentHistoryService
+- audioSession (for call state detection)
 
 
 ### useErrorBoundary.js
@@ -526,9 +539,28 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Exports**:
 - `useSettings`: Hook for settings
+- `useApiKeyCheck`: Hook for validating API keys
+
+**Implementation Pattern**:
+- Follows the [Service-Hook Pattern](SERVICE_HOOK_PATTERN.md)
+- Thin adapter over settings.js service
+- Uses service methods directly instead of duplicating logic
+
+**State Management**:
+- `ultravoxApiKey`: Ultravox API key
+- `openrouterApiKey`: OpenRouter API key
+- `selectedModel`: Selected generation model
+- `selectedLanguage`: Selected voice recognition language
+- `isSettingsOpen`: UI state for settings modal
+- `isSettingsLoaded`: Loading state indicator
+- `error`: Error state
+
+**Methods**:
+- `saveSettings()`: Save settings through service
+- `setIsSettingsOpen()`: Control settings UI visibility
 
 **Dependencies**:
-- React
+- React, expo-router
 - Services: settings
 
 ## Utilities

@@ -59,7 +59,7 @@ componentHistoryService.deleteConversation(id);
 
 ## React Integration
 
-The unified `useAssistantState` hook provides React components with access to both assistant state and history:
+The unified `useAssistantState` hook provides React components with access to both assistant state and history. It follows our standard service-hook pattern described in [SERVICE_HOOK_PATTERN.md](SERVICE_HOOK_PATTERN.md).
 
 ```javascript
 const {
@@ -99,19 +99,45 @@ const {
 
 The hook consolidates all assistant and history functionality into a single interface, eliminating the need for separate hooks. This simplifies component code and avoids potential state synchronization issues.
 
-## Legacy Compatibility
+### State Management Architecture
 
-To ensure a smooth transition, the service provides backward compatibility APIs:
-
-```javascript
-// Legacy component history methods
-componentHistoryService.getComponents();      // Array in old format
-componentHistoryService.back();               // Alias for goBack
-componentHistoryService.forward();            // Alias for goForward
-componentHistoryService.setComponentIndex();  // Alias for setCurrentIndex
+```
+┌─────────────────────┐
+│                     │
+│     Components      │
+│                     │
+└─────────┬───────────┘
+          │ Uses
+          ▼
+┌─────────────────────┐    ┌─────────────────────┐
+│                     │    │                     │
+│  useAssistantState  │◄───┤  AssistantService   │
+│   (Unified Hook)    │    │                     │
+└─────────┬───────────┘    └─────────────────────┘
+          │ Accesses              ▲
+          ▼                      │ Calls
+┌─────────────────────┐    ┌─────────────────────┐
+│                     │    │                     │
+│ componentHistory    │◄───┤    audioSession     │
+│      Service        │    │                     │
+└─────────────────────┘    └─────────────────────┘
 ```
 
-These methods transform the unified data model into the legacy format expected by older components that haven't been updated.
+The hook uses a memoized return value to ensure that React components only re-render when the specific values they consume have changed. This optimization happens at the hook level, eliminating the need for consumers to implement their own memoization.
+
+## Legacy Compatibility
+
+Previously, the service provided backward compatibility APIs. With our recent architecture refactoring, these legacy methods have been removed to simplify the codebase:
+
+```javascript
+// REMOVED Legacy component history methods
+componentHistoryService.getComponents();      // Replaced with getState().history
+componentHistoryService.back();               // Replaced with goBack()
+componentHistoryService.forward();            // Replaced with goForward()
+componentHistoryService.setComponentIndex();  // Replaced with setCurrentIndex()
+```
+
+All application code has been updated to use the new unified API methods. This simplifies the service implementation and ensures a consistent interface throughout the codebase.
 
 ## Implementation Notes
 
