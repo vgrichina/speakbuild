@@ -116,8 +116,10 @@ export const VoiceAssistant = React.memo(() => {
           )}
         </View>
         
-        {/* Response Stream (during generation) */}
-        {(assistant.status === assistant.STATUS.PROCESSING || assistant.status === assistant.STATUS.THINKING) && (
+        {/* Response Stream (during generation or error if we have content) */}
+        {(assistant.status === assistant.STATUS.PROCESSING || 
+          assistant.status === assistant.STATUS.THINKING || 
+          (assistant.status === assistant.STATUS.ERROR && assistant.responseStream)) && (
           <ResponseStream
             responseStream={assistant.responseStream}
             status={assistant.status}
@@ -141,9 +143,12 @@ export const VoiceAssistant = React.memo(() => {
           volume={assistant.volume}
           callActive={assistant.callActive}
           callStartTime={assistant.callStartTime}
-          onPressIn={assistant.startPTT}
-          onPressOut={assistant.stopPTT}
-          onToggleCall={assistant.toggleCallMode}
+          onPressIn={assistant.startRecording}
+          onPressOut={{
+            setMode: (mode) => assistant.setMode(mode === 'call' ? assistant.MODE.CALL : assistant.MODE.PTT),
+            stopRecording: assistant.stopRecording,
+            endCall: assistant.endCall
+          }}
           onToggleKeyboard={handleToggleKeyboard}
           keyboardActive={keyboardActive}
           disabled={!isApiKeysSet}

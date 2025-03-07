@@ -35,8 +35,11 @@ export const ResponseStream = React.memo(({
     }
   }, []);
 
-  // Only show when we have response content or we're in thinking/processing state
-  if (!responseStream && status !== ASSISTANT_STATUS.PROCESSING && status !== ASSISTANT_STATUS.THINKING) return null;
+  // Only show when we have response content or we're in thinking/processing/error state
+  if (!responseStream && 
+      status !== ASSISTANT_STATUS.PROCESSING && 
+      status !== ASSISTANT_STATUS.THINKING &&
+      status !== ASSISTANT_STATUS.ERROR) return null;
 
   return (
     <View style={[
@@ -81,7 +84,10 @@ export const ResponseStream = React.memo(({
         </View>
       )}
       
-      {(status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING) && onCancel && (
+      {(status === ASSISTANT_STATUS.THINKING || 
+         status === ASSISTANT_STATUS.PROCESSING || 
+         (status === ASSISTANT_STATUS.ERROR && responseStream)) && 
+         onCancel && (
         <View style={styles.cancelContainer}>
           <Text 
             style={styles.cancelButton}

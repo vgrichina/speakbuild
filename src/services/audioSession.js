@@ -41,6 +41,7 @@ class AudioSessionSingleton {
     this.accumulatedJson = '';
     this.stopping = false;
     this.stopTimeoutId = null;
+    this.serverListening = false; // Flag to track server "listening" state
     
     // Throttling timestamps
     this.lastVolumeUpdateTime = 0;
@@ -139,15 +140,17 @@ class AudioSessionSingleton {
     const average = sum / pcmData.length;
     const normalizedVolume = Math.min(average / 32768, 1);
     
-    // If WebSocket is open, send immediately, otherwise buffer
+    // If WebSocket is open AND server is in listening state, send immediately, otherwise buffer
     let wsStatus;
     
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN && this.serverListening) {
       this.ws.send(bytes.buffer);
       wsStatus = 'sent';
     } else {
+      const wsState = this.ws ? `ws:${this.ws.readyState}` : 'ws:null';
+      const listeningState = this.serverListening ? 'listening:yes' : 'listening:no';
       this.audioBuffer.push(bytes.buffer);
-      wsStatus = `buffered:${this.audioBuffer.length}`;
+      wsStatus = `buffered:${this.audioBuffer.length} ${wsState} ${listeningState}`;
     }
     
     // Direct throttling for volume updates based on time
@@ -252,6 +255,7 @@ class AudioSessionSingleton {
       this.stopping = false;
       this.audioBuffer = [];
       this.accumulatedJson = '';
+      this.serverListening = false; // Reset server listening state
       if (this.callbacks.volumeChange) {
         this.callbacks.volumeChange(0);
       }
@@ -397,67 +401,99 @@ class AudioSessionSingleton {
       const wsInstance = new WebSocket(joinUrl);
       this.ws = wsInstance;
       
+      // Flag to track if we've received the "listening" state from server
+      this.serverListening = false;
+      
       wsInstance.onopen = () => {
-        console.log(`WebSocket opened with ID:`, wsInstance.url.split('/').pop());
+        const wsId = wsInstance.url.split('/').pop();
+        console.log(`[AUDIO_SESSION] WebSocket opened with ID: ${wsId}`);
         
         // Only proceed if this is still the active WebSocket
         if (this.ws === wsInstance) {
-          // Send buffered audio
-          while (this.audioBuffer.length > 0) {
-            const buffer = this.audioBuffer.shift();
-            if (wsInstance.readyState === WebSocket.OPEN) {
-              wsInstance.send(buffer);
-            }
+          // Log that we're waiting for "listening" state before sending buffered audio
+          const bufferSize = this.audioBuffer.length;
+          if (bufferSize > 0) {
+            console.log(`[AUDIO_SESSION] Holding ${bufferSize} buffered chunks until server sends "listening" state`);
           }
+          
+          // We'll send the buffer when we receive the "listening" state message
+          // See the onmessage handler for this logic
         }
       };
       
       wsInstance.onmessage = (event) => {
+        // Log raw message info immediately upon receipt, before any processing
+        const wsId = wsInstance.url.split('/').pop();
+        const dataLength = event.data?.length || 0;
+        const preview = typeof event.data === 'string' 
+          ? event.data.substring(0, 50).replace(/\n/g, '\\n') 
+          : '[binary data]';
+        console.log(`[WS_MESSAGE] Received msg: size=${dataLength}B, wsId=${wsId}, state=${wsInstance.readyState}, preview="${preview}${dataLength > 50 ? '...' : ''}"`);
+        
         // Only process messages if this is still the active WebSocket
         if (this.ws !== wsInstance) {
-          console.log('Skipping message - WebSocket no longer active');
+          console.log('[WS_MESSAGE] Skipping - WebSocket no longer active');
           return;
         }
         
         // Allow messages in CLOSING state when in stopping mode
         if (wsInstance.readyState !== WebSocket.OPEN && 
             !(this.stopping && wsInstance.readyState === WebSocket.CLOSING)) {
-          console.log(`Skipping message - WebSocket not open (state: ${wsInstance.readyState}, stopping: ${this.stopping})`);
+          console.log(`[WS_MESSAGE] Skipping - WebSocket not open (state: ${wsInstance.readyState}, stopping: ${this.stopping})`);
           return;
         }
         
         let msg;
         try {
           msg = JSON.parse(event.data);
+          console.log(`[WS_MESSAGE] Parsed type="${msg.type}" role="${msg.role || 'none'}" final=${!!msg.final}`);
+          
+          // Check for "listening" state message
+          if (msg.type === "state" && msg.state === "listening" && !this.serverListening) {
+            this.serverListening = true;
+            console.log(`[AUDIO_SESSION] Server is now listening, can send buffered audio`);
+            
+            // Send buffered audio now that server is ready
+            const bufferSize = this.audioBuffer.length;
+            if (bufferSize > 0) {
+              console.log(`[AUDIO_SESSION] Now sending ${bufferSize} buffered chunks to WebSocket ${wsId}`);
+              
+              let sentCount = 0;
+              const startTime = Date.now();
+              
+              while (this.audioBuffer.length > 0) {
+                const buffer = this.audioBuffer.shift();
+                if (wsInstance.readyState === WebSocket.OPEN) {
+                  wsInstance.send(buffer);
+                  sentCount++;
+                }
+              }
+              
+              const elapsed = Date.now() - startTime;
+              console.log(`[AUDIO_SESSION] Sent ${sentCount}/${bufferSize} buffered chunks in ${elapsed}ms to WebSocket ${wsId}`);
+            }
+          }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error('[WS_MESSAGE] Failed to parse:', error);
           return;
         }
         
         // Handle agent transcripts
         if (msg.type === "transcript" && msg.role === "agent") {
-          // Create a compact log string with all message details
-          const isFinal = msg.final || false;
-          const hasText = !!msg.text;
-          const hasDelta = !!msg.delta;
-          const textLength = msg.text?.length || msg.delta?.length || 0;
-          console.log(`[TRANSCRIPTION] Msg: ${msg.role}, final=${isFinal}, text=${hasText}, delta=${hasDelta}, len=${textLength}`);
-          
+          // Process transcription data
           // Accumulate JSON text
           if (msg.text) {
             // Full replacement
             this.accumulatedJson = msg.text;
-            console.log(`[TRANSCRIPTION] JSON: Set to ${msg.text.length} chars`);
+            console.log(`[TRANSCRIPTION] Chunk  >> ${msg.role}: "${msg.text.substring(0, 20)}${msg.text.length > 20 ? '...' : ''}"`);
           } else if (msg.delta) {
             // Format the chunk to escape special characters for better log readability
             const chunkDisplay = msg.delta.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
             
             // Add the delta to accumulated JSON
-            const prevLen = this.accumulatedJson.length;
             this.accumulatedJson += msg.delta;
-            const newLen = this.accumulatedJson.length;
             
-            console.log(`[TRANSCRIPTION] JSON: ${prevLen} + ${msg.delta.length} = ${newLen} >> ${chunkDisplay}`);
+            console.log(`[TRANSCRIPTION] Chunk  >> ${msg.role}: "${chunkDisplay}"`);
           }
           
           // Only try parsing if we have some JSON structure
@@ -470,15 +506,12 @@ class AudioSessionSingleton {
               const startParse = Date.now();
               const partialResult = parse(cleanedJson, STR | OBJ);
               const parseTime = Date.now() - startParse;
-              console.log(`[TRANSCRIPTION] Parsing: cleaned=${cleanedJson.length}, time=${parseTime}ms`);
               
               if (partialResult?.transcription) {
                 // Only update partial results if it's changed AND enough time has passed
                 const now = Date.now();
                 const contentChanged = partialResult.transcription !== this.lastPartialText;
                 const timeElapsed = now - this.lastPartialResultsUpdateTime >= this.PARTIAL_RESULTS_UPDATE_INTERVAL;
-                
-                console.log(`[TRANSCRIPTION] Partial: changed=${contentChanged}, elapsed=${timeElapsed}, len=${partialResult.transcription.length}, timeSince=${now - this.lastPartialResultsUpdateTime}ms`);
                 
                 if (contentChanged && timeElapsed) {
                   // Only log when actually updating
@@ -592,46 +625,44 @@ class AudioSessionSingleton {
       };
       
       wsInstance.onerror = (error) => {
-        console.error('WebSocket error:', {
+        const wsId = wsInstance.url.split('/').pop();
+        console.error(`[WS_ERROR] WebSocket error for wsId=${wsId}, state=${wsInstance.readyState}, stopping=${this.stopping}, cleaning=${this.isCleaningUp}`, {
           error,
-          errorStack: error.stack || new Error().stack,
-          wsState: wsInstance.readyState,
-          wsUrl: wsInstance.url,
-          isStopping: this.stopping,
-          isCleaningUp: this.isCleaningUp
+          errorStack: error.stack || new Error().stack
         });
         
         // Only handle error if this is still the active WebSocket
         if (this.ws === wsInstance) {
           // Only treat as an error if not already in stopping/cleanup state
           if (!this.stopping && !this.isCleaningUp) {
-            console.log('[WebSocket] Error during active connection - triggering error state');
+            console.log(`[WS_ERROR] Error during active connection, wsId=${wsId} - triggering error state`);
             if (this.callbacks.error) {
               this.callbacks.error(new Error('Connection error'));
             }
           } else {
-            console.log('[WebSocket] Error during normal cleanup - ignoring');
+            console.log(`[WS_ERROR] Error during normal cleanup, wsId=${wsId} - ignoring`);
           }
           this.stop();
         }
       };
       
       wsInstance.onclose = (event) => {
-        console.log('[AUDIO_SESSION] WebSocket connection closed with code:', event.code, 'reason:', event.reason);
+        const wsId = wsInstance.url.split('/').pop();
+        console.log(`[WS_CLOSE] WebSocket closed: wsId=${wsId}, code=${event.code}, reason="${event.reason}", active=${this.active}, stopping=${this.stopping}`);
   
         // Only handle close if this is still the active WebSocket
         if (this.ws === wsInstance) {
           if (this.active) {
-            console.log('[AUDIO_SESSION] WebSocket closed while recording is active - cleaning up session');
+            console.log(`[WS_CLOSE] Closed while recording active (wsId=${wsId}) - cleaning up session`);
             this.cleanup();
           } else {
-            console.log('[AUDIO_SESSION] WebSocket closed while not active - no additional cleanup needed');
+            console.log(`[WS_CLOSE] Closed while not active (wsId=${wsId}) - no additional cleanup needed`);
           }
           
           // Always clear the WebSocket reference on close
           // Only do this if we haven't already done it in cleanup()
           if (this.ws === wsInstance) {
-            console.log('Clearing WebSocket reference in onclose');
+            console.log(`[WS_CLOSE] Clearing WebSocket reference in onclose for wsId=${wsId}`);
             this.ws = null;
           }
         }

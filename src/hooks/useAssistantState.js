@@ -108,9 +108,10 @@ export function useAssistantState() {
   
   // Create memoized action methods
   // Assistant actions
-  const startPTT = useCallback(() => AssistantService.startPTT(), []);
-  const stopPTT = useCallback(() => AssistantService.stopPTT(), []);
-  const toggleCallMode = useCallback(() => AssistantService.toggleCallMode(), []);
+  const startRecording = useCallback(() => AssistantService.startRecording(), []);
+  const stopRecording = useCallback((options) => AssistantService.stopRecording(options), []);
+  const setMode = useCallback((mode) => AssistantService.setMode(mode), []);
+  const endCall = useCallback(() => AssistantService.endCall(), []);
   const abortGeneration = useCallback(() => AssistantService.abortGeneration(), []);
   const retry = useCallback(() => AssistantService.retry(), []);
   
@@ -165,9 +166,10 @@ export function useAssistantState() {
     activeConversationId: historyState.activeConversationId,
     
     // Assistant actions
-    startPTT,
-    stopPTT,
-    toggleCallMode,
+    startRecording,
+    stopRecording,
+    setMode,
+    endCall,
     abortGeneration,
     retry,
     

@@ -27,6 +27,7 @@ export async function processWithClaudeStream({
             const generation = createComponentGeneration(analysis, {
                 onProgress: (content) => {
                     responseText += content;
+                    console.log(`[PROCESS_STREAM] Progress update: content length=${content.length}, total=${responseText.length}`);
                     onResponseStream(content);
                 },
                 onComplete: (result) => {
@@ -65,6 +66,12 @@ export async function processWithClaudeStream({
                     }
                 },
                 onError: (error) => {
+                    console.error(`[PROCESS_STREAM] Generation error:`, {
+                        message: error.message,
+                        timestamp: new Date().toISOString(),
+                        stackTrace: error.stack,
+                        responseTextLength: responseText.length
+                    });
                     reject(error);
                 },
                 currentComponentCode,

@@ -53,7 +53,7 @@ export function ConversationList(props) {
     >
       <View style={styles.conversationContent}>
         <Text style={styles.conversationPreview} numberOfLines={2}>
-          {item.previewText || "Empty conversation"}
+          {item.previewText || item.title || "Empty conversation"}
         </Text>
         <Text style={styles.conversationDate}>
           {new Date(item.updatedAt).toLocaleString()}

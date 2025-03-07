@@ -65,30 +65,35 @@ class AssistantServiceClass extends EventEmitter {
     const oldState = { ...this._state };
     this._state = { ...this._state, ...updates };
     
-    // Log state changes
-    console.log('[ASSISTANT_STATE] State update:', {
-      oldStatus: oldState.status,
-      newStatus: updates.status || oldState.status,
-      changed: Object.keys(updates).join(', '),
-      timestamp: new Date().toISOString()
-    });
+    // Single consolidated state log with all details
+    const stateDetails = [];
     
-    // Detailed logging for specific state changes
-    if (updates.status && oldState.status !== updates.status) {
-      console.log(`[ASSISTANT_STATE] Status change: ${oldState.status} -> ${updates.status}`);
-    }
+    // Add current status (not transition)
+    stateDetails.push(`status:'${updates.status || oldState.status}'`);
     
+    // Add property-specific details
     if (updates.transcript && oldState.transcript !== updates.transcript) {
-      console.log(`[ASSISTANT_STATE] Transcript updated: length=${updates.transcript.length}`);
+      stateDetails.push(`transcript:${updates.transcript.length}B`);
     }
     
     if (updates.partialTranscript && oldState.partialTranscript !== updates.partialTranscript) {
-      console.log(`[ASSISTANT_STATE] Partial transcript updated: length=${updates.partialTranscript.length}`);
+      stateDetails.push(`partial:${updates.partialTranscript.length}B`);
     }
     
     if (updates.responseStream && oldState.responseStream !== updates.responseStream) {
       const addedLength = updates.responseStream.length - oldState.responseStream.length;
-      console.log(`[ASSISTANT_STATE] Response stream updated: added=${addedLength}, total=${updates.responseStream.length}`);
+      stateDetails.push(`stream:+${addedLength}/${updates.responseStream.length}B`);
+    }
+    
+    // Include full changed properties list
+    stateDetails.push(`props:[${Object.keys(updates).join(',')}]`);
+    
+    // Log single line with all details
+    console.log(`[ASSISTANT_STATE] Update  ${stateDetails.join(', ')}`);
+    
+    // Keep status change log for better visibility of state transitions
+    if (updates.status && oldState.status !== updates.status) {
+      console.log(`[ASSISTANT_STATE] Status  ${oldState.status} → ${updates.status}`);
     }
     
     // Emit events for each changed property
@@ -183,8 +188,16 @@ class AssistantServiceClass extends EventEmitter {
   _handleFinalTranscript = (analysis) => {
     console.log('Final transcript received:', analysis);
     
-    // Update state with transcript - we're already in THINKING state,
-    // just need to update the transcript and clear any response stream
+    // Make sure we're in THINKING state regardless of how we got here
+    // This handles cases where we might be in IDLE due to call ending
+    if (this._state.status !== ASSISTANT_STATUS.THINKING) {
+      console.log('[ASSISTANT] Transitioning to THINKING state for transcript processing');
+      this._setState({
+        status: ASSISTANT_STATUS.THINKING
+      });
+    }
+    
+    // Update state with transcript
     this._setState({
       transcript: analysis.transcription,
       partialTranscript: '',
@@ -336,16 +349,40 @@ class AssistantServiceClass extends EventEmitter {
     if (this._state.mode === ASSISTANT_MODE.CALL && audioSession.isActive()) {
       console.log('[ASSISTANT] Ending call');
       
-      // Immediately transition to idle state
-      this._setState({
-        callStartTime: null,
-        mode: ASSISTANT_MODE.PTT,
-        status: ASSISTANT_STATUS.IDLE,
-        volume: 0
-      });
+      // Check current state to determine next state after ending call
+      if (this._state.status === ASSISTANT_STATUS.PROCESSING) {
+        // If we're already in PROCESSING state, preserve it but update other properties
+        console.log('[ASSISTANT] Call ended during active component generation - preserving PROCESSING state');
+        
+        this._setState({
+          callStartTime: null,
+          mode: ASSISTANT_MODE.PTT,
+          volume: 0
+          // Maintain PROCESSING status to keep the ResponseStream visible
+        });
+      } else if (this._state.partialTranscript || this._state.transcript) {
+        // If we have transcript data but not yet processing, transition to THINKING
+        console.log('[ASSISTANT] Call ended with active transcript - transitioning to THINKING state');
+        
+        this._setState({
+          callStartTime: null,
+          mode: ASSISTANT_MODE.PTT,
+          status: ASSISTANT_STATUS.THINKING,
+          volume: 0
+        });
+      } else {
+        // No transcript or processing in progress, go to IDLE
+        console.log('[ASSISTANT] Call ended with no active processing - transitioning to IDLE state');
+        
+        this._setState({
+          callStartTime: null,
+          mode: ASSISTANT_MODE.PTT,
+          status: ASSISTANT_STATUS.IDLE,
+          volume: 0
+        });
+      }
       
-      // Stop recording - we go straight to IDLE for calls since there's
-      // usually no final response expected when ending a call
+      // Stop recording and wait for final response
       audioSession.stop();
       return true;
     }
