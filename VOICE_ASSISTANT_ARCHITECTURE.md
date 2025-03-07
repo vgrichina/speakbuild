@@ -579,25 +579,74 @@ stopPTT()  │        │startPTT()
 
 ## Migration Strategy
 
-### Phase 1: Core Services
-1. Implement AudioSession singleton
-2. Update ComponentGeneration factory with direct callbacks
-3. Create AssistantController hook
+### Phase 1: Core Services ✅
+1. ✅ Implement AudioSession singleton
+2. ✅ Update ComponentGeneration factory with direct callbacks
+3. ✅ Create AssistantService singleton (replaced the planned AssistantController)
 
-### Phase 2: UI Components
-4. Update VoiceButton for dual modes
-5. Modify TranscriptionBox for partial transcripts
-6. Refactor ResponseStream for direct updates
+### Phase 2: UI Components ✅
+4. ✅ Update VoiceButton for dual modes
+5. ✅ Modify TranscriptionBox for partial transcripts
+6. ✅ Refactor ResponseStream for direct updates
 
-### Phase 3: Integration
-7. Connect controller to UI components
-8. Remove context dependencies
-9. Add error handling and retry logic
+### Phase 3: Integration ✅
+7. ✅ Connect service to UI components with useAssistantState hook
+8. ✅ Remove context dependencies (AssistantContext, VoiceRoomContext, GenerationContext)
+9. ✅ Add error handling and retry logic
 
 ### Phase 4: Testing
 10. Test both PTT and Call modes
 11. Verify race condition elimination
-12. Benchmark performance and memory usage
+
+## Completed Architectural Changes
+
+The migration to a service-based architecture has been completed successfully:
+
+### 1. Redundant Files Removed:
+- ✅ Removed `componentGenerator.js` (replaced by `componentGeneration.js`)
+- ✅ Removed `AssistantController.js` (replaced by `AssistantService`)
+- ✅ Removed `GenerationContext.js` (functionality in `AssistantService`)
+- ✅ Removed `AssistantContext.js` (migrated to service-based architecture)
+- ✅ Removed `VoiceRoomContext.js` (replaced by `audioSession` service)
+
+### 2. Service-Based State Management:
+- ✅ `AssistantService`: Central service for coordinating voice assistant functionality
+- ✅ `audioSession`: Manages audio recording and transcription
+- ✅ `componentGeneration`: Factory for component generation processes
+- ✅ `useAssistantState`: Bridge hook connecting services to React components
+
+### 3. Updated Component Architecture:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Root Component                           │
+└───────────────────────────┬───────────────────────────┬─────────┘
+                            │                           │
+                            ▼                           ▼
+┌───────────────────────────────────┐   ┌───────────────────────────┐
+│   useAssistantState Bridge Hook   │   │      ErrorBoundary        │
+│                                   │   │                           │
+└─────────────┬───────────────┬─────┘   └───────────────────────────┘
+              │               │
+              ▼               ▼
+    ┌─────────────────┐ ┌─────────────────┐
+    │ AssistantService│ │ComponentHistory │
+    └────────┬────────┘ └────────┬────────┘
+             │                   │
+             ▼                   ▼
+    ┌────────────────┐  ┌─────────────────┐
+    │  audioSession  │  │ conversationStorage
+    └────────────────┘  └─────────────────┘
+             │                   │
+             └───────────┬───────┘
+                         │
+             ┌───────────┼───────────┐
+             │           │           │
+             ▼           ▼           ▼
+    ┌─────────────┐ ┌──────────┐ ┌──────────┐
+    │VoiceButton  │ │Response  │ │Other UI  │
+    └─────────────┘ │Stream    │ │Components│
+                    └──────────┘ └──────────┘
+```
 
 ## Benefits
 

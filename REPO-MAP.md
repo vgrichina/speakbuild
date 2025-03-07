@@ -30,9 +30,8 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Dependencies**: 
 - React, React Native
 - Components: ErrorBoundary, VoiceButton, TranscriptionBox, ResponseStream
-- Contexts: AssistantContext, ComponentHistoryContext
-- Controllers: AssistantController
-- Services: componentGeneration, processStream
+- Hooks: useAssistantState
+- Services: AssistantService, audioSession, componentGeneration
 
 ### app/index.js
 
@@ -203,73 +202,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ## Contexts
 
-### AssistantContext.js
-
-**Purpose**: Unified API for voice assistant functionality
-
-**Exports**:
-- `AssistantProvider` component
-- `useAssistant` hook
-
-**State Management**:
-- `status`: Current assistant status (idle, listening, processing, etc.)
-- `transcription`: Voice input transcription (partial and final)
-- `response`: Assistant response data
-- `callActive`: Boolean for call mode state
-- `callStartTime`: Timestamp for call start
-
-**Methods**:
-- `listen()`: Start listening for input
-- `stop()`: Stop listening
-- `reset()`: Reset assistant state
-- `submitText(text)`: Submit text input
-- `handlePressIn()`: Handle button press start
-- `handlePressOut()`: Handle button press end
-
-**State Transitions**:
-- idle → listening: When user starts voice input
-- listening → processing: When input is complete
-- processing → responding: When generation starts
-- responding → idle: When generation completes
-- any state → error: On error condition
-
-**Dependencies**:
-- React
-- VoiceRoomContext
-- ComponentHistoryContext
-- Services: componentGeneration, processStream
-
-### VoiceRoomContext.js
-
-**Purpose**: Manages audio recording and transcription
-
-**Exports**:
-- `VoiceRoomProvider` component
-- `useVoiceRoom` hook
-
-**State Management**:
-- Reducer-based state:
-  - `volume`: Audio input volume
-  - `results`: Transcription results
-  - `recording`: Recording status
-  - `error`: Error state
-
-**Methods**:
-- `startRecording()`: Begin audio capture
-- `stopRecording()`: End audio capture
-- `cancelRecording()`: Cancel current recording
-- `reset()`: Reset voice room state
-
-**State Transitions**:
-- idle → recording: When recording starts
-- recording → processing: When recording stops
-- processing → idle: When transcription completes
-- any state → error: On error condition
-
-**Dependencies**:
-- React
-- react-native-audio-record
-- Services: audioSession
+> **Note**: Most contexts have been replaced by services in the new service-based architecture
 
 ### ComponentHistoryContext.js
 
@@ -293,13 +226,86 @@ This document provides a comprehensive overview of the codebase structure, modul
 - React
 - Services: conversationStorage, widgetStorage
 
-### GenerationContext.js
+## Services (New Architecture)
 
-**Purpose**: Manages component generation workflow
+### assistantService.js
+
+**Purpose**: Central service for voice assistant functionality, replacing AssistantContext
 
 **Exports**:
-- `GenerationProvider` component
-- `useGeneration` hook
+- `AssistantService` singleton
+- `ASSISTANT_STATUS` constants
+- `ASSISTANT_MODE` constants
+
+**State Management**:
+- `status`: Current status (idle, listening, thinking, processing, error)
+- `mode`: Input mode (ptt, call)
+- `volume`: Audio volume level
+- `transcript`: Final transcription
+- `partialTranscript`: In-progress transcription
+- `responseStream`: Generation response text
+- `error`: Error state
+
+**Methods**:
+- `startPTT()`: Start push-to-talk recording
+- `stopPTT()`: Stop push-to-talk recording
+- `toggleCallMode()`: Switch between PTT and call mode
+- `abortGeneration()`: Cancel current generation
+- `retry()`: Retry after error
+
+**Dependencies**:
+- EventEmitter
+- audioSession
+- componentGeneration
+- settings
+
+### audioSession.js
+
+**Purpose**: Manages audio recording and transcription, replacing VoiceRoomContext
+
+**Exports**:
+- `audioSession` singleton
+
+**State Management**:
+- `active`: Whether audio session is active
+- `mode`: Current mode (ptt or call)
+
+**Methods**:
+- `start({ mode, onVolumeChange, onPartialTranscript, onFinalTranscript, onError })`: Start audio session
+- `stop()`: Stop audio session
+- `isActive()`: Check if session is active
+
+**Dependencies**:
+- react-native-audio-record
+- react-native-permissions
+
+### componentGeneration.js
+
+**Purpose**: Factory for component generation processes
+
+**Exports**:
+- `createComponentGeneration` factory function
+- `ComponentHistory` helper object
+
+**Factory Function Parameters**:
+- `analysis`: The analysis object with transcription and params
+- `options`: Configuration options including callbacks
+  - `onProgress`: Called with streaming updates
+  - `onComplete`: Called when generation is complete
+  - `onError`: Called when an error occurs
+  - `currentComponentCode`: For modifications
+  - `selectedModel`: Model to use for generation
+  - `apiKey`: API key for generation
+
+**Controller API**:
+- `start()`: Begin component generation
+- `abort()`: Cancel generation
+- `getStatus()`: Get current status information
+
+**Dependencies**:
+- api
+- widgetStorage
+- componentExamples
 
 **State Management**:
 - `generating`: Boolean for active generation
@@ -453,26 +459,41 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Dependencies**:
 - Native fetch API
 
-## Controllers
+## Hooks
 
-### AssistantController.js
+### useAssistantState.js
 
-**Purpose**: Controller for voice assistant functionality
+**Purpose**: Bridge hook connecting service layer to React components
 
 **Exports**:
-- `useAssistantController`: Hook for controller
+- `useAssistantState` hook
 
 **State Management**:
-- Combines states from multiple contexts
+- `status`: Current assistant status
+- `volume`: Audio volume level
+- `transcript`: Voice input transcription
+- `partialTranscript`: In-progress transcription
+- `responseStream`: Generation response text
+- `callActive`: Boolean for call mode state
+- `callStartTime`: Timestamp for call start
+- `error`: Error state
+- `componentHistory`: Array of generated components
+- `currentHistoryIndex`: Index of currently displayed component
+- `currentComponent`: Currently displayed component
 
 **Methods**:
-- Unified API for assistant operations
+- `startPTT()`: Start push-to-talk recording
+- `stopPTT()`: Stop push-to-talk recording
+- `toggleCallMode()`: Switch between PTT and call mode
+- `abortGeneration()`: Cancel current generation
+- `retry()`: Retry after error
+- `navigateBack()`: Navigate to previous component
+- `navigateForward()`: Navigate to next component
+- `setHistoryIndex()`: Set the current history index
 
 **Dependencies**:
-- React
-- Contexts: VoiceRoomContext, GenerationContext
-
-## Hooks
+- AssistantService
+- ComponentHistory from componentGeneration
 
 ### useErrorBoundary.js
 
@@ -523,15 +544,16 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 1. **User Interaction**:
    - User interacts with VoiceButton (PTT, call mode, or keyboard)
-   - Input captured through VoiceRoomContext (audio) or keyboard
+   - Input captured through audioSession service
 
 2. **Transcription Process**:
    - Audio sent to Ultravox API via WebSocket
-   - Streaming transcription received and displayed
+   - audioSession emits volume and partial transcript events
    - Final transcription analyzed for intent and parameters
 
 3. **Component Generation**:
-   - Analysis sent to Claude API through processWithClaudeStream
+   - Analysis sent to Claude API through createComponentGeneration
+   - AssistantService coordinates the process and manages state
    - Streaming response shown in ResponseStream
    - Code extracted and validated
 
@@ -545,9 +567,15 @@ This document provides a comprehensive overview of the codebase structure, modul
    - View source code with DebugMenuButton
    - Access settings and debugging tools
 
-The application follows a context-based architecture with clear separation of concerns:
+The application follows a service-based architecture with clear separation of concerns:
 - UI components handle display and user interaction
-- Contexts manage stateful application logic
-- Services provide external API integration
-- Controllers unify functionality across contexts
+- Services manage stateful application logic
+- Hooks provide React bindings to services
 - Utils provide shared functionality
+
+This architecture has several advantages:
+- Reduced coupling between components
+- Better testability of service logic
+- Fewer re-renders due to more targeted updates
+- Clearer boundaries between concerns
+- Simpler state management through dedicated services
