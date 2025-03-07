@@ -1,8 +1,9 @@
 /**
  * componentHistoryService.js
  * 
- * Service for managing component history and conversations
- * Replaces both ComponentHistoryContext and ComponentHistory with a unified service-based approach
+ * Service for managing unified component history and conversations
+ * Uses a single unified history model where each entry contains both
+ * transcription and component data in a conversation flow
  */
 import { conversationStorage } from './conversationStorage';
 import { widgetStorage } from './widgetStorage';
@@ -13,15 +14,14 @@ const CURRENT_CHANGE = 'currentChange';
 const INDEX_CHANGE = 'indexChange';
 const HISTORY_CHANGE = 'historyChange';
 
-// State management
+// State management with unified history model
 let state = {
+  // Unified history array with transcription->component pairs
   history: [],
+  // Current position in history
   currentIndex: -1,
-  activeConversationId: null,
-  // In-memory component array (mirrors ComponentHistory._components)
-  components: [],
-  // In-memory current index (mirrors ComponentHistory._currentIndex)
-  componentIndex: 0
+  // Active conversation ID
+  activeConversationId: null
 };
 
 // Listeners for state changes by event type
@@ -38,7 +38,7 @@ export const componentHistoryService = {
     return { ...state };
   },
   
-  // Get current conversation entry
+  // Get current history entry
   getCurrent() {
     if (state.currentIndex >= 0 && state.currentIndex < state.history.length) {
       return state.history[state.currentIndex];
@@ -88,41 +88,96 @@ export const componentHistoryService = {
     }
   },
   
-  // Add entry to history
-  addToHistory(entry) {
+  /**
+   * Add a component to history with its analysis data
+   * Creates a unified history entry with both transcription and component
+   * 
+   * @param {Object} component - Generated component result
+   * @param {Object} analysis - Analysis with transcript and intent
+   * @returns {Object} Unified history entry
+   */
+  addToHistory(component, analysis) {
+    if (!component) return null;
+    
+    // Create a unified history item with ID
+    const historyItem = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+      // Component data
+      component: {
+        code: component.code,
+        widgetUrl: analysis?.widgetUrl || component.widgetUrl,
+        params: analysis?.params || component.params || {}
+      },
+      // Analysis data
+      transcript: analysis?.transcription || '',
+      intent: analysis?.intent || 'new',
+      // Metadata
+      timestamp: Date.now()
+    };
+    
+    // Store in widgetStorage if we have a widgetUrl
+    if (historyItem.component.widgetUrl) {
+      widgetStorage.store(historyItem.component.widgetUrl, historyItem.component.code);
+    }
+    
+    // Add to history array at current position (removing any forward history)
     const newHistory = [
-      ...state.history.slice(0, state.currentIndex + 1), 
-      entry
+      ...state.history.slice(0, state.currentIndex + 1),
+      historyItem
     ];
     
+    // Keep only the latest 50 items
+    if (newHistory.length > 50) {
+      newHistory.splice(0, newHistory.length - 50);
+    }
+    
+    // Update state with new history and current index
     this.setState({
       history: newHistory,
       currentIndex: newHistory.length - 1
     });
+    
+    // Notify listeners
+    this.notifyListeners(HISTORY_CHANGE, newHistory);
+    this.notifyListeners(INDEX_CHANGE, newHistory.length - 1);
+    
+    return historyItem;
   },
   
-  // Set current index
-  setCurrentIndex(newIndex) {
-    if (newIndex >= -1 && newIndex < state.history.length) {
-      this.setState({ currentIndex: newIndex });
-    }
+  /**
+   * Set the current index directly
+   * @param {number} index - New index
+   * @returns {boolean} Whether the operation was successful
+   */
+  setCurrentIndex(index) {
+    if (index < 0 || index >= state.history.length) return false;
+    
+    this.setState({ currentIndex: index });
+    this.notifyListeners(INDEX_CHANGE, index);
+    return true;
   },
   
-  // Navigate backward in history
+  /**
+   * Navigate backward in history (to older items)
+   * @returns {boolean} Whether navigation was successful
+   */
   goBack() {
-    if (state.currentIndex > 0) {
-      this.setCurrentIndex(state.currentIndex - 1);
-    }
+    if (state.currentIndex <= 0) return false;
+    return this.setCurrentIndex(state.currentIndex - 1);
   },
   
-  // Navigate forward in history
+  /**
+   * Navigate forward in history (to newer items)
+   * @returns {boolean} Whether navigation was successful
+   */
   goForward() {
-    if (state.currentIndex < state.history.length - 1) {
-      this.setCurrentIndex(state.currentIndex + 1);
-    }
+    if (state.currentIndex >= state.history.length - 1) return false;
+    return this.setCurrentIndex(state.currentIndex + 1);
   },
   
-  // Clear history
+  /**
+   * Clear history
+   */
   clearHistory() {
     widgetStorage.clear();
     
@@ -134,9 +189,15 @@ export const componentHistoryService = {
       currentIndex: -1,
       activeConversationId: newConversation.id
     });
+    
+    this.notifyListeners(HISTORY_CHANGE, []);
+    this.notifyListeners(INDEX_CHANGE, -1);
   },
   
-  // Switch conversation
+  /**
+   * Switch to a different conversation
+   * @param {string} conversationId - ID of conversation to switch to
+   */
   switchConversation(conversationId) {
     // Skip if already on this conversation
     if (state.activeConversationId === conversationId) {
@@ -160,9 +221,16 @@ export const componentHistoryService = {
     
     // Set as active in storage
     conversationStorage.setActive(conversationId);
+    
+    // Notify listeners
+    this.notifyListeners(HISTORY_CHANGE, conversationHistory);
+    this.notifyListeners(INDEX_CHANGE, conversationHistory.length - 1);
   },
   
-  // Create new conversation
+  /**
+   * Create a new conversation
+   * @returns {string} ID of new conversation
+   */
   createNewConversation() {
     const newConversation = conversationStorage.create();
     
@@ -172,10 +240,18 @@ export const componentHistoryService = {
       activeConversationId: newConversation.id
     });
     
+    this.notifyListeners(HISTORY_CHANGE, []);
+    this.notifyListeners(INDEX_CHANGE, -1);
+    
     return newConversation.id;
   },
   
-  // Subscribe to state changes
+  /**
+   * Subscribe to state changes
+   * @param {string} eventType - Event type to listen for
+   * @param {Function} listener - Function to call when event occurs
+   * @returns {Function} Function to remove the listener
+   */
   on(eventType, listener) {
     if (!listeners[eventType]) {
       listeners[eventType] = new Set();
@@ -187,19 +263,29 @@ export const componentHistoryService = {
     return () => listeners[eventType].delete(listener);
   },
   
-  // Notify listeners of a specific event type
+  /**
+   * Notify listeners of a specific event type
+   * @param {string} eventType - Event type to notify
+   * @param {any} data - Data to pass to listeners
+   */
   notifyListeners(eventType, data) {
     if (listeners[eventType]) {
       listeners[eventType].forEach(listener => listener(data));
     }
   },
   
-  // Get all conversations
+  /**
+   * Get all conversations
+   * @returns {Array} All conversations
+   */
   getAllConversations() {
     return conversationStorage.getAll();
   },
   
-  // Delete a conversation
+  /**
+   * Delete a conversation
+   * @param {string} conversationId - ID of conversation to delete
+   */
   deleteConversation(conversationId) {
     conversationStorage.delete(conversationId);
     
@@ -217,177 +303,88 @@ export const componentHistoryService = {
     }
   },
   
-  // Rename a conversation
+  /**
+   * Rename a conversation
+   * @param {string} conversationId - ID of conversation to rename
+   * @param {string} newTitle - New title for conversation
+   */
   renameConversation(conversationId, newTitle) {
     conversationStorage.rename(conversationId, newTitle);
   },
 
   /************************************
-   * ComponentHistory compatibility API
+   * Legacy compatibility API
    ************************************/
   
   /**
-   * Add a component to history
-   * @param {Object} component - Generated component result
-   * @param {Object} analysis - Analysis with transcript and intent
-   * @returns {Object} Component with ID
-   */
-  addToHistory(component, analysis) {
-    if (!component) return null;
-    
-    // Create a complete history item with ID
-    const historyItem = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
-      // Component data
-      code: component.code,
-      // Analysis data
-      transcription: analysis?.transcription || '',
-      intent: analysis?.intent || 'new',
-      widgetUrl: analysis?.widgetUrl || component.widgetUrl,
-      params: analysis?.params || component.params || {},
-      // Metadata
-      timestamp: Date.now()
-    };
-    
-    // Store in widgetStorage if we have a widgetUrl
-    if (historyItem.widgetUrl) {
-      widgetStorage.store(historyItem.widgetUrl, historyItem.code);
-    }
-    
-    // Add to in-memory components array
-    const newComponents = [historyItem, ...state.components];
-    
-    // Keep only the latest 50 components
-    if (newComponents.length > 50) {
-      newComponents.length = 50;
-    }
-    
-    // Update state
-    state = {
-      ...state,
-      components: newComponents,
-      componentIndex: 0
-    };
-    
-    // Notify listeners
-    this.notifyListeners(HISTORY_CHANGE, newComponents);
-    this.notifyListeners(INDEX_CHANGE, 0);
-    
-    // Also add to conversation history if we have an active conversation
-    if (state.activeConversationId) {
-      this.addToConversationHistory(historyItem);
-    }
-    
-    return historyItem;
-  },
-  
-  /**
-   * Add component to conversation history
-   * This helps bridge the gap between in-memory components and persistent conversation history
-   */
-  addToConversationHistory(component) {
-    if (!state.activeConversationId) return;
-    
-    // Add to the persistent conversation history
-    const conversationHistory = conversationStorage.getHistory(state.activeConversationId);
-    const newHistory = [...conversationHistory, component];
-    conversationStorage.saveHistory(state.activeConversationId, newHistory);
-    
-    // Update local state
-    this.setState({
-      history: newHistory,
-      currentIndex: newHistory.length - 1
-    });
-  },
-  
-  /**
-   * Get all components
-   * @returns {Array} All components
+   * Get all components from history
+   * @returns {Array} All components from history
    */
   getComponents() {
-    return state.components;
+    return state.history.map(item => ({
+      id: item.id,
+      code: item.component?.code || '',
+      transcription: item.transcript || '',
+      intent: item.intent || '',
+      widgetUrl: item.component?.widgetUrl || '',
+      params: item.component?.params || {},
+      timestamp: item.timestamp
+    }));
   },
   
   /**
-   * Get the current component (based on current index)
+   * Get the current component
    * @returns {Object|null} Current component or null if history is empty
    */
   getCurrentComponent() {
-    if (state.components.length === 0) return null;
-    return state.components[state.componentIndex];
+    const current = this.getCurrent();
+    if (!current) return null;
+    
+    return {
+      id: current.id,
+      code: current.component?.code || '',
+      transcription: current.transcript || '',
+      intent: current.intent || '',
+      widgetUrl: current.component?.widgetUrl || '',
+      params: current.component?.params || {},
+      timestamp: current.timestamp
+    };
   },
   
   /**
-   * Get the current component index
+   * Get the current index
    * @returns {number} Current index
    */
   getCurrentIndex() {
-    return state.componentIndex;
+    return state.currentIndex;
   },
   
   /**
    * Navigate backward in history (to older items)
+   * Legacy compatibility method
    * @returns {boolean} Whether navigation was successful
    */
   back() {
-    if (state.componentIndex >= state.components.length - 1) return false;
-    
-    const newIndex = state.componentIndex + 1;
-    state = {
-      ...state,
-      componentIndex: newIndex
-    };
-    
-    this.notifyListeners(INDEX_CHANGE, newIndex);
-    return true;
+    return this.goBack();
   },
   
   /**
    * Navigate forward in history (to newer items)
+   * Legacy compatibility method
    * @returns {boolean} Whether navigation was successful
    */
   forward() {
-    if (state.componentIndex <= 0) return false;
-    
-    const newIndex = state.componentIndex - 1;
-    state = {
-      ...state,
-      componentIndex: newIndex
-    };
-    
-    this.notifyListeners(INDEX_CHANGE, newIndex);
-    return true;
+    return this.goForward();
   },
   
   /**
    * Set the current component index directly
+   * Legacy compatibility method
    * @param {number} index - New index
    * @returns {boolean} Whether the operation was successful
    */
   setComponentIndex(index) {
-    if (index < 0 || index >= state.components.length) return false;
-    
-    state = {
-      ...state,
-      componentIndex: index
-    };
-    
-    this.notifyListeners(INDEX_CHANGE, index);
-    return true;
-  },
-  
-  /**
-   * Clear all components
-   */
-  clearComponents() {
-    state = {
-      ...state,
-      components: [],
-      componentIndex: 0
-    };
-    
-    this.notifyListeners(HISTORY_CHANGE, []);
-    this.notifyListeners(INDEX_CHANGE, 0);
+    return this.setCurrentIndex(index);
   },
   
   /**

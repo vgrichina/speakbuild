@@ -4,7 +4,7 @@
  * React hook that connects to the AssistantService.
  * Provides a thin layer between the service and React components.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AssistantService, ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
 import { componentHistoryService } from '../services/componentHistoryService';
 
@@ -71,16 +71,39 @@ export function useAssistantState() {
   const navigateForward = useCallback(() => AssistantService.navigateForward(), []);
   const setHistoryIndex = useCallback((index) => AssistantService.setHistoryIndex(index), []);
   
-  // Get current history index
-  const [currentHistoryIndex, setCurrentHistoryIndexState] = useState(componentHistoryService.getCurrentIndex());
-  const [currentComponent, setCurrentComponent] = useState(componentHistoryService.getCurrentComponent());
+  // Use a single state object for current history data
+  // This reduces the number of React state updates and potential race conditions
+  const [historyState, setHistoryState] = useState({
+    currentIndex: componentHistoryService.getCurrentIndex(),
+    current: componentHistoryService.getCurrent()
+  });
+
+  // Memoize the component data from the current history entry
+  const currentComponent = useMemo(() => {
+    const current = componentHistoryService.getCurrent();
+    if (!current) return null;
+    
+    return {
+      id: current.id,
+      code: current.component?.code || '',
+      transcription: current.transcript || '',
+      intent: current.intent || '',
+      params: current.component?.params || {},
+      timestamp: current.timestamp
+    };
+  }, [historyState.current]);
 
   // Listen for history index changes
   useEffect(() => {
-    const unsubscribe = componentHistoryService.onIndexChange((index) => {
-      setCurrentHistoryIndexState(index);
-      setCurrentComponent(componentHistoryService.getCurrentComponent());
-    });
+    // Use a single handler to update all history-related state at once
+    const handleHistoryChange = (index) => {
+      setHistoryState({
+        currentIndex: index,
+        current: componentHistoryService.getCurrent()
+      });
+    };
+    
+    const unsubscribe = componentHistoryService.onIndexChange(handleHistoryChange);
     return unsubscribe;
   }, []);
 
@@ -96,7 +119,7 @@ export function useAssistantState() {
     callStartTime,
     responseStream,
     componentHistory,
-    currentHistoryIndex,
+    currentHistoryIndex: historyState.currentIndex,
     currentComponent,
     
     // Actions

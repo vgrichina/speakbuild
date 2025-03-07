@@ -193,7 +193,7 @@ class AssistantServiceClass extends EventEmitter {
     // Get analysis prompt
     const messages = analysisPrompt({ 
       text: '', 
-      requestHistory: this.getComponentHistory()?.map(entry => entry.transcription).slice(0, 5) || []
+      requestHistory: this.getComponentHistory()?.map(entry => entry.transcription || entry.transcript).slice(0, 5) || []
     });
     
     // Start audio session
@@ -256,7 +256,7 @@ class AssistantServiceClass extends EventEmitter {
     // Get analysis prompt
     const messages = analysisPrompt({ 
       text: '', 
-      requestHistory: this.getComponentHistory()?.map(entry => entry.transcription).slice(0, 5) || []
+      requestHistory: this.getComponentHistory()?.map(entry => entry.transcription || entry.transcript).slice(0, 5) || []
     });
     
     // Start audio session

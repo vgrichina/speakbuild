@@ -3,8 +3,10 @@
  * 
  * React hook that connects to the componentHistoryService.
  * Provides a thin layer between the service and React components.
+ * This hook maintains compatibility with the old interface while
+ * using the new unified history model internally.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { componentHistoryService } from '../services/componentHistoryService';
 
 // Constants from service
@@ -29,9 +31,33 @@ export function useComponentHistory() {
     };
   }, []);
   
+  // Create derived data for components using current model
+  const currentComponent = useMemo(() => {
+    if (!current) return null;
+    
+    return {
+      id: current.id,
+      code: current.component?.code || '',
+      transcription: current.transcript || '',
+      intent: current.intent || '',
+      params: current.component?.params || {},
+      timestamp: current.timestamp
+    };
+  }, [current]);
+  
   // Create memoized action methods
-  const addToHistory = useCallback((entry) => {
-    componentHistoryService.addToHistory(entry);
+  const addToHistory = useCallback((entry, analysis) => {
+    // For backward compatibility, we might receive either a complete
+    // component+analysis pair or just a component object
+    if (analysis) {
+      return componentHistoryService.addToHistory(entry, analysis);
+    } else {
+      // Legacy format with component data embedded
+      return componentHistoryService.addToHistory(
+        { code: entry.code, widgetUrl: entry.widgetUrl, params: entry.params },
+        { transcription: entry.transcription, intent: entry.intent }
+      );
+    }
   }, []);
   
   const setCurrentIndex = useCallback((index) => {
@@ -66,13 +92,16 @@ export function useComponentHistory() {
     componentHistoryService.deleteConversation(conversationId);
   }, []);
   
-  // Return hook interface - matches the old context API for easy migration
+  // Return hook interface - maintains compatibility with the old context API
   return {
-    // State
+    // State - using the full unified history
     history: state.history,
     currentIndex: state.currentIndex,
     activeConversationId: state.activeConversationId,
+    // For compatibility, current now returns the full unified entry
     current,
+    // For components that expect the old format
+    currentComponent,
     
     // Actions
     addToHistory,
