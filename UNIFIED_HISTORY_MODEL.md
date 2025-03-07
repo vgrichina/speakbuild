@@ -59,20 +59,45 @@ componentHistoryService.deleteConversation(id);
 
 ## React Integration
 
-The `useComponentHistory` hook provides React components with access to the history:
+The unified `useAssistantState` hook provides React components with access to both assistant state and history:
 
 ```javascript
 const {
-  history,            // All history entries
-  currentIndex,       // Current position
-  current,            // Current entry (transcript + component)
-  currentComponent,   // Just the component (legacy support)
-  goBack,
-  goForward,
-  addToHistory,
-  // ... other methods
-} = useComponentHistory();
+  // Assistant state
+  status,
+  volume,
+  transcript,
+  partialTranscript,
+  error,
+  callActive,
+  
+  // History state
+  history,                // All history entries
+  currentHistoryIndex,    // Current position
+  current,                // Current entry (transcript + component)
+  currentComponent,       // Just the component (legacy support)
+  activeConversationId,   // Current conversation ID
+  
+  // Assistant actions
+  startPTT,
+  stopPTT,
+  abortGeneration,
+  
+  // History navigation
+  navigateBack,
+  navigateForward,
+  goBack,                 // Alias for navigateBack
+  goForward,              // Alias for navigateForward
+  
+  // Conversation management
+  switchConversation,
+  createNewConversation,
+  clearHistory,
+  // ...other methods
+} = useAssistantState();
 ```
+
+The hook consolidates all assistant and history functionality into a single interface, eliminating the need for separate hooks. This simplifies component code and avoids potential state synchronization issues.
 
 ## Legacy Compatibility
 
@@ -94,3 +119,4 @@ These methods transform the unified data model into the legacy format expected b
 2. Each component has a widgetUrl that's used as a key for widgetStorage
 3. The history maintains application flow through component<->transcript pairs
 4. Navigation affects both component and transcript simultaneously
+5. All UI components access history through the unified useAssistantState hook
