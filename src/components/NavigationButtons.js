@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
-import { useComponentHistory } from '../contexts/ComponentHistoryContext';
-import { useAssistant } from '../contexts/AssistantContext';
+import { useAssistantState } from '../hooks/useAssistantState';
+import { AssistantService } from '../services/assistantService';
 
 const styles = StyleSheet.create({
     container: {
@@ -24,20 +24,21 @@ const styles = StyleSheet.create({
 });
 
 export const NavigationButtons = () => {
+    // Use our new non-React-context state
     const { 
-        currentIndex: currentHistoryIndex,
-        history: componentHistory,
-        setCurrentIndex
-    } = useComponentHistory();
-    
-    const { abortGeneration } = useAssistant();
+        componentHistory,
+        currentHistoryIndex,
+        navigateBack,
+        navigateForward,
+        abortGeneration
+    } = useAssistantState();
 
     return (
         <View style={styles.container}>
             <Pressable
                 onPress={() => {
                     abortGeneration();
-                    setCurrentIndex(currentHistoryIndex - 1);
+                    navigateBack();
                 }}
                 disabled={currentHistoryIndex <= 0}
                 style={({ pressed }) => [
@@ -52,7 +53,7 @@ export const NavigationButtons = () => {
             <Pressable
                 onPress={() => {
                     abortGeneration();
-                    setCurrentIndex(currentHistoryIndex + 1);
+                    navigateForward();
                 }}
                 disabled={currentHistoryIndex >= componentHistory.length - 1}
                 style={({ pressed }) => [

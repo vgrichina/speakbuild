@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { EmptyState } from './components/EmptyState';
 import { VoiceButton } from './components/VoiceButton';
 import { TranscriptionBox } from './components/TranscriptionBox';
 import { ResponseStream } from './components/ResponseStream';
-import { useSettings } from './hooks/useSettings';
+import { hasApiKeys } from './services/settings';
 import { createComponent, renderComponent } from './utils/componentUtils';
-import { useAssistantController } from './controllers/AssistantController';
-import { analysisPrompt } from './services/analysis';
+import { useAssistantState } from './hooks/useAssistantState';
 
 /**
  * Main Voice Assistant component
@@ -22,23 +21,15 @@ export const VoiceAssistant = React.memo(() => {
     console.log(`VoiceAssistant rendered ${renderCounter.current} times`);
   });
   
-  // Get settings
-  const {
-    getApiKeys,
-    selectedModel,
-    selectedLanguage,
-    isSettingsLoaded
-  } = useSettings();
-  
   // Initialize keyboard mode
   const [keyboardActive, setKeyboardActive] = useState(false);
   const [keyboardInput, setKeyboardInput] = useState('');
   
-  // Use the assistant controller
-  const assistant = useAssistantController({
-    selectedModel,
-    selectedLanguage
-  });
+  // Use our new non-React-context assistant state 
+  const assistant = useAssistantState();
+  
+  // Check if API keys are set
+  const isApiKeysSet = hasApiKeys();
   
   // Handle keyboard mode toggle
   const handleToggleKeyboard = () => {
@@ -58,10 +49,18 @@ export const VoiceAssistant = React.memo(() => {
   
   // Recreate component from history when available
   const currentComponent = useMemo(() => {
-    const current = assistant.componentHistory[0];
-    if (current?.componentCode) {
+    const current = assistant.currentComponent;
+    console.log('Current component from history:', current ? 
+      { 
+        hasCode: Boolean(current.code), 
+        codeLength: current.code?.length,
+        availableProps: current ? Object.keys(current) : []
+      } : 'No component');
+    
+    if (current?.code) {
       try {
-        const component = createComponent(current.componentCode);
+        const component = createComponent(current.code);
+        console.log('Component created successfully');
         return component;
       } catch (error) {
         console.error('Error creating component:', error);
@@ -69,7 +68,7 @@ export const VoiceAssistant = React.memo(() => {
       }
     }
     return null;
-  }, [assistant.componentHistory]);
+  }, [assistant.currentComponent]);
   
   // Determine if we can render a component
   const canRenderComponent = 
@@ -87,7 +86,7 @@ export const VoiceAssistant = React.memo(() => {
               {(() => {
                 try {
                   // Get params from the current component
-                  const params = assistant.componentHistory[0]?.params || {};
+                  const params = assistant.currentComponent?.params || {};
                   return renderComponent(currentComponent, params);
                 } catch (error) {
                   console.error('Component render error:', error);
@@ -116,7 +115,7 @@ export const VoiceAssistant = React.memo(() => {
           <ResponseStream
             responseStream={assistant.responseStream}
             status={assistant.status}
-            intent={assistant.componentHistory[0]?.intent || 'new'}
+            intent={assistant.currentComponent?.intent || 'new'}
             onRetry={assistant.retry}
           />
         )}
@@ -140,7 +139,7 @@ export const VoiceAssistant = React.memo(() => {
           onToggleCall={assistant.toggleCallMode}
           onToggleKeyboard={handleToggleKeyboard}
           keyboardActive={keyboardActive}
-          disabled={!isSettingsLoaded}
+          disabled={!isApiKeysSet}
         />
       </ErrorBoundary>
     </View>

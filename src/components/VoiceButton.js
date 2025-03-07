@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
 import { Square, Mic, Phone, Keyboard } from 'lucide-react-native';
+import { ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
 
 /**
  * Component for visualizing audio volume
  */
-const VolumeVisualization = ({ volume = 0, isActive = false }) => {
+const VolumeVisualization = React.memo(({ volume = 0, isActive = false }) => {
   // Animation value
   const pulseAnimation = useRef(new Animated.Value(1)).current;
   
@@ -39,6 +40,16 @@ const VolumeVisualization = ({ volume = 0, isActive = false }) => {
       }}
     />
   );
+});
+
+/**
+ * Format duration in milliseconds to mm:ss format
+ */
+const formatDuration = (ms) => {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
 /**
@@ -56,7 +67,7 @@ const VolumeVisualization = ({ volume = 0, isActive = false }) => {
  * @param {boolean} props.keyboardActive - Whether keyboard mode is active
  */
 export const VoiceButton = React.memo(({
-  status = 'idle',
+  status = ASSISTANT_STATUS.IDLE,
   disabled = false,
   volume = 0,
   callActive = false,
@@ -67,67 +78,21 @@ export const VoiceButton = React.memo(({
   onToggleKeyboard,
   keyboardActive = false
 }) => {
-  const [isPressed, setIsPressed] = useState(false);
-  const pressStartTime = useRef(null);
+  // Local UI state
+  const [pressed, setPressed] = useState(false);
+  const [durationDisplay, setDurationDisplay] = useState('00:00');
+  const pressTimeoutRef = useRef(null);
   
-  // Handle press in for gesture detection
-  const handlePressIn = useCallback(() => {
-    if (disabled || keyboardActive) return;
-    
-    pressStartTime.current = Date.now();
-    setIsPressed(true);
-    
-    // If call mode is not active, trigger PTT
-    if (!callActive && onPressIn) {
-      console.log('VoiceButton: Press and hold detected (PTT)');
-      onPressIn();
-    }
-  }, [callActive, disabled, keyboardActive, onPressIn]);
-  
-  // Handle press out for gesture detection
-  const handlePressOut = useCallback(() => {
-    if (disabled || keyboardActive) return;
-    
-    const pressDuration = Date.now() - (pressStartTime.current || 0);
-    pressStartTime.current = null;
-    setIsPressed(false);
-    
-    if (pressDuration < 300) {
-      // Short press - interpret as tap (toggle call mode)
-      console.log('VoiceButton: Tap detected (toggle call)');
-      if (onToggleCall) {
-        onToggleCall();
-      }
-    } else if (!callActive && onPressOut) {
-      // Long press - PTT release only if not in call mode
-      console.log('VoiceButton: Press and hold release (PTT end)');
-      onPressOut();
-    }
-  }, [callActive, disabled, keyboardActive, onPressOut, onToggleCall]);
-  
-  // Render call duration if in call mode
-  const renderCallDuration = () => {
-    if (!callStartTime) return null;
-    
-    const duration = Math.floor((Date.now() - callStartTime) / 1000);
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    
-    return (
-      <Text style={styles.callDuration}>
-        {`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`}
-      </Text>
-    );
-  };
-  
-  // Initialize a timer for call duration updates
+  // Handle call duration updates
   useEffect(() => {
     let timer;
     if (callActive && callStartTime) {
-      // Update every second for the timer display
+      // Initial update
+      setDurationDisplay(formatDuration(Date.now() - callStartTime));
+      
+      // Update every second
       timer = setInterval(() => {
-        // Force re-render to update duration
-        setIsPressed(prev => prev);
+        setDurationDisplay(formatDuration(Date.now() - callStartTime));
       }, 1000);
     }
     
@@ -136,142 +101,147 @@ export const VoiceButton = React.memo(({
     };
   }, [callActive, callStartTime]);
   
-  // Determine if button should show active state
-  const isActive = status === 'listening' || isPressed;
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (pressTimeoutRef.current) {
+        clearTimeout(pressTimeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Handle press in
+  const handlePressIn = useCallback(() => {
+    if (disabled || keyboardActive) return;
+    
+    setPressed(true);
+    
+    // Clear any existing timeout
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+    }
+    
+    // Set a timeout to detect long presses
+    pressTimeoutRef.current = setTimeout(() => {
+      // Long press detected - in this case we just maintain the pressed state
+      pressTimeoutRef.current = null;
+    }, 300);
+    
+    // If not in call mode, start PTT
+    if (!callActive && onPressIn) {
+      onPressIn();
+    }
+  }, [callActive, disabled, keyboardActive, onPressIn]);
+  
+  // Handle press out
+  const handlePressOut = useCallback(() => {
+    if (disabled || keyboardActive) return;
+    
+    setPressed(false);
+    
+    // If press timeout is still active, it was a short press (tap)
+    const wasShortPress = pressTimeoutRef.current !== null;
+    
+    // Clear timeout
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+      pressTimeoutRef.current = null;
+    }
+    
+    if (wasShortPress) {
+      // Short press detected - toggle call mode
+      if (onToggleCall) {
+        onToggleCall();
+      }
+    } else if (!callActive && onPressOut) {
+      // Long press release - stop PTT
+      onPressOut();
+    }
+  }, [callActive, disabled, keyboardActive, onPressOut, onToggleCall]);
+  
+  // Determine if we're in an active listening state
+  const isListening = status === ASSISTANT_STATUS.LISTENING || pressed;
   
   // Determine button content based on state
-  const renderButtonContent = () => {
+  const getButtonContent = () => {
     if (callActive) {
-      // Show call status and duration
+      // Call mode active
       return (
         <>
           <Phone size={28} color="white" />
-          {renderCallDuration()}
+          <Text style={styles.callDuration}>{durationDisplay}</Text>
         </>
       );
-    } else if (status === 'listening' || isPressed) {
-      // Show volume visualization for PTT or active listening
-      return <Square size={32} color="white" />;
-    } else if (status === 'processing') {
-      // Show processing indicator
-      return <Mic size={32} color="white" />;
+    } else if (keyboardActive) {
+      // Keyboard mode active
+      return <Keyboard size={28} color="white" />;
+    } else if (isListening) {
+      // Showing volume visualization
+      return <Square size={28} color="white" />;
+    } else if (status === ASSISTANT_STATUS.PROCESSING) {
+      // Processing
+      return <Mic size={28} color="#FFF" />;
     } else {
-      // Show default mic icon
+      // Default state
       return <Mic size={32} color="white" />;
     }
   };
   
-  // Determine button style based on status and modes
-  let buttonStyle;
-  if (callActive) {
-    buttonStyle = {
-      backgroundColor: '#10B981', // Green for call mode
-    };
-  } else if (isPressed) {
-    buttonStyle = {
-      backgroundColor: '#EF4444', // Red for pressed (PTT)
-    };
-  } else {
-    switch (status) {
-      case 'listening':
-        buttonStyle = {
-          backgroundColor: '#EF4444', // Red for listening
-        };
-        break;
-      case 'processing':
-        buttonStyle = {
-          backgroundColor: '#F59E0B', // Amber for processing
-        };
-        break;
-      case 'error':
-        buttonStyle = {
-          backgroundColor: '#6B7280', // Gray for error
-        };
-        break;
-      case 'idle':
-      default:
-        buttonStyle = {
-          backgroundColor: '#3B82F6', // Blue for idle
-        };
-        break;
-    }
-  }
-  
-  // Determine button text based on status and modes
-  let buttonText;
-  if (callActive) {
-    buttonText = 'End Call';
-  } else if (isPressed) {
-    buttonText = 'Listening...';
-  } else {
-    switch (status) {
-      case 'listening':
-        buttonText = 'Listening...';
-        break;
-      case 'processing':
-        buttonText = 'Processing...';
-        break;
-      case 'error':
-        buttonText = 'Try again';
-        break;
-      case 'idle':
-      default:
-        buttonText = 'Hold to speak';
-        break;
-    }
-  }
-  
   return (
     <View style={styles.container}>
-      {/* Keyboard toggle button */}
-      <Pressable 
-        style={styles.keyboardToggle}
-        onPress={onToggleKeyboard}
-        disabled={disabled}
-      >
-        <Keyboard size={20} color="#6B7280" />
-      </Pressable>
-      
       {/* Main voice button */}
-      <View style={styles.buttonContainer}>
-        <VolumeVisualization isActive={isActive} volume={volume} />
+      <View style={styles.buttonWrapper}>
+        <VolumeVisualization isActive={isListening} volume={volume} />
         <Pressable
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          disabled={disabled || keyboardActive}
           style={[
             styles.button,
-            buttonStyle,
-            disabled && styles.disabled,
-            keyboardActive && styles.disabled
+            pressed && styles.buttonPressed,
+            callActive && styles.callActiveButton,
+            status === ASSISTANT_STATUS.LISTENING && styles.listeningButton,
+            status === ASSISTANT_STATUS.PROCESSING && styles.processingButton,
+            status === ASSISTANT_STATUS.ERROR && styles.errorButton,
+            disabled && styles.disabledButton
           ]}
+          disabled={disabled}
         >
-          {renderButtonContent()}
+          {getButtonContent()}
         </Pressable>
-        <Text style={[
-          styles.buttonText,
-          isActive && styles.activeButtonText
-        ]}>
-          {buttonText}
-        </Text>
       </View>
+      
+      {/* Label under button */}
+      <Text style={styles.buttonLabel}>
+        {callActive ? 'Tap to end call' : 
+          (status === ASSISTANT_STATUS.LISTENING ? 'Listening...' : 
+           status === ASSISTANT_STATUS.PROCESSING ? 'Processing...' : 
+           'Hold to speak')}
+      </Text>
+      
+      {/* Keyboard toggle button */}
+      <Pressable
+        onPress={onToggleKeyboard}
+        style={[
+          styles.keyboardToggle,
+          keyboardActive && styles.keyboardActive
+        ]}
+        disabled={disabled}
+      >
+        <Keyboard size={20} color={keyboardActive ? "white" : "#666"} />
+      </Pressable>
     </View>
   );
 }, (prevProps, nextProps) => {
-  // Optimize re-renders by only updating when specific props change
-  // 1. Status has changed
-  // 2. Disabled state has changed
-  // 3. Call active state has changed
-  // 4. Keyboard active state has changed
-  // 5. Volume has changed AND we're in LISTENING mode
-  const shouldSkip = 
-    prevProps.status === nextProps.status &&
-    prevProps.disabled === nextProps.disabled &&
-    prevProps.callActive === nextProps.callActive &&
-    prevProps.keyboardActive === nextProps.keyboardActive &&
-    (prevProps.status !== 'listening' || prevProps.volume === nextProps.volume);
+  // Optimize re-renders by only updating when necessary
+  const shouldUpdate = 
+    prevProps.status !== nextProps.status ||
+    prevProps.disabled !== nextProps.disabled ||
+    prevProps.callActive !== nextProps.callActive ||
+    prevProps.keyboardActive !== nextProps.keyboardActive ||
+    (prevProps.status === ASSISTANT_STATUS.LISTENING && prevProps.volume !== nextProps.volume) ||
+    (prevProps.callActive && prevProps.callStartTime !== nextProps.callStartTime);
   
-  return shouldSkip;
+  return !shouldUpdate; // Return true to skip update, false to update
 });
 
 // Styles for the voice button components
@@ -281,10 +251,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    paddingBottom: 20,
   },
-  buttonContainer: {
+  buttonWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   button: {
     width: 64,
@@ -292,17 +264,36 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#3B82F6', // Default blue
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
   },
-  disabled: {
+  buttonPressed: {
+    backgroundColor: '#EF4444', // Red for pressed
+  },
+  listeningButton: {
+    backgroundColor: '#EF4444', // Red for listening
+  },
+  processingButton: {
+    backgroundColor: '#F59E0B', // Amber for processing
+  },
+  errorButton: {
+    backgroundColor: '#DC2626', // Bright red for error
+  },
+  callActiveButton: {
+    backgroundColor: '#10B981', // Green for call mode
+  },
+  disabledButton: {
     opacity: 0.5,
   },
-  buttonText: {
+  buttonLabel: {
     marginTop: 8,
     color: '#666',
     fontSize: 12,
-  },
-  activeButtonText: {
-    color: '#EF4444',
+    textAlign: 'center',
   },
   keyboardToggle: {
     position: 'absolute',
@@ -319,6 +310,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 1.5,
     elevation: 2,
+  },
+  keyboardActive: {
+    backgroundColor: '#3B82F6',
   },
   callDuration: {
     marginTop: 4,

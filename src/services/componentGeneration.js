@@ -216,8 +216,7 @@ ${examplesText}`
 
             // Create result object with the generated code
             streamResult = { 
-              code: rawCode,
-              componentCode,
+              code: rawCode,    // Use rawCode for code property (consistent with other parts of the app)
               widgetUrl: analysis.widgetUrl,
               params: analysis.params,
               intent: analysis.intent,
@@ -281,6 +280,8 @@ ${examplesText}`
 export const ComponentHistory = {
   // In-memory component history for the current session
   _components: [],
+  _currentIndex: 0,
+  _listeners: [], // For notification when current index changes
   
   /**
    * Add a component to history
@@ -296,7 +297,6 @@ export const ComponentHistory = {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
       // Component data
       code: component.code,
-      componentCode: component.componentCode,
       // Analysis data
       transcription: analysis?.transcription || '',
       intent: analysis?.intent || 'new',
@@ -308,11 +308,15 @@ export const ComponentHistory = {
     
     // Store in widgetStorage if we have a widgetUrl
     if (historyItem.widgetUrl) {
-      widgetStorage.store(historyItem.widgetUrl, historyItem.componentCode);
+      widgetStorage.store(historyItem.widgetUrl, historyItem.code);
     }
     
     // Add to in-memory array
     this._components.unshift(historyItem);
+    
+    // Reset current index to 0 (newest)
+    this._currentIndex = 0;
+    this._notifyListeners();
     
     // Keep only the latest 50 components
     if (this._components.length > 50) {
@@ -331,9 +335,91 @@ export const ComponentHistory = {
   },
   
   /**
+   * Get the current component (based on current index)
+   * @returns {Object|null} Current component or null if history is empty
+   */
+  getCurrentComponent() {
+    if (this._components.length === 0) return null;
+    return this._components[this._currentIndex];
+  },
+  
+  /**
+   * Get the current history index
+   * @returns {number} Current index
+   */
+  getCurrentIndex() {
+    return this._currentIndex;
+  },
+  
+  /**
+   * Navigate backward in history (to older items)
+   * @returns {boolean} Whether navigation was successful
+   */
+  back() {
+    if (this._currentIndex >= this._components.length - 1) return false;
+    
+    this._currentIndex++;
+    this._notifyListeners();
+    return true;
+  },
+  
+  /**
+   * Navigate forward in history (to newer items)
+   * @returns {boolean} Whether navigation was successful
+   */
+  forward() {
+    if (this._currentIndex <= 0) return false;
+    
+    this._currentIndex--;
+    this._notifyListeners();
+    return true;
+  },
+  
+  /**
+   * Set the current index directly
+   * @param {number} index - New index
+   * @returns {boolean} Whether the operation was successful
+   */
+  setCurrentIndex(index) {
+    if (index < 0 || index >= this._components.length) return false;
+    
+    this._currentIndex = index;
+    this._notifyListeners();
+    return true;
+  },
+  
+  /**
+   * Add a listener for history index changes
+   * @param {Function} callback - Function to call when index changes
+   * @returns {Function} Function to remove the listener
+   */
+  onIndexChange(callback) {
+    this._listeners.push(callback);
+    return () => {
+      this._listeners = this._listeners.filter(cb => cb !== callback);
+    };
+  },
+  
+  /**
+   * Notify all listeners of a change
+   * @private
+   */
+  _notifyListeners() {
+    for (const listener of this._listeners) {
+      try {
+        listener(this._currentIndex);
+      } catch (err) {
+        console.error('Error in history index change listener:', err);
+      }
+    }
+  },
+  
+  /**
    * Clear all components
    */
   clear() {
     this._components = [];
+    this._currentIndex = 0;
+    this._notifyListeners();
   }
 };
