@@ -1,6 +1,6 @@
 import { createComponent } from '../utils/componentUtils';
 import { widgetStorage } from './widgetStorage';
-import { streamComponent } from './componentGenerator';
+import { createComponentGeneration } from './componentGeneration';
 
 export async function processWithClaudeStream({
     analysis,
@@ -19,40 +19,70 @@ export async function processWithClaudeStream({
     }
 
     try {
-        for await (const { content, code, done } of streamComponent(
-            analysis,
-            currentComponentCode,
-            selectedModel,
-            abortController,
-            apiKey
-        )) {
-            if (abortController?.signal.aborted) {
-                throw new Error('Stream aborted');
-            }
-
-            if (content) {
-                // Pass the content directly, not a function
-                onResponseStream(content);
+        // Create a promise to handle the generation completion
+        return new Promise((resolve, reject) => {
+            let responseText = '';
+            
+            // Create component generation with callbacks
+            const generation = createComponentGeneration(analysis, {
+                onProgress: (content) => {
+                    responseText += content;
+                    onResponseStream(content);
+                },
+                onComplete: (result) => {
+                    if (result?.code) {
+                        console.log(`processStream: final code received`, { codeLength: result.code.length });
+                        const GeneratedComponent = createComponent(result.code);
+                        console.log(`processStream: component created successfully`);
+                        
+                        // Store in widgetStorage
+                        widgetStorage.store(analysis.widgetUrl, result.code)
+                            .then(() => {
+                                console.log(`processStream: component stored in widgetStorage`);
+                                
+                                // Return same format as before for backward compatibility
+                                resolve({
+                                    component: GeneratedComponent,
+                                    code: result.code,
+                                    request: analysis.transcription,
+                                    params: analysis.params || {},
+                                    intent: analysis.intent
+                                });
+                            })
+                            .catch(err => {
+                                console.error('Error storing component:', err);
+                                // Still resolve with the component even if storage fails
+                                resolve({
+                                    component: GeneratedComponent,
+                                    code: result.code,
+                                    request: analysis.transcription,
+                                    params: analysis.params || {},
+                                    intent: analysis.intent
+                                });
+                            });
+                    } else {
+                        reject(new Error('No code was generated'));
+                    }
+                },
+                onError: (error) => {
+                    reject(error);
+                },
+                currentComponentCode,
+                selectedModel,
+                apiKey
+            });
+            
+            // Attach the abort controller
+            if (abortController) {
+                abortController.signal.addEventListener('abort', () => {
+                    generation.abort();
+                    reject(new Error('Stream aborted'));
+                });
             }
             
-            if (done && code) {
-                console.log(`processStream: final code received`, { codeLength: code.length });
-                const GeneratedComponent = createComponent(code);
-                console.log(`processStream: component created successfully`);
-                await widgetStorage.store(analysis.widgetUrl, code);
-                console.log(`processStream: component stored in widgetStorage`);
-                
-                const result = {
-                    component: GeneratedComponent,
-                    code,
-                    request: analysis.transcription,
-                    params: analysis.params || {},
-                    intent: analysis.intent
-                };
-                console.log(`processStream: returning result with properties:`, Object.keys(result));
-                return result;
-            }
-        }
+            // Start the generation
+            generation.start();
+        });
     } catch (error) {
         if (error.name === 'AbortError' || error.message === 'Stream aborted') {
             throw new Error('Stream aborted');

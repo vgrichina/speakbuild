@@ -1,4 +1,4 @@
-import { streamComponent } from '../src/services/componentGenerator';
+import { createComponentGeneration } from '../src/services/componentGeneration';
 import testCases from '../src/evaluation/generationTestCases.json' assert { type: "json" };
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -27,20 +27,36 @@ async function runEvaluation({
                 throw new Error('OPENROUTER_API_KEY environment variable must be set for evaluation');
             }
             
-            for await (const { content, code, done } of streamComponent(
-                testCase,
-                testCase.currentComponentCode || null,
-                model,
-                new AbortController(),
-                apiKey
-            )) {
-                if (content) {
-                    process.stdout.write(content); // Show progress
-                }
-                if (done && code) {
-                    generatedCode = code;
-                }
-            }
+            // Use promise for more straightforward handling
+            await new Promise((resolve, reject) => {
+                let responseText = '';
+                
+                // Create component generation with callbacks
+                const generation = createComponentGeneration(testCase, {
+                    onProgress: (content) => {
+                        responseText += content;
+                        process.stdout.write(content); // Show progress
+                    },
+                    onComplete: (result) => {
+                        if (result?.code) {
+                            generatedCode = result.code;
+                            resolve();
+                        } else {
+                            reject(new Error('No code was generated'));
+                        }
+                    },
+                    onError: (error) => {
+                        reject(error);
+                    },
+                    currentComponentCode: testCase.currentComponentCode || null,
+                    selectedModel: model,
+                    apiKey
+                });
+                
+                // Start the generation
+                generation.start().catch(reject);
+            });
+            
             fullResponse = generatedCode;
 
             results.push({

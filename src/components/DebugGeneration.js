@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { useRouter } from 'expo-router';
 import * as RN from 'react-native';
 import { widgetStorage } from '../services/widgetStorage';
-import { streamComponent } from '../services/componentGenerator';
+import { createComponentGeneration } from '../services/componentGeneration';
 import testCases from '../evaluation/generationTestCases.json';
 import { ExpoModules } from '../expo-modules';
 import { ViewCode } from './ViewCode';
@@ -39,18 +39,24 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
   const generateWidget = async (testCase) => {
     setGenerating(testCase.widgetUrl);
     try {
-      for await (const chunk of streamComponent(
-        testCase,
-        null,
+      const abortController = new AbortController();
+      
+      // Create component generation with callbacks
+      const generation = createComponentGeneration(testCase, {
+        onComplete: async (result) => {
+          if (result?.code) {
+            await widgetStorage.store(testCase.widgetUrl, result.code);
+          }
+        },
+        onError: (error) => {
+          console.error('Error generating component:', error);
+        },
         selectedModel,
-        new AbortController(),
         apiKey
-      )) {
-        if (chunk.done && chunk.code) {
-          await widgetStorage.store(testCase.widgetUrl, chunk.code);
-          break;
-        }
-      }
+      });
+      
+      // Start generation
+      await generation.start();
       await loadWidgets();
     } finally {
       setGenerating(null);
