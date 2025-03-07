@@ -464,62 +464,51 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ### useAssistantState.js
 
-**Purpose**: Bridge hook connecting service layer to React components
+**Purpose**: Unified hook connecting service layer to React components
 
 **Exports**:
 - `useAssistantState` hook
 
 **State Management**:
-- `status`: Current assistant status
-- `volume`: Audio volume level
-- `transcript`: Voice input transcription
-- `partialTranscript`: In-progress transcription
-- `responseStream`: Generation response text
-- `callActive`: Boolean for call mode state
-- `callStartTime`: Timestamp for call start
-- `error`: Error state
-- `currentHistoryIndex`: Index of currently displayed component
-- `currentComponent`: Currently displayed component
+- **Assistant State**
+  - `status`: Current assistant status
+  - `volume`: Audio volume level
+  - `transcript`: Voice input transcription
+  - `partialTranscript`: In-progress transcription
+  - `responseStream`: Generation response text
+  - `callActive`: Boolean for call mode state
+  - `callStartTime`: Timestamp for call start
+  - `error`: Error state
+- **History State**
+  - `currentHistoryIndex`: Index of currently displayed component
+  - `currentComponent`: Currently displayed component
+  - `current`: Current unified history entry (transcript + component)
+  - `activeConversationId`: Current conversation ID
+  - `history`: All history entries for current conversation
+  - `componentHistory`: All generated components
 
 **Methods**:
-- `startPTT()`: Start push-to-talk recording
-- `stopPTT()`: Stop push-to-talk recording
-- `toggleCallMode()`: Switch between PTT and call mode
-- `abortGeneration()`: Cancel current generation
-- `retry()`: Retry after error
-- `navigateBack()`: Navigate to previous component
-- `navigateForward()`: Navigate to next component
-- `setHistoryIndex()`: Set the current history index
+- **Assistant Actions**
+  - `startPTT()`: Start push-to-talk recording
+  - `stopPTT()`: Stop push-to-talk recording
+  - `toggleCallMode()`: Switch between PTT and call mode
+  - `abortGeneration()`: Cancel current generation
+  - `retry()`: Retry after error
+- **History Navigation**
+  - `navigateBack()/goBack()`: Navigate to previous component
+  - `navigateForward()/goForward()`: Navigate to next component
+  - `setHistoryIndex()`: Set the current history index
+- **Conversation Management**
+  - `switchConversation()`: Change active conversation
+  - `createNewConversation()`: Create new conversation
+  - `clearHistory()`: Clear history
+  - `getAllConversations()`: Get all conversations
+  - `deleteConversation()`: Delete a conversation
 
 **Dependencies**:
 - AssistantService
 - componentHistoryService
 
-### useComponentHistory.js
-
-**Purpose**: React hook for accessing componentHistoryService
-
-**Exports**:
-- `useComponentHistory` hook
-
-**State Management**:
-- `history`: Array of conversation entries
-- `currentIndex`: Current conversation index
-- `activeConversationId`: Current conversation ID
-- `current`: Current conversation entry
-
-**Methods**:
-- `addToHistory()`: Add to conversation history
-- `setCurrentIndex()`: Set current index
-- `clearHistory()`: Clear history
-- `switchConversation()`: Switch active conversation
-- `createNewConversation()`: Create new conversation
-- `goBack()/goForward()`: Navigate conversation history
-- `getAllConversations()`: Get all conversations
-- `deleteConversation()`: Delete a conversation
-
-**Dependencies**:
-- componentHistoryService
 
 ### useErrorBoundary.js
 
