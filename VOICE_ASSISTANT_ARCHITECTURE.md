@@ -102,7 +102,7 @@ Rather than a general subscription system, we'll treat audio sessions and compon
 ┌─────────────────┐        ┌────────────────┐        ┌───────────────┐
 │                 │ update │                │ create │               │
 │TranscriptionBox │◄───────┤ Parent Control ├───────►│ComponentGenera│
-│                 │        │                │        │tion           │
+│                 │        │                │        │tion w/callbacks│
 └─────────────────┘        └────────────────┘        └───────────────┘
 ```
 
@@ -123,18 +123,18 @@ Rather than a general subscription system, we'll treat audio sessions and compon
                                  │ onFinalTranscript(1)                   │
                                  ▼                                        │
 ┌─────────────────┐        ┌────────────────┐                            │
-│                 │ update │                │                            │
-│TranscriptionBox │◄───────┤ Generation 1   │                            │
-│                 │        │                │                            │
+│                 │ update │ ComponentGenera│                            │
+│TranscriptionBox │◄───────┤ tion 1 created │                            │
+│                 │        │ with callbacks │                            │
 └─────────────────┘        └────────────────┘                            │
                                  │                                        │
                                  │ start()                                │
                                  ▼                                        │
 ┌─────────────────┐        ┌────────────────┐                            │
-│                 │ update │                │                            │
-│ ResponseStream  │◄───────┤ API Streaming  │                            │
-│                 │        │                │                            │
-└─────────────────┘        └────────────────┘                            │
+│                 │ streams│                │                            │
+│ ResponseStream  │◄───────┤ API Processing │                            │
+│                 │ via    │                │                            │
+└─────────────────┘ onProgress └────────────────┘                            │
                                                                           │
                                                                           │
                          +---------------------+                          │
@@ -144,9 +144,9 @@ Rather than a general subscription system, we'll treat audio sessions and compon
                                  │ onFinalTranscript(2)
                                  ▼
 ┌─────────────────┐        ┌────────────────┐
-│                 │ update │                │
-│TranscriptionBox │◄───────┤ Generation 2   │
-│                 │        │                │
+│                 │ update │ ComponentGenera│
+│TranscriptionBox │◄───────┤ tion 2 created │
+│                 │        │ with callbacks │
 └─────────────────┘        └────────────────┘
 ```
 
@@ -246,17 +246,18 @@ import { processWithClaudeStream } from './processStream';
 import { getApiKeys } from './settings';
 
 // Component generation factory
-export function createComponentGeneration(transcription, options = {}) {
+export function createComponentGeneration(transcription, {
+  // Callbacks receive directly in options like AudioSession
+  onProgress = null,
+  onComplete = null, 
+  onError = null,
+  ...otherOptions
+} = {}) {
   const id = generateUniqueId();
   let status = 'idle'; // idle, generating, complete, error
   let result = null;
   let error = null;
   let abortController = new AbortController();
-  
-  // Callback stores
-  const progressCallbacks = new Set();
-  const completeCallbacks = new Set();
-  const errorCallbacks = new Set();
   
   // Generation process controller
   return {
@@ -278,13 +279,13 @@ export function createComponentGeneration(transcription, options = {}) {
           apiKey: apiKeys.openrouter,
           signal: abortController.signal,
           onProgress: (chunk) => {
-            progressCallbacks.forEach(cb => cb(chunk));
+            if (onProgress) onProgress(chunk);
           }
         });
         
         result = await stream.result;
         status = 'complete';
-        completeCallbacks.forEach(cb => cb(result));
+        if (onComplete) onComplete(result);
         
         return result;
       } catch (err) {
@@ -293,31 +294,9 @@ export function createComponentGeneration(transcription, options = {}) {
         } else {
           error = err;
           status = 'error';
-          errorCallbacks.forEach(cb => cb(err));
+          if (onError) onError(err);
         }
       }
-    },
-    
-    // Register callbacks
-    onProgress(callback) {
-      progressCallbacks.add(callback);
-      return () => progressCallbacks.delete(callback);
-    },
-    
-    onComplete(callback) {
-      completeCallbacks.add(callback);
-      if (status === 'complete' && result) {
-        callback(result);
-      }
-      return () => completeCallbacks.delete(callback);
-    },
-    
-    onError(callback) {
-      errorCallbacks.add(callback);
-      if (status === 'error' && error) {
-        callback(error);
-      }
-      return () => errorCallbacks.delete(callback);
     },
     
     // Cancel generation
@@ -417,7 +396,7 @@ export function VoiceButton({
 ## Migration Strategy
 
 1. Implement AudioSession singleton
-2. Create ComponentGeneration factory
+2. Create ComponentGeneration factory with direct callback parameters
 3. Update VoiceButton to support both PTT and Call modes
 4. Implement TranscriptionBox that handles partial and final transcripts
 5. Create main controller that coordinates AudioSession and ComponentGeneration
@@ -427,6 +406,7 @@ export function VoiceButton({
 
 - **Clear Process Boundaries**: Each audio session and generation has defined lifecycle
 - **Explicit Event Flow**: Components only receive events they need
+- **Consistent Interface**: Both AudioSession and ComponentGeneration use direct callbacks
 - **Mode-Specific Handling**: PTT and Call modes handled appropriately
 - **Independent Processes**: Multiple component generations can run in parallel
 - **Resource Management**: Audio hardware accessed through single entry point
