@@ -276,28 +276,64 @@ ${examplesText}`
 
 /**
  * Helper for component history management
+ * Simple in-memory history for the current session
  */
 export const ComponentHistory = {
-  addToHistory(component) {
+  // In-memory component history for the current session
+  _components: [],
+  
+  /**
+   * Add a component to history
+   * @param {Object} component - Generated component result
+   * @param {Object} analysis - Analysis with transcript and intent
+   * @returns {Object} Component with ID
+   */
+  addToHistory(component, analysis) {
     if (!component) return null;
     
-    // Save the component to storage
-    const id = widgetStorage.saveCode(component.componentCode, {
-      widgetUrl: component.widgetUrl,
-      params: component.params
-    });
-    
-    return {
-      id,
-      ...component
+    // Create a complete history item with ID
+    const historyItem = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+      // Component data
+      code: component.code,
+      componentCode: component.componentCode,
+      // Analysis data
+      transcription: analysis?.transcription || '',
+      intent: analysis?.intent || 'new',
+      widgetUrl: analysis?.widgetUrl || component.widgetUrl,
+      params: analysis?.params || component.params || {},
+      // Metadata
+      timestamp: Date.now()
     };
+    
+    // Store in widgetStorage if we have a widgetUrl
+    if (historyItem.widgetUrl) {
+      widgetStorage.store(historyItem.widgetUrl, historyItem.componentCode);
+    }
+    
+    // Add to in-memory array
+    this._components.unshift(historyItem);
+    
+    // Keep only the latest 50 components
+    if (this._components.length > 50) {
+      this._components.length = 50;
+    }
+    
+    return historyItem;
   },
   
+  /**
+   * Get all components
+   * @returns {Array} All components
+   */
   getComponents() {
-    return widgetStorage.getAllComponents();
+    return this._components;
   },
   
-  getComponentById(id) {
-    return widgetStorage.getComponent(id);
+  /**
+   * Clear all components
+   */
+  clear() {
+    this._components = [];
   }
 };

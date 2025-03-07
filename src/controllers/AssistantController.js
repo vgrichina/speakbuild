@@ -54,10 +54,10 @@ export function useAssistantController({
   const currentGeneration = useRef(null);
   const responseStream = useRef('');
   
-  // Load component history
+  // Initialize component history
   useEffect(() => {
-    const components = ComponentHistory.getComponents();
-    setComponentHistory(components);
+    // Set initial state from ComponentHistory
+    setComponentHistory(ComponentHistory.getComponents());
   }, []);
   
   // Clean up on unmount
@@ -119,11 +119,11 @@ export function useAssistantController({
       onComplete: (result) => {
         console.log('Component generation complete:', result);
         
-        // Add to history
-        const savedComponent = ComponentHistory.addToHistory(result);
-        if (savedComponent) {
-          setComponentHistory(prev => [savedComponent, ...prev]);
-        }
+        // Add to history with both component and analysis data
+        const historyItem = ComponentHistory.addToHistory(result, analysis);
+        
+        // Update component history state
+        setComponentHistory(ComponentHistory.getComponents());
         
         // Update state
         setStatus(STATUS.IDLE);
