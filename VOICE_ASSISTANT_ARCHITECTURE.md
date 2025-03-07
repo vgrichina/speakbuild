@@ -393,14 +393,211 @@ export function VoiceButton({
 }
 ```
 
+## Detailed Implementation Plan
+
+### 1. AudioSession (New Component)
+
+**Implementation Requirements:**
+- Create a singleton service file: `src/services/audioSession.js`
+- Implement direct callback interface for all events
+
+**Key Methods and Features:**
+```javascript
+export const audioSession = {
+  start({ mode, onVolumeChange, onPartialTranscript, onFinalTranscript, onError }),
+  stop(),
+  getCurrentMode(),
+  isActive(),
+}
+```
+
+**Callback Flow:**
+- `onVolumeChange`: Called at regular intervals while recording (10-30ms)
+- `onPartialTranscript`: Called when WebSocket sends partial updates
+- `onFinalTranscript`: Called once after recording stops and final transcript arrives
+- `onError`: Called if WebSocket errors or audio recording fails
+
+### 2. ComponentGeneration (Factory Update)
+
+**Implementation Requirements:**
+- Update `src/services/componentGenerator.js`
+- Convert from event subscription model to direct callback approach
+
+**Key Changes:**
+```javascript
+export function createComponentGeneration(transcript, { 
+  onProgress, 
+  onComplete, 
+  onError 
+}) {
+  return {
+    start(),
+    abort(),
+    getStatus()
+  }
+}
+```
+
+**State Management:**
+- Internal tracking of status, result, and error state
+- No dependency on external React state
+- Clean abort logic for cancellation
+
+### 3. VoiceButton Component
+
+**Implementation Requirements:**
+- Update `src/components/VoiceButton.js`
+- Support both PTT and Call modes with distinct UI
+
+**UI States:**
+- **Default**: Mic icon
+- **PTT pressed**: Volume visualization with growing circles
+- **Call active**: Phone icon + duration timer
+- **Processing**: Loading spinner
+- **Error**: Red indicator with retry option
+
+**Event Handlers:**
+- `onPressIn`: Start PTT recording
+- `onPressOut`: End PTT recording 
+- `onLongPress`: Switch to call mode
+- `onPress`: Toggle call mode on/off
+
+### 4. TranscriptionBox Component
+
+**Implementation Requirements:**
+- Update `src/components/TranscriptionBox.js`
+- Handle both partial and final transcripts
+
+**UI Features:**
+- Italics for partial transcripts
+- Regular text for final transcripts
+- Timestamp for transcript in call mode
+- Auto-scrolling to latest transcript
+
+**Rendering Optimizations:**
+- Memoization of transcript items
+- Virtualized list for call mode history
+- Controlled re-renders for partial updates
+
+### 5. ResponseStream Component
+
+**Implementation Requirements:**
+- Update `src/components/ResponseStream.js` 
+- Receive direct streaming updates via callbacks
+
+**Key Features:**
+- Code highlighting with syntax detection
+- Auto-scrolling during streaming
+- Loading state during initialization
+- Copy button for generated code
+- Error state with retry option
+
+**Performance Optimizations:**
+- Chunked rendering of large responses
+- Throttled updates for smooth scrolling
+- Memoized rendering of completed sections
+
+### 6. AssistantController (New Component)
+
+**Implementation Requirements:**
+- Create new file: `src/controllers/AssistantController.js`
+- Coordinate between AudioSession and ComponentGeneration
+
+**Core Interface:**
+```javascript
+export function useAssistantController() {
+  return {
+    startPTT(),
+    stopPTT(),
+    toggleCallMode(),
+    abortGeneration(),
+    currentState: { 
+      mode,         // 'ptt' or 'call'
+      status,       // 'idle', 'listening', 'processing', 'error'
+      transcript,   // current or most recent transcript
+      generation    // current or most recent generation
+    }
+  }
+}
+```
+
+**State Machine:**
+```
+                ┌───────┐
+                │       │
+           ┌───►│ IDLE  │◄────┐
+           │    │       │     │
+           │    └───┬───┘     │
+           │        │         │
+stopPTT()  │        │startPTT()
+           │        ▼         │
+        ┌──┴────────────┐     │
+        │               │     │
+        │  LISTENING    │     │
+        │               │     │
+        └───────────────┘     │
+                │             │
+                │onFinalTranscript
+                ▼             │
+        ┌───────────────┐     │
+        │               │     │
+        │  PROCESSING   ├─────┘
+        │               │   onComplete/onError
+        └───────────────┘
+```
+
+### 7. Integration Architecture
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                         Root Component                         │
+└───────────────┬───────────────────────────────┬───────────────┘
+                │                               │
+                ▼                               ▼
+┌───────────────────────────┐   ┌───────────────────────────────┐
+│   AssistantController     │   │      ErrorBoundary            │
+│                           │   │                               │
+│ ┌─────────┐ ┌───────────┐ │   └───────────────────────────────┘
+│ │AudioSess│ │Component  │ │
+│ │ion      │ │Generation │ │
+└─┴─────────┴─┴───────────┴─┘
+    │    ▲        │    ▲
+    │    │        │    │
+    ▼    │        ▼    │
+┌─────────────┐  ┌─────────────┐
+│ VoiceButton │  │ResponseStrea│
+└─────────────┘  └─────────────┘
+        │              ▲
+        │              │
+        ▼              │
+┌─────────────────┐    │
+│TranscriptionBox │    │
+└─────────────────┘    │
+        │              │
+        └──────────────┘
+```
+
 ## Migration Strategy
 
+### Phase 1: Core Services
 1. Implement AudioSession singleton
-2. Create ComponentGeneration factory with direct callback parameters
-3. Update VoiceButton to support both PTT and Call modes
-4. Implement TranscriptionBox that handles partial and final transcripts
-5. Create main controller that coordinates AudioSession and ComponentGeneration
-6. Test thoroughly in both modes
+2. Update ComponentGeneration factory with direct callbacks
+3. Create AssistantController hook
+
+### Phase 2: UI Components
+4. Update VoiceButton for dual modes
+5. Modify TranscriptionBox for partial transcripts
+6. Refactor ResponseStream for direct updates
+
+### Phase 3: Integration
+7. Connect controller to UI components
+8. Remove context dependencies
+9. Add error handling and retry logic
+
+### Phase 4: Testing
+10. Test both PTT and Call modes
+11. Verify race condition elimination
+12. Benchmark performance and memory usage
 
 ## Benefits
 
@@ -412,6 +609,8 @@ export function VoiceButton({
 - **Resource Management**: Audio hardware accessed through single entry point
 - **Performance**: Significant reduction in React renders by avoiding global state updates
 - **Reliability**: Elimination of race conditions with callback-based architecture
+- **Testability**: Isolated components and services with clear interfaces
+- **Maintainability**: Simplified debugging with clear data flow
 
 ## Accessibility and UX Considerations
 
@@ -419,5 +618,8 @@ export function VoiceButton({
 - Keyboard mode for quiet environments
 - Seamless mode switching with natural gestures
 - Clear visual feedback for all states
+- Haptic feedback for state transitions
+- Badge indicators for errors and retry options
+- High contrast mode for accessibility
 
 By implementing this architecture, we'll solve the core issues while maintaining what already works well in the codebase.
