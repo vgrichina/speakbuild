@@ -2,86 +2,98 @@
  * useAssistantState.js
  * 
  * Unified React hook that connects to the AssistantService and componentHistoryService.
- * Provides a single source of truth for all assistant and history state.
- * This combines functionality previously split between useAssistantState and useComponentHistory.
+ * Acts as a thin adapter layer between services and React components.
+ * Uses a single service state object instead of individual state values.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AssistantService, ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
 import { componentHistoryService } from '../services/componentHistoryService';
+import { audioSession } from '../services/audioSession';
 
 export function useAssistantState() {
-  // Initialize state from the service
-  const [status, setStatus] = useState(AssistantService.getStatus());
-  const [volume, setVolume] = useState(AssistantService.getVolume());
-  const [transcript, setTranscript] = useState(AssistantService.getTranscript());
-  const [partialTranscript, setPartialTranscript] = useState(AssistantService.getPartialTranscript());
-  const [error, setError] = useState(AssistantService.getError());
-  const [callActive, setCallActive] = useState(AssistantService.isCallActive());
-  const [callStartTime, setCallStartTime] = useState(AssistantService.getCallStartTime());
-  const [responseStream, setResponseStream] = useState(AssistantService.getResponseStream());
-  const [componentHistory, setComponentHistory] = useState(AssistantService.getComponentHistory());
+  // Use a single state object for AssistantService state
+  const [assistantState, setAssistantState] = useState({
+    status: AssistantService.getStatus(),
+    mode: AssistantService.getMode(),
+    volume: AssistantService.getVolume(),
+    transcript: AssistantService.getTranscript(),
+    partialTranscript: AssistantService.getPartialTranscript(),
+    error: AssistantService.getError(),
+    callStartTime: AssistantService.getCallStartTime(),
+    responseStream: AssistantService.getResponseStream(),
+    callActive: AssistantService.isCallActive()
+  });
+
+  // Use a single state object for ComponentHistoryService state
+  const [historyState, setHistoryState] = useState({
+    currentIndex: componentHistoryService.getState().currentIndex,
+    current: componentHistoryService.getCurrent(),
+    history: componentHistoryService.getState().history,
+    activeConversationId: componentHistoryService.getState().activeConversationId
+  });
   
-  // Set up subscriptions to state changes
+  // Subscribe to AssistantService stateChange events
   useEffect(() => {
-    // Subscribe to individual state properties
-    const statusUnsub = AssistantService.on('status', setStatus);
-    const volumeUnsub = AssistantService.on('volume', setVolume);
-    const transcriptUnsub = AssistantService.on('transcript', setTranscript);
-    const partialTranscriptUnsub = AssistantService.on('partialTranscript', setPartialTranscript);
-    const errorUnsub = AssistantService.on('error', setError);
-    const callStartTimeUnsub = AssistantService.on('callStartTime', setCallStartTime);
-    const responseStreamUnsub = AssistantService.on('responseStream', setResponseStream);
+    // Subscribe to state changes from AssistantService
+    const stateChangeUnsub = AssistantService.on('stateChange', (state) => {
+      setAssistantState(prevState => ({
+        ...prevState,
+        status: state.status,
+        mode: state.mode,
+        volume: state.volume,
+        transcript: state.transcript,
+        partialTranscript: state.partialTranscript,
+        error: state.error,
+        callStartTime: state.callStartTime,
+        responseStream: state.responseStream,
+        callActive: state.mode === ASSISTANT_MODE.CALL && audioSession.isActive()
+      }));
+    });
     
-    // Subscribe to component history changes
-    const historyUnsub = AssistantService.on('historyChange', setComponentHistory);
-    
-    // Subscribe to mode changes for callActive
-    const modeUnsub = AssistantService.on('mode', () => {
-      setCallActive(AssistantService.isCallActive());
+    // Handle historyChange events
+    const historyChangeUnsub = AssistantService.on('historyChange', (history) => {
+      setHistoryState(prevState => ({
+        ...prevState,
+        history
+      }));
     });
     
     // Create an interval to keep callActive in sync
     const interval = setInterval(() => {
-      setCallActive(AssistantService.isCallActive());
+      setAssistantState(prevState => ({
+        ...prevState,
+        callActive: AssistantService.isCallActive()
+      }));
     }, 1000);
     
     // Cleanup subscriptions
     return () => {
-      statusUnsub();
-      volumeUnsub();
-      transcriptUnsub();
-      partialTranscriptUnsub();
-      errorUnsub();
-      callStartTimeUnsub();
-      responseStreamUnsub();
-      historyUnsub();
-      modeUnsub();
+      stateChangeUnsub();
+      historyChangeUnsub();
       clearInterval(interval);
     };
   }, []);
   
-  // Create memoized action methods
-  const startPTT = useCallback(() => AssistantService.startPTT(), []);
-  const stopPTT = useCallback(() => AssistantService.stopPTT(), []);
-  const toggleCallMode = useCallback(() => AssistantService.toggleCallMode(), []);
-  const abortGeneration = useCallback(() => AssistantService.abortGeneration(), []);
-  const retry = useCallback(() => AssistantService.retry(), []);
-  
-  // History navigation methods
-  const navigateBack = useCallback(() => AssistantService.navigateBack(), []);
-  const navigateForward = useCallback(() => AssistantService.navigateForward(), []);
-  const setHistoryIndex = useCallback((index) => AssistantService.setHistoryIndex(index), []);
-  
-  // Use a single state object for current history data
-  // This reduces the number of React state updates and potential race conditions
-  const [historyState, setHistoryState] = useState({
-    currentIndex: componentHistoryService.getState().currentIndex,
-    current: componentHistoryService.getCurrent()
-  });
+  // Listen for history index changes
+  useEffect(() => {
+    // Update history state when the current index changes
+    const handleIndexChange = (index) => {
+      const historyServiceState = componentHistoryService.getState();
+      setHistoryState({
+        currentIndex: index,
+        current: componentHistoryService.getCurrent(),
+        history: historyServiceState.history,
+        activeConversationId: historyServiceState.activeConversationId
+      });
+    };
+    
+    const unsubscribe = componentHistoryService.onIndexChange(handleIndexChange);
+    return unsubscribe;
+  }, []);
 
-  // Memoize the component data from the current history entry
+  // Memoized current component for convenience
   const currentComponent = useMemo(() => {
-    const current = componentHistoryService.getCurrent();
+    const current = historyState.current;
     if (!current) return null;
     
     return {
@@ -93,22 +105,21 @@ export function useAssistantState() {
       timestamp: current.timestamp
     };
   }, [historyState.current]);
-
-  // Listen for history index changes
-  useEffect(() => {
-    // Use a single handler to update all history-related state at once
-    const handleHistoryChange = (index) => {
-      setHistoryState({
-        currentIndex: index,
-        current: componentHistoryService.getCurrent()
-      });
-    };
-    
-    const unsubscribe = componentHistoryService.onIndexChange(handleHistoryChange);
-    return unsubscribe;
-  }, []);
-
-  // Additional component history methods from componentHistoryService
+  
+  // Create memoized action methods
+  // Assistant actions
+  const startPTT = useCallback(() => AssistantService.startPTT(), []);
+  const stopPTT = useCallback(() => AssistantService.stopPTT(), []);
+  const toggleCallMode = useCallback(() => AssistantService.toggleCallMode(), []);
+  const abortGeneration = useCallback(() => AssistantService.abortGeneration(), []);
+  const retry = useCallback(() => AssistantService.retry(), []);
+  
+  // History navigation methods
+  const navigateBack = useCallback(() => AssistantService.navigateBack(), []);
+  const navigateForward = useCallback(() => AssistantService.navigateForward(), []);
+  const setHistoryIndex = useCallback((index) => AssistantService.setHistoryIndex(index), []);
+  
+  // Conversation management methods (directly from componentHistoryService)
   const switchConversation = useCallback((conversationId) => {
     componentHistoryService.switchConversation(conversationId);
   }, []);
@@ -132,29 +143,25 @@ export function useAssistantState() {
   const renameConversation = useCallback((conversationId, newTitle) => {
     componentHistoryService.renameConversation(conversationId, newTitle);
   }, []);
-
-  // Get current conversation
-  const current = useMemo(() => componentHistoryService.getCurrent(), [historyState.current]);
   
-  // Return unified hook interface
+  // Return unified hook interface with destructured values for ease of use
   return {
-    // Assistant state
-    status,
-    volume,
-    transcript,
-    partialTranscript,
-    error,
-    callActive,
-    callStartTime,
-    responseStream,
-    componentHistory,
+    // Assistant state (destructured for component convenience)
+    status: assistantState.status,
+    volume: assistantState.volume,
+    transcript: assistantState.transcript,
+    partialTranscript: assistantState.partialTranscript,
+    error: assistantState.error,
+    callActive: assistantState.callActive,
+    callStartTime: assistantState.callStartTime,
+    responseStream: assistantState.responseStream,
     
     // History state
     currentHistoryIndex: historyState.currentIndex,
     currentComponent,
-    current,
-    activeConversationId: componentHistoryService.getState().activeConversationId,
-    history: componentHistoryService.getState().history,
+    current: historyState.current,
+    history: historyState.history,
+    activeConversationId: historyState.activeConversationId,
     
     // Assistant actions
     startPTT,
@@ -167,7 +174,7 @@ export function useAssistantState() {
     navigateBack,
     navigateForward,
     setHistoryIndex,
-    goBack: navigateBack,       // Aliases for compatibility with useComponentHistory
+    goBack: navigateBack,       // Aliases for compatibility
     goForward: navigateForward,
     
     // Conversation management
