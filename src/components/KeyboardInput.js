@@ -66,7 +66,7 @@ export const KeyboardInput = ({
         { transform: [{ translateY: slideAnim }] }
       ]}
     >
-      <SafeAreaView style={styles.safeAreaContainer} edges={['bottom']}>
+      <SafeAreaView style={styles.safeAreaContainer}>
         <TextInput
           ref={inputRef}
           style={styles.input}
