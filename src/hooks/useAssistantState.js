@@ -145,6 +145,21 @@ export function useAssistantState() {
     componentHistoryService.renameConversation(conversationId, newTitle);
   }, []);
   
+  // Add processAnalysis method
+  const processAnalysis = useCallback((analysis) => {
+    // Create a function to process text input similar to voice input
+    console.log('Processing analysis from keyboard:', analysis);
+    
+    // Call the appropriate AssistantService method
+    if (typeof AssistantService.processAnalysis === 'function') {
+      AssistantService.processAnalysis(analysis);
+    } else {
+      // Fallback implementation if the method doesn't exist
+      AssistantService.setTranscript(analysis.transcript);
+      AssistantService._startComponentGeneration(analysis);
+    }
+  }, []);
+
   // Memoize the complete state object to avoid unnecessary re-renders
   // This ensures components only re-render when values they actually use change
   const hookState = useMemo(() => ({
@@ -172,6 +187,7 @@ export function useAssistantState() {
     endCall,
     abortGeneration,
     retry,
+    processAnalysis,
     
     // History navigation 
     navigateBack,

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Keyboard } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { EmptyState } from './components/EmptyState';
 import { VoiceButton } from './components/VoiceButton';
@@ -40,17 +41,32 @@ export const VoiceAssistant = React.memo(() => {
   // Handle keyboard mode toggle
   const handleToggleKeyboard = () => {
     setKeyboardActive(prev => !prev);
+    
+    // If closing keyboard, ensure keyboard is dismissed
+    if (keyboardActive) {
+      Keyboard.dismiss();
+    }
   };
   
   // Handle keyboard input submit
-  const handleKeyboardSubmit = () => {
-    if (!keyboardInput.trim()) return;
+  const handleKeyboardSubmit = (text) => {
+    if (!text.trim()) return;
     
-    // TODO: Implement keyboard input processing
-    // This will involve directly creating an analysis object
-    // and passing it to the component generation process
+    console.log('Processing keyboard input:', text);
     
-    setKeyboardInput('');
+    // Create an analysis object similar to what speech would create
+    const analysis = {
+      transcript: text,
+      widgetUrl: 'keyboard-input', // Special identifier for keyboard inputs
+      confidence: 1.0, // Keyboard input has perfect confidence
+      source: 'keyboard'
+    };
+    
+    // Process the input using the assistant service
+    assistant.processAnalysis(analysis);
+    
+    // Close keyboard after submission
+    setKeyboardActive(false);
   };
   
   // Recreate component from history when available
@@ -177,12 +193,26 @@ export const VoiceAssistant = React.memo(() => {
             />
           </View>
           
-          {/* Keyboard toggle button in corner */}
-          {keyboardActive && (
+          {/* Keyboard toggle button in corner (only when keyboard is not active) */}
+          {!keyboardActive && (
             <View style={styles.keyboardButtonContainer}>
-              {/* Your keyboard input component would go here */}
+              <TouchableOpacity 
+                style={styles.keyboardToggleButton}
+                onPress={handleToggleKeyboard}
+                disabled={assistant.status === assistant.STATUS.PROCESSING}
+              >
+                <Feather name="keyboard" size={24} color="#4F46E5" />
+              </TouchableOpacity>
             </View>
           )}
+          
+          {/* Keyboard input component */}
+          <KeyboardInput 
+            active={keyboardActive}
+            onSubmit={handleKeyboardSubmit}
+            onToggle={handleToggleKeyboard}
+            callActive={assistant.callActive}
+          />
         </View>
       </ErrorBoundary>
     </View>
@@ -248,5 +278,18 @@ const styles = StyleSheet.create({
     bottom: -30,
     right: 10,
     zIndex: 10,
+  },
+  keyboardToggleButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
 });

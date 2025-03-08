@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { View, TextInput, Pressable, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { View, TextInput, Pressable, StyleSheet, Animated, Keyboard, Platform } from 'react-native';
 import { Send, Mic } from 'lucide-react-native';
 
 /**
@@ -17,6 +17,35 @@ export const KeyboardInput = ({
   callActive = false
 }) => {
   const [text, setText] = useState('');
+  const slideAnim = useRef(new Animated.Value(active ? 0 : 300)).current;
+  const inputRef = useRef(null);
+  
+  // Handle animation when active state changes
+  useEffect(() => {
+    if (active) {
+      // Slide up animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        // Focus the input after animation completes
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      });
+    } else {
+      // Slide down animation
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      
+      // Dismiss keyboard
+      Keyboard.dismiss();
+    }
+  }, [active, slideAnim]);
   
   const handleSubmit = useCallback(() => {
     if (text.trim()) {
@@ -25,14 +54,20 @@ export const KeyboardInput = ({
     }
   }, [text, onSubmit]);
   
-  // If keyboard is not active, don't render anything
+  // If keyboard is not active, still render but with transform
   if (!active) {
     return null;
   }
   
   return (
-    <View style={styles.container}>
+    <Animated.View 
+      style={[
+        styles.container,
+        { transform: [{ translateY: slideAnim }] }
+      ]}
+    >
       <TextInput
+        ref={inputRef}
         style={styles.input}
         value={text}
         onChangeText={setText}
@@ -66,7 +101,7 @@ export const KeyboardInput = ({
           <Send size={20} color={text.trim() ? "#3B82F6" : "#D1D5DB"} />
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -81,7 +116,13 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E7EB',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingBottom: 28, // Extra padding for iOS home indicator
+    paddingBottom: Platform.OS === 'ios' ? 36 : 28, // Extra padding for iOS home indicator
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 100,
   },
   input: {
     backgroundColor: '#F3F4F6',
@@ -96,7 +137,7 @@ const styles = StyleSheet.create({
   controls: {
     position: 'absolute',
     right: 24,
-    bottom: 40,
+    bottom: Platform.OS === 'ios' ? 48 : 40,
     flexDirection: 'row',
     alignItems: 'center',
   },
