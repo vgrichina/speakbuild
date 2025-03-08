@@ -136,7 +136,7 @@ export const VoiceButton = React.memo(({
     
     // Start recording
     onPressIn();
-  }, [callActive, disabled, keyboardActive, onPressIn, status]);
+  }, [callActive, disabled, onPressIn, status]);
   
   // Handle press out
   const handlePressOut = useCallback(() => {
@@ -174,7 +174,7 @@ export const VoiceButton = React.memo(({
     }
     
     pressStartTimeRef.current = null;
-  }, [callActive, disabled, keyboardActive, onPressOut, status]);
+  }, [callActive, disabled, onPressOut, status]);
   
   // Handle separate call button press
   const handleCallButtonPress = useCallback(() => {
@@ -257,7 +257,6 @@ export const VoiceButton = React.memo(({
     prevProps.status !== nextProps.status ||
     prevProps.disabled !== nextProps.disabled ||
     prevProps.callActive !== nextProps.callActive ||
-    prevProps.keyboardActive !== nextProps.keyboardActive ||
     (prevProps.status === ASSISTANT_STATUS.LISTENING && prevProps.volume !== nextProps.volume) ||
     (prevProps.callActive && prevProps.callStartTime !== nextProps.callStartTime);
   
