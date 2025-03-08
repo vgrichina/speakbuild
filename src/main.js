@@ -207,7 +207,7 @@ export const VoiceAssistant = React.memo(() => {
             disabled={assistant.status === assistant.STATUS.PROCESSING}
           >
             <Feather 
-              name="keyboard" 
+              name="type" 
               size={24} 
               color={keyboardActive ? "#FFFFFF" : "#4F46E5"} 
             />
