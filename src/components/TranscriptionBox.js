@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: 60, // Space for the floating button without extra View
+    paddingBottom: 40, // Reduced padding for the floating button
   },
   transcriptsContainer: {
     width: '100%'
