@@ -135,6 +135,12 @@ class AssistantServiceClass extends EventEmitter {
       return;
     }
     
+    // If we're in the middle of history navigation, log this for debugging
+    const historyState = componentHistoryService.getState();
+    if (historyState.currentIndex < historyState.history.length - 1) {
+      console.log(`[ASSISTANT] Generating new component while at history index ${historyState.currentIndex} of ${historyState.history.length - 1}`);
+    }
+    
     // Start component generation
     const generation = createComponentGeneration(analysis, {
       onStart: () => {

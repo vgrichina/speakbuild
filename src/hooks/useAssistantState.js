@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AssistantService, ASSISTANT_STATUS, ASSISTANT_MODE } from '../services/assistantService';
 import { componentHistoryService } from '../services/componentHistoryService';
 import { audioSession } from '../services/audioSession';
+import { HISTORY_CHANGE } from '../services/componentHistoryService';
 
 export function useAssistantState() {
   // Use a single state object for AssistantService state
@@ -74,7 +75,7 @@ export function useAssistantState() {
     };
   }, []);
   
-  // Listen for history index changes
+  // Listen for history index changes and history changes
   useEffect(() => {
     // Update history state when the current index changes
     const handleIndexChange = (index) => {
@@ -87,8 +88,24 @@ export function useAssistantState() {
       });
     };
     
-    const unsubscribe = componentHistoryService.onIndexChange(handleIndexChange);
-    return unsubscribe;
+    // Also listen for history changes (like when truncating and adding new items)
+    const handleHistoryChange = (history) => {
+      const historyServiceState = componentHistoryService.getState();
+      setHistoryState({
+        currentIndex: historyServiceState.currentIndex,
+        current: componentHistoryService.getCurrent(),
+        history: history,
+        activeConversationId: historyServiceState.activeConversationId
+      });
+    };
+    
+    const unsubscribeIndex = componentHistoryService.onIndexChange(handleIndexChange);
+    const unsubscribeHistory = componentHistoryService.on(HISTORY_CHANGE, handleHistoryChange);
+    
+    return () => {
+      unsubscribeIndex();
+      unsubscribeHistory();
+    };
   }, []);
 
   // Memoized current component for convenience
