@@ -67,7 +67,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F3F4F6',
     borderRadius: 8,
-    marginVertical: 8,
     maxHeight: 200,
     width: '100%'
   },
@@ -75,24 +74,19 @@ const styles = StyleSheet.create({
     maxHeight: 200
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 40, // Reduced padding for the floating button
+    paddingBottom: 40, // Only keep padding for the floating button
   },
   transcriptsContainer: {
     width: '100%'
   },
   historyText: {
     color: '#6B7280',
-    fontSize: 14,
-    marginBottom: 4
+    fontSize: 14
   },
   currentTranscript: {
     color: '#111827',
     fontSize: 18,
-    fontWeight: '500',
-    marginTop: 4,
-    marginBottom: 12,
-    paddingVertical: 4
+    fontWeight: '500'
   },
   ellipsis: {
     color: '#9CA3AF'

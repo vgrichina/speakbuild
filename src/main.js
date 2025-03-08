@@ -271,8 +271,6 @@ const styles = StyleSheet.create({
   },
   transcriptionContainer: {
     position: 'relative',
-    marginHorizontal: 16,
-    marginBottom: 16,
   },
   floatingButtonContainer: {
     position: 'absolute',
