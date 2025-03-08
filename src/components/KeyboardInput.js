@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, TextInput, Pressable, StyleSheet, Animated, Keyboard, Platform, SafeAreaView } from 'react-native';
-import { Send, Mic } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 
 /**
  * Keyboard input component that provides text input
@@ -89,7 +89,7 @@ export const KeyboardInput = ({
               style={styles.toggleButton}
               accessibilityLabel="Switch to voice input"
             >
-              <Mic size={20} color="#6B7280" />
+              <Feather name="mic" size={20} color="#6B7280" />
             </Pressable>
             <Pressable 
               onPress={handleSubmit}
@@ -100,7 +100,7 @@ export const KeyboardInput = ({
               disabled={!text.trim()}
               accessibilityLabel="Send message"
             >
-              <Send size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
+              <Feather name="send" size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
             </Pressable>
           </View>
         </View>

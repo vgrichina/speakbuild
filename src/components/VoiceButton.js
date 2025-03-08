@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
-import { Square, Mic, Phone } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import { ASSISTANT_STATUS } from '../services/assistantService';
 
 /**
@@ -196,19 +196,19 @@ export const VoiceButton = React.memo(({
       // Call mode active
       return (
         <>
-          <Phone size={28} color="white" />
+          <Feather name="phone" size={28} color="white" />
           <Text style={styles.callDuration}>{durationDisplay}</Text>
         </>
       );
     } else if (isListening) {
       // Showing volume visualization
-      return <Square size={28} color="white" />;
+      return <Feather name="square" size={28} color="white" />;
     } else if (status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING) {
       // Thinking or Processing
-      return <Mic size={28} color="#FFF" />;
+      return <Feather name="mic" size={28} color="#FFF" />;
     } else {
       // Default state
-      return <Mic size={32} color="white" />;
+      return <Feather name="mic" size={32} color="white" />;
     }
   };
   
