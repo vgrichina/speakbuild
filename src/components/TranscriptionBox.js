@@ -90,7 +90,9 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontSize: 18,
     fontWeight: '500',
-    marginTop: 4
+    marginTop: 4,
+    marginBottom: 12,
+    paddingVertical: 4
   },
   ellipsis: {
     color: '#9CA3AF'
