@@ -48,11 +48,11 @@ export default function Index() {
                     />
                     <DebugMenuButton
                         onViewSource={() => {
-                            if (current?.code) {
-                                console.log('ViewSource - code preview:', current.code?.slice(0, 100) + '...');
+                            if (current?.component?.code) {
+                                console.log('ViewSource - code preview:', current.component.code?.slice(0, 100) + '...');
                                 router.push({
                                     pathname: 'code-viewer',
-                                    params: { code: current.code }
+                                    params: { code: current.component.code }
                                 });
                             } else {
                                 console.log('ViewSource - no code in current:', current);

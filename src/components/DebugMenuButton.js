@@ -125,12 +125,12 @@ export const DebugMenuButton = ({
                     >
                         <Pressable
                             style={styles.menuItem}
-                            disabled={!currentHistoryEntry?.code}
+                            disabled={!currentHistoryEntry?.component?.code}
                             onPress={() => handleSelect(onViewSource)}
                         >
                             <Text style={[
                                 styles.menuItemText,
-                                !currentHistoryEntry?.code && { opacity: 0.5 }
+                                !currentHistoryEntry?.component?.code && { opacity: 0.5 }
                             ]}>
                                 {showSourceCode ? 'Hide source' : 'View source'}
                             </Text>
