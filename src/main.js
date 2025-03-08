@@ -188,8 +188,6 @@ export const VoiceAssistant = React.memo(() => {
                 stopRecording: assistant.stopRecording,
                 endCall: assistant.endCall
               }}
-              onToggleKeyboard={handleToggleKeyboard}
-              keyboardActive={keyboardActive}
               disabled={!isApiKeysSet}
             />
           </View>
@@ -199,11 +197,18 @@ export const VoiceAssistant = React.memo(() => {
         {/* Keyboard toggle button positioned absolutely */}
         <View style={styles.keyboardButtonContainer}>
           <TouchableOpacity 
-            style={styles.keyboardToggleButton}
+            style={[
+              styles.keyboardToggleButton,
+              keyboardActive && styles.keyboardToggleButtonActive
+            ]}
             onPress={handleToggleKeyboard}
-            disabled={assistant.status === assistant.STATUS.PROCESSING || keyboardActive}
+            disabled={assistant.status === assistant.STATUS.PROCESSING}
           >
-            <Feather name="keyboard" size={24} color="#4F46E5" />
+            <Feather 
+              name="keyboard" 
+              size={24} 
+              color={keyboardActive ? "#FFFFFF" : "#4F46E5"} 
+            />
           </TouchableOpacity>
         </View>
         
@@ -294,5 +299,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
+  },
+  keyboardToggleButtonActive: {
+    backgroundColor: '#4F46E5',
   },
 });

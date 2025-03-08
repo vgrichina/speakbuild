@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
-import { Square, Mic, Phone, Keyboard } from 'lucide-react-native';
+import { Square, Mic, Phone } from 'lucide-react-native';
 import { ASSISTANT_STATUS } from '../services/assistantService';
 
 /**
@@ -63,8 +63,6 @@ const formatDuration = (ms) => {
  * @param {Function} props.onPressIn - Callback when button is pressed (PTT start)
  * @param {Function} props.onPressOut - Callback when button is released (PTT end)
  * @param {Function} props.onToggleCall - Callback to toggle call mode
- * @param {Function} props.onToggleKeyboard - Callback to toggle keyboard mode
- * @param {boolean} props.keyboardActive - Whether keyboard mode is active
  */
 export const VoiceButton = React.memo(({
   status = ASSISTANT_STATUS.IDLE,
@@ -74,9 +72,7 @@ export const VoiceButton = React.memo(({
   callStartTime = null,
   onPressIn,
   onPressOut,
-  onToggleCall,
-  onToggleKeyboard,
-  keyboardActive = false
+  onToggleCall
 }) => {
   // Local UI state
   const [pressed, setPressed] = useState(false);
@@ -118,7 +114,7 @@ export const VoiceButton = React.memo(({
   
   // Handle press in
   const handlePressIn = useCallback(() => {
-    if (disabled || keyboardActive || status === 'THINKING' || status === 'PROCESSING') return;
+    if (disabled || status === 'THINKING' || status === 'PROCESSING') return;
     
     // If already in call mode, do nothing on press
     if (callActive) return;
@@ -144,7 +140,7 @@ export const VoiceButton = React.memo(({
   
   // Handle press out
   const handlePressOut = useCallback(() => {
-    if (disabled || keyboardActive || status === 'THINKING' || status === 'PROCESSING') return;
+    if (disabled || status === 'THINKING' || status === 'PROCESSING') return;
     
     // If already in call mode or no press start time, do nothing
     if (callActive || !pressStartTimeRef.current) {
@@ -204,9 +200,6 @@ export const VoiceButton = React.memo(({
           <Text style={styles.callDuration}>{durationDisplay}</Text>
         </>
       );
-    } else if (keyboardActive) {
-      // Keyboard mode active
-      return <Keyboard size={28} color="white" />;
     } else if (isListening) {
       // Showing volume visualization
       return <Square size={28} color="white" />;
@@ -256,18 +249,6 @@ export const VoiceButton = React.memo(({
            status === ASSISTANT_STATUS.PROCESSING ? 'Processing...' : 
            'Hold to speak')}
       </Text>
-      
-      {/* Keyboard toggle button */}
-      <Pressable
-        onPress={onToggleKeyboard}
-        style={[
-          styles.keyboardToggle,
-          keyboardActive && styles.keyboardActive
-        ]}
-        disabled={disabled}
-      >
-        <Keyboard size={20} color={keyboardActive ? "white" : "#666"} />
-      </Pressable>
     </View>
   );
 }, (prevProps, nextProps) => {
@@ -336,25 +317,6 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 12,
     textAlign: 'center',
-  },
-  keyboardToggle: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.5,
-    elevation: 2,
-  },
-  keyboardActive: {
-    backgroundColor: '#3B82F6',
   },
   callDuration: {
     marginTop: 4,
