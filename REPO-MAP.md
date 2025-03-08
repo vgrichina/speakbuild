@@ -22,15 +22,15 @@ This document provides a comprehensive overview of the codebase structure, modul
 - `VoiceAssistant` (React.memo) - Main component wrapping the voice assistant functionality
 
 **State Management**:
-- Uses `useSettings` hook for configuration
+- Uses `useAssistantState` hook for assistant state
 - Tracks keyboard mode state
-- Manages component history
+- Uses componentHistoryService for history management
 
 **Dependencies**: 
 - React, React Native
-- Components: ErrorBoundary, VoiceButton, TranscriptionBox, ResponseStream
+- Components: ErrorBoundary, VoiceButton, TranscriptionBox, ResponseStream, EmptyState, KeyboardInput
 - Hooks: useAssistantState
-- Services: AssistantService, audioSession, componentGeneration
+- Services: componentHistoryService, hasApiKeys
 
 ### app/index.js
 
@@ -206,51 +206,89 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Purpose**: Central service for voice assistant functionality
 
 **Exports**:
-- `AssistantService` singleton
-- `ASSISTANT_STATUS` constants
-- `ASSISTANT_MODE` constants
+- `AssistantService` singleton (instance of AssistantServiceClass)
+- `ASSISTANT_STATUS` constants (IDLE, LISTENING, THINKING, PROCESSING, ERROR)
+- `ASSISTANT_MODE` constants (PTT, CALL)
 
 **State Management**:
-- `status`: Current status (idle, listening, thinking, processing, error)
-- `mode`: Input mode (ptt, call)
-- `volume`: Audio volume level
-- `transcript`: Final transcription
-- `partialTranscript`: In-progress transcription
-- `responseStream`: Generation response text
-- `error`: Error state
+- `_state` object containing:
+  - `status`: Current status (idle, listening, thinking, processing, error)
+  - `mode`: Input mode (ptt, call)
+  - `volume`: Audio volume level
+  - `transcript`: Final transcription
+  - `partialTranscript`: In-progress transcription
+  - `responseStream`: Generation response text
+  - `error`: Error state
+  - `callStartTime`: Timestamp for call start
 
 **Methods**:
-- `startPTT()`: Start push-to-talk recording
-- `stopPTT()`: Stop push-to-talk recording
-- `toggleCallMode()`: Switch between PTT and call mode
+- `startRecording()`: Start recording audio
+- `stopRecording()`: Stop recording audio
+- `setMode(mode)`: Set recording mode
+- `endCall()`: End call mode
 - `abortGeneration()`: Cancel current generation
 - `retry()`: Retry after error
+- `navigateBack()`: Navigate to previous component
+- `navigateForward()`: Navigate to next component
+- `setHistoryIndex(index)`: Set the current history index
+- `cleanup()`: Clean up resources
+- Various getter methods for state properties
+
+**Event Handlers**:
+- `_handleVolumeChange`: Handle volume change events
+- `_handlePartialTranscript`: Handle partial transcript events
+- `_handleFinalTranscript`: Handle final transcript events
+- `_handleSessionStatus`: Handle session status events
+- `_handleAudioError`: Handle audio error events
 
 **Dependencies**:
-- EventEmitter
+- EventEmitter (extends)
 - audioSession
-- componentGeneration
-- settings
+- createComponentGeneration
+- analysisPrompt
+- getApiKeys, getSettings from settings
+- componentHistoryService
 
 ### audioSession.js
 
 **Purpose**: Manages audio recording and transcription
 
 **Exports**:
-- `audioSession` singleton
+- `audioSession` singleton (instance of AudioSessionSingleton)
 
 **State Management**:
 - `active`: Whether audio session is active
 - `mode`: Current mode (ptt or call)
+- `audioBuffer`: Buffer for audio data
+- `isCleaningUp`: Flag for cleanup state
+- `isStartingRecording`: Flag for recording start state
+- `serverListening`: Flag for server listening state
+- `transcript`: Track if transcript has been received
+- `lastMessageTime`: Track last message receive time
 
 **Methods**:
-- `start({ mode, onVolumeChange, onPartialTranscript, onFinalTranscript, onError })`: Start audio session
-- `stop()`: Stop audio session
+- `start({ mode, onVolumeChange, onPartialTranscript, onFinalTranscript, onError, selectedLanguage, apiKeys, analysisPrompt })`: Start audio session
+- `stop(forceImmediateCleanup)`: Stop audio session
 - `isActive()`: Check if session is active
+- `getCurrentMode()`: Get current mode
+- `setMode(newMode)`: Set the audio session mode
+- `cleanup(options)`: Clean up resources
+- `cleanupWebSocket()`: Clean up WebSocket connection
+- `checkPermission()`: Check microphone permission
+- `initAudio()`: Initialize audio recording
+
+**Implementation Features**:
+- WebSocket-based communication with Ultravox API
+- Callback-based event handling
+- Comprehensive error handling
+- Throttled volume and partial transcript updates
+- Timeout management for final responses
 
 **Dependencies**:
-- react-native-audio-record
-- react-native-permissions
+- AudioRecord from react-native-audio-record
+- PERMISSIONS, request, check, RESULTS from react-native-permissions
+- Platform from react-native
+- parse, STR, OBJ from partial-json
 
 ### componentGeneration.js
 
@@ -262,7 +300,6 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Factory Function Parameters**:
 - `analysis`: The analysis object with transcription and params
 - `options`: Configuration options including callbacks
-  - `onStart`: Called when generation starts
   - `onProgress`: Called with streaming updates
   - `onComplete`: Called when generation is complete
   - `onError`: Called when an error occurs
@@ -274,24 +311,18 @@ This document provides a comprehensive overview of the codebase structure, modul
 - `start()`: Begin component generation
 - `abort()`: Cancel generation
 - `getStatus()`: Get current status information
+- `id`: Unique identifier for the generation process
+
+**Implementation Features**:
+- Unique ID generation for tracking
+- Comprehensive error handling
+- Detailed logging throughout the generation lifecycle
+- Code extraction and validation from API responses
 
 **Dependencies**:
 - api
-- componentExamples
-
-**State Management**:
-- `generating`: Boolean for active generation
-- `responseStream`: Stream of text from API
-- `error`: Error state
-
-**Methods**:
-- `generateComponent(input)`: Generate component from input
-- `modifyComponent(code, request)`: Modify existing component
-- `cancelGeneration()`: Cancel ongoing generation
-
-**Dependencies**:
-- React
-- Services: componentGeneration, processStream
+- widgetStorage
+- formatExamples from componentExamples
 
 ## Services
 
@@ -361,12 +392,16 @@ This document provides a comprehensive overview of the codebase structure, modul
 **Exports**:
 - `processWithClaudeStream`: Function for API interaction
 
-**Methods**:
-- Streaming API interaction
-- Response parsing and handling
+**Implementation**:
+- Uses createComponentGeneration for handling the streaming response
+- Creates a promise-based interface for component generation
+- Manages abortController for cancellation
+- Provides progress updates via onResponseStream callback
 
 **Dependencies**:
-- Services: api, componentGeneration
+- createComponent from componentUtils
+- widgetStorage
+- createComponentGeneration
 
 ### analysis.js
 
@@ -380,23 +415,26 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 ### api.js
 
-**Purpose**: API client for OpenRouter and other services
+**Purpose**: API client for OpenRouter API
 
 **Exports**:
 - `api`: Object with API methods
 
 **Methods**:
-- `completion(params)`: Make completion request
-- `streamCompletion(params, callbacks)`: Make streaming request
+- `streamCompletion(apiKey, messages, options)`: Make streaming completion request
+- `completion(apiKey, messages, options)`: Make non-streaming completion request
 
 **Implementation Features**:
 - Detailed performance monitoring for streaming chunks
 - Robust error handling with context-rich error objects
 - Tracking for stream metrics (chunks, tokens, duration)
 - Structured logging format for easier debugging
+- Preview truncation for large responses
+- API key masking in logs for security
 
 **Dependencies**:
-- Services: sseFetch, settings
+- fetchSSE from sseFetch
+- truncateWithEllipsis from stringUtils
 
 ### storage.js
 
@@ -494,23 +532,24 @@ This document provides a comprehensive overview of the codebase structure, modul
 - `useAssistantState` hook
 
 **Implementation Pattern**:
-- Follows the [Service-Hook Pattern](SERVICE_HOOK_PATTERN.md)
-- Thin adapter layer over services
-- Uses consolidated state objects
-- Memoized return value for optimal rendering performance
-- Subscribes to service events instead of duplicating state
+- Thin adapter layer over AssistantService and componentHistoryService
+- Uses useState to track service state
+- Subscribes to service events via useEffect
+- Uses useMemo and useCallback for performance optimization
 
 **State Management**:
-- **Assistant State** (from AssistantService)
+- **Assistant State**:
   - `status`: Current assistant status
+  - `mode`: Input mode (ptt, call)
   - `volume`: Audio volume level
-  - `transcript`: Voice input transcription
+  - `transcript`: Final transcription
   - `partialTranscript`: In-progress transcription
   - `responseStream`: Generation response text
+  - `error`: Error state
   - `callActive`: Boolean for call mode state
   - `callStartTime`: Timestamp for call start
-  - `error`: Error state
-- **History State** (from componentHistoryService)
+
+- **History State**:
   - `currentHistoryIndex`: Index of currently displayed component
   - `currentComponent`: Currently displayed component
   - `current`: Current unified history entry (transcript + component)
@@ -518,25 +557,30 @@ This document provides a comprehensive overview of the codebase structure, modul
   - `history`: All history entries for current conversation
 
 **Methods**:
-- **Assistant Actions**
-  - `startPTT()`: Start push-to-talk recording
-  - `stopPTT()`: Stop push-to-talk recording
-  - `toggleCallMode()`: Switch between PTT and call mode
+- **Assistant Actions**:
+  - `startRecording()`: Start recording
+  - `stopRecording()`: Stop recording
+  - `setMode()`: Set recording mode
+  - `endCall()`: End call mode
   - `abortGeneration()`: Cancel current generation
   - `retry()`: Retry after error
-- **History Navigation**
+  - `processAnalysis()`: Process text input
+
+- **History Navigation**:
   - `navigateBack()/goBack()`: Navigate to previous component
   - `navigateForward()/goForward()`: Navigate to next component
   - `setHistoryIndex()`: Set the current history index
-- **Conversation Management**
+
+- **Conversation Management**:
   - `switchConversation()`: Change active conversation
   - `createNewConversation()`: Create new conversation
   - `clearHistory()`: Clear history
   - `getAllConversations()`: Get all conversations
   - `deleteConversation()`: Delete a conversation
+  - `renameConversation()`: Rename a conversation
 
 **Dependencies**:
-- AssistantService
+- AssistantService (ASSISTANT_STATUS, ASSISTANT_MODE)
 - componentHistoryService
 - audioSession (for call state detection)
 
