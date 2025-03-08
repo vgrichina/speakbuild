@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Keyboard } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { KeyboardInput } from './components/KeyboardInput';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { EmptyState } from './components/EmptyState';
 import { VoiceButton } from './components/VoiceButton';
@@ -207,12 +208,14 @@ export const VoiceAssistant = React.memo(() => {
           )}
           
           {/* Keyboard input component */}
-          <KeyboardInput 
-            active={keyboardActive}
-            onSubmit={handleKeyboardSubmit}
-            onToggle={handleToggleKeyboard}
-            callActive={assistant.callActive}
-          />
+          {keyboardActive && (
+            <KeyboardInput 
+              active={keyboardActive}
+              onSubmit={handleKeyboardSubmit}
+              onToggle={handleToggleKeyboard}
+              callActive={assistant.callActive}
+            />
+          )}
         </View>
       </ErrorBoundary>
     </View>
