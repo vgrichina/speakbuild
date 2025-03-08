@@ -99,7 +99,7 @@ export const KeyboardInput = ({
             disabled={!text.trim()}
             accessibilityLabel="Send message"
           >
-            <Send size={20} color={text.trim() ? "#3B82F6" : "#D1D5DB"} />
+            <Send size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
           </Pressable>
         </View>
       </SafeAreaView>
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 30 : 16,
     shadowColor: '#000',
@@ -133,16 +132,17 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#F3F4F6',
     borderRadius: 20,
+    marginHorizontal: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingRight: 50, // Space for controls
+    paddingRight: 80, // More space for controls
     fontSize: 16,
     maxHeight: 100,
     color: '#1F2937'
   },
   controls: {
     position: 'absolute',
-    right: 24,
+    right: 20,
     bottom: Platform.OS === 'ios' ? 24 : 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#4F46E5',
     alignItems: 'center',
     justifyContent: 'center',
   },
