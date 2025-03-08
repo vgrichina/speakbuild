@@ -27,9 +27,7 @@ export const TranscriptionBox = React.memo(({
   
   if (!shouldShow) return null;
   
-  // Reverse the order of transcripts so newest is at the bottom
-  const reversedTranscripts = [...transcripts].reverse();
-  
+  // No need to reverse - we'll display newest at the top
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -38,8 +36,16 @@ export const TranscriptionBox = React.memo(({
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.transcriptsContainer}>
-          {/* Oldest messages at the top (will fade out as they scroll) */}
-          {reversedTranscripts.slice(1).map((transcript, index) => (
+          {/* Latest transcript at the top */}
+          {transcripts.length > 0 && (
+            <Text style={styles.currentTranscript}>
+              {transcripts[transcripts.length - 1]}
+              {isListening && <Text style={styles.ellipsis}>...</Text>}
+            </Text>
+          )}
+          
+          {/* Older messages below (will fade out as they get older) */}
+          {transcripts.slice(0, -1).reverse().map((transcript, index) => (
             <Text 
               key={`history-${index}`} 
               style={[
@@ -51,14 +57,6 @@ export const TranscriptionBox = React.memo(({
               {transcript}
             </Text>
           ))}
-          
-          {/* Latest transcript at the bottom */}
-          {reversedTranscripts.length > 0 && (
-            <Text style={styles.currentTranscript}>
-              {reversedTranscripts[0]}
-              {isListening && <Text style={styles.ellipsis}>...</Text>}
-            </Text>
-          )}
         </View>
       </ScrollView>
     </View>
