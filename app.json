@@ -7,6 +7,9 @@
     "newArchEnabled": true,
     "scheme": "voiceassistant",
     "userInterfaceStyle": "automatic",
+    "developmentClient": {
+      "silentLaunch": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.voiceassistant.app",
