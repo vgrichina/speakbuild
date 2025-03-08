@@ -66,7 +66,6 @@ export const TranscriptionBox = React.memo(({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F3F4F6',
-    borderRadius: 8,
     maxHeight: 200,
     width: '100%'
   },
