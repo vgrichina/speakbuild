@@ -27,6 +27,9 @@ export const TranscriptionBox = React.memo(({
   
   if (!shouldShow) return null;
   
+  // Reverse the order of transcripts so newest is at the bottom
+  const reversedTranscripts = [...transcripts].reverse();
+  
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -35,24 +38,29 @@ export const TranscriptionBox = React.memo(({
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.transcriptsContainer}>
-          {/* All transcripts except the latest */}
-          {transcripts.slice(0, -1).map((transcript, index) => (
-            <Text key={`history-${index}`} style={styles.historyText}>
+          {/* Oldest messages at the top (will fade out as they scroll) */}
+          {reversedTranscripts.slice(1).map((transcript, index) => (
+            <Text 
+              key={`history-${index}`} 
+              style={[
+                styles.historyText,
+                // Add fade effect for older messages
+                { opacity: Math.max(0.5, 1 - (index * 0.2)) }
+              ]}
+            >
               {transcript}
             </Text>
           ))}
           
-          {/* Latest transcript */}
-          {transcripts.length > 0 && (
+          {/* Latest transcript at the bottom */}
+          {reversedTranscripts.length > 0 && (
             <Text style={styles.currentTranscript}>
-              {transcripts[transcripts.length - 1]}
+              {reversedTranscripts[0]}
               {isListening && <Text style={styles.ellipsis}>...</Text>}
             </Text>
           )}
         </View>
       </ScrollView>
-      {/* Add extra padding at the bottom for the floating button */}
-      <View style={styles.buttonSpace} />
     </View>
   );
 });
@@ -70,6 +78,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+    paddingBottom: 60, // Space for the floating button without extra View
   },
   transcriptsContainer: {
     width: '100%'
@@ -87,9 +96,5 @@ const styles = StyleSheet.create({
   },
   ellipsis: {
     color: '#9CA3AF'
-  },
-  buttonSpace: {
-    height: 40, // Space for the floating button
-    width: '100%'
   }
 });

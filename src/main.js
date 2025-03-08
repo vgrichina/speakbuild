@@ -176,6 +176,13 @@ export const VoiceAssistant = React.memo(() => {
               disabled={!isApiKeysSet}
             />
           </View>
+          
+          {/* Keyboard toggle button in corner */}
+          {keyboardActive && (
+            <View style={styles.keyboardButtonContainer}>
+              {/* Your keyboard input component would go here */}
+            </View>
+          )}
         </View>
       </ErrorBoundary>
     </View>
@@ -235,5 +242,11 @@ const styles = StyleSheet.create({
     bottom: -30, // Position it to overlap with the bottom of the transcription box
     alignSelf: 'center',
     zIndex: 10, // Ensure it's above the transcription box
+  },
+  keyboardButtonContainer: {
+    position: 'absolute',
+    bottom: -30,
+    right: 10,
+    zIndex: 10,
   },
 });
