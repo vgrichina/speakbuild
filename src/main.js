@@ -194,28 +194,28 @@ export const VoiceAssistant = React.memo(() => {
             />
           </View>
           
-          {/* Keyboard toggle button in corner (only when keyboard is not active) */}
-          {!keyboardActive && (
-            <View style={styles.keyboardButtonContainer}>
-              <TouchableOpacity 
-                style={styles.keyboardToggleButton}
-                onPress={handleToggleKeyboard}
-                disabled={assistant.status === assistant.STATUS.PROCESSING}
-              >
-                <Feather name="keyboard" size={24} color="#4F46E5" />
-              </TouchableOpacity>
-            </View>
-          )}
-          
-          {/* Keyboard input component */}
-          {keyboardActive && (
-            <KeyboardInput 
-              active={keyboardActive}
-              onSubmit={handleKeyboardSubmit}
-              onToggle={handleToggleKeyboard}
-              callActive={assistant.callActive}
-            />
-          )}
+        </View>
+        
+        {/* Keyboard toggle button positioned absolutely */}
+        <View style={styles.keyboardButtonContainer}>
+          <TouchableOpacity 
+            style={styles.keyboardToggleButton}
+            onPress={handleToggleKeyboard}
+            disabled={assistant.status === assistant.STATUS.PROCESSING || keyboardActive}
+          >
+            <Feather name="keyboard" size={24} color="#4F46E5" />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Keyboard input component */}
+        {keyboardActive && (
+          <KeyboardInput 
+            active={keyboardActive}
+            onSubmit={handleKeyboardSubmit}
+            onToggle={handleToggleKeyboard}
+            callActive={assistant.callActive}
+          />
+        )}
         </View>
       </ErrorBoundary>
     </View>
@@ -278,9 +278,9 @@ const styles = StyleSheet.create({
   },
   keyboardButtonContainer: {
     position: 'absolute',
-    bottom: -30,
-    right: 10,
-    zIndex: 10,
+    bottom: 20,
+    right: 20,
+    zIndex: 20,
   },
   keyboardToggleButton: {
     width: 48,

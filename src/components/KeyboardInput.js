@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { View, TextInput, Pressable, StyleSheet, Animated, Keyboard, Platform } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, Animated, Keyboard, Platform, SafeAreaView } from 'react-native';
 import { Send, Mic } from 'lucide-react-native';
 
 /**
@@ -66,41 +66,43 @@ export const KeyboardInput = ({
         { transform: [{ translateY: slideAnim }] }
       ]}
     >
-      <TextInput
-        ref={inputRef}
-        style={styles.input}
-        value={text}
-        onChangeText={setText}
-        placeholder={
-          callActive 
-            ? "Send message during call..." 
-            : "Type your message..."
-        }
-        placeholderTextColor="#9CA3AF"
-        multiline
-        autoFocus
-        onSubmitEditing={handleSubmit}
-      />
-      <View style={styles.controls}>
-        <Pressable 
-          onPress={onToggle} 
-          style={styles.toggleButton}
-          accessibilityLabel="Switch to voice input"
-        >
-          <Mic size={20} color="#6B7280" />
-        </Pressable>
-        <Pressable 
-          onPress={handleSubmit}
-          style={[
-            styles.sendButton,
-            !text.trim() && styles.sendButtonDisabled
-          ]}
-          disabled={!text.trim()}
-          accessibilityLabel="Send message"
-        >
-          <Send size={20} color={text.trim() ? "#3B82F6" : "#D1D5DB"} />
-        </Pressable>
-      </View>
+      <SafeAreaView style={styles.safeAreaContainer}>
+        <TextInput
+          ref={inputRef}
+          style={styles.input}
+          value={text}
+          onChangeText={setText}
+          placeholder={
+            callActive 
+              ? "Send message during call..." 
+              : "Type your message..."
+          }
+          placeholderTextColor="#9CA3AF"
+          multiline
+          autoFocus
+          onSubmitEditing={handleSubmit}
+        />
+        <View style={styles.controls}>
+          <Pressable 
+            onPress={onToggle} 
+            style={styles.toggleButton}
+            accessibilityLabel="Switch to voice input"
+          >
+            <Mic size={20} color="#6B7280" />
+          </Pressable>
+          <Pressable 
+            onPress={handleSubmit}
+            style={[
+              styles.sendButton,
+              !text.trim() && styles.sendButtonDisabled
+            ]}
+            disabled={!text.trim()}
+            accessibilityLabel="Send message"
+          >
+            <Send size={20} color={text.trim() ? "#3B82F6" : "#D1D5DB"} />
+          </Pressable>
+        </View>
+      </SafeAreaView>
     </Animated.View>
   );
 };
@@ -111,18 +113,21 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    width: '100%',
+    zIndex: 1000,
+  },
+  safeAreaContainer: {
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 28, // Extra padding for iOS home indicator
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
-    zIndex: 100,
   },
   input: {
     backgroundColor: '#F3F4F6',
