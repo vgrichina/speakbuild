@@ -43,6 +43,7 @@ class AudioSessionSingleton {
     this.stopTimeoutId = null;
     this.serverListening = false; // Flag to track server "listening" state
     this.transcript = null; // Track if we've received a transcript
+    this.lastMessageTime = 0; // Track last message receive time
     
     // Throttling timestamps
     this.lastVolumeUpdateTime = 0;
@@ -55,7 +56,8 @@ class AudioSessionSingleton {
       volumeChange: null,
       partialTranscript: null,
       finalTranscript: null,
-      error: null
+      error: null,
+      onSessionStatus: null // New event-based communication with Assistant
     };
 
     // Initialize audio
@@ -424,6 +426,9 @@ class AudioSessionSingleton {
       };
       
       wsInstance.onmessage = (event) => {
+        // Update last message time when any message is received
+        this.lastMessageTime = Date.now();
+        
         // Log raw message info immediately upon receipt, before any processing
         const wsId = wsInstance.url.split('/').pop();
         const dataLength = event.data?.length || 0;
@@ -731,29 +736,83 @@ class AudioSessionSingleton {
       }
       
       // Set a timeout to force close after a delay if no final result arrives
+      // But allow flexibility for active processing
       this.stopTimeoutId = setTimeout(() => {
-        console.log(`[AUDIO_SESSION] Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, checking transcript status`);
+        console.log(`[AUDIO_SESSION] Timeout of ${FINAL_RESPONSE_TIMEOUT_MS}ms reached, checking activity status`);
         
-        // First check if we already have a transcript - if so, don't trigger an error
-        if (this.transcript) {
-          console.log('[AUDIO_SESSION] Transcript was already received, ignoring timeout');
-          // Just perform cleanup without triggering error
-          if (this.stopping && this.ws) {
-            try {
-              // Only close if the WebSocket is still open
-              if (this.ws.readyState === WebSocket.OPEN) {
-                this.ws.close(1000, "Timeout after stopping - transcript already received");
-                console.log('[AUDIO_SESSION] WebSocket close initiated after timeout (already had transcript)');
-              } else {
-                console.log('[AUDIO_SESSION] WebSocket already closed/closing, no action needed');
-              }
-            } catch (err) {
-              console.error('[AUDIO_SESSION] Error closing WebSocket:', err);
-              this.cleanup();
-            }
+        // Check if we're still actively receiving messages via the websocket
+        const isReceivingMessages = (Date.now() - this.lastMessageTime) < 2000; // Within 2 seconds
+        
+        if (isReceivingMessages) {
+          // If we're still actively receiving messages, extend the timeout
+          console.log('[AUDIO_SESSION] Still actively receiving messages, extending timeout');
+          
+          // Notify assistant about activity
+          if (this.callbacks.onSessionStatus) {
+            this.callbacks.onSessionStatus({
+              type: 'activity',
+              detail: 'extending_timeout',
+              timestamp: Date.now()
+            });
           }
+          
+          // Clear this timeout and set a new one
+          clearTimeout(this.stopTimeoutId);
+          this.stopTimeoutId = setTimeout(() => {
+            console.log('[AUDIO_SESSION] Extended timeout reached, notifying assistant');
+            
+            // Just notify about extended timeout without forcing closure
+            if (this.callbacks.onSessionStatus) {
+              this.callbacks.onSessionStatus({
+                type: 'extended_timeout_reached',
+                detail: this.transcript ? 'with_transcript' : 'no_transcript',
+                timestamp: Date.now()
+              });
+            }
+            
+            // Only close websocket if we have a transcript already, otherwise let assistant decide
+            if (this.transcript) {
+              this.cleanupWebSocket();
+            }
+          }, FINAL_RESPONSE_TIMEOUT_MS / 2); // Use half the original timeout for extension
+          
+          return; // Exit early - don't close while actively receiving data
+        }
+        
+        // At this point we've reached timeout and there's no active communication
+        console.log(`[AUDIO_SESSION] No activity for ${FINAL_RESPONSE_TIMEOUT_MS}ms, handling timeout`);
+        
+        // Check for transcript and notify assistant - let it decide what to do
+        if (this.transcript) {
+          console.log('[AUDIO_SESSION] Transcript was already received, notifying with timeout_with_transcript');
+          
+          // Notify assistant of timeout with transcript
+          if (this.callbacks.onSessionStatus) {
+            this.callbacks.onSessionStatus({
+              type: 'timeout',
+              detail: 'with_transcript',
+              transcript: this.transcript,
+              timestamp: Date.now()
+            });
+          }
+          
+          // Just clean websocket, don't do full cleanup - let assistant decide
+          this.cleanupWebSocket();
+          this.stopTimeoutId = null;
+          
         } else if (this.stopping && this.ws) {
-          // No transcript received, trigger error
+          // No transcript received, notify assistant
+          console.log('[AUDIO_SESSION] No transcript received, notifying with timeout_no_transcript');
+          
+          if (this.callbacks.onSessionStatus) {
+            this.callbacks.onSessionStatus({
+              type: 'timeout',
+              detail: 'no_transcript',
+              timestamp: Date.now()
+            });
+          }
+          
+          // Let the error callback handle this for backward compatibility
           if (this.callbacks.error) {
             const timeoutError = new Error("No transcript received within timeout period");
             timeoutError.code = "TIMEOUT";
@@ -761,18 +820,8 @@ class AudioSessionSingleton {
             this.callbacks.error(timeoutError);
           }
           
-          try {
-            // Only close if the WebSocket is still open
-            if (this.ws.readyState === WebSocket.OPEN) {
-              this.ws.close(1000, "Timeout after stopping");
-              console.log('[AUDIO_SESSION] WebSocket close initiated after timeout');
-            } else {
-              console.log('[AUDIO_SESSION] WebSocket already closed/closing, no action needed');
-            }
-          } catch (err) {
-            console.error('[AUDIO_SESSION] Error closing WebSocket:', err);
-            this.cleanup();
-          }
+          // Still clean up the websocket - just not the full session
+          this.cleanupWebSocket();
         }
       }, FINAL_RESPONSE_TIMEOUT_MS);
     } else {

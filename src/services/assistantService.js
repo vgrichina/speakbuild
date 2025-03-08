@@ -208,6 +208,74 @@ class AssistantServiceClass extends EventEmitter {
     this._startComponentGeneration(analysis);
   }
   
+  /**
+   * Handle session status events from the audio session
+   * Uses a more granular event-based communication pattern
+   */
+  _handleSessionStatus = (statusEvent) => {
+    console.log(`[ASSISTANT] Received session status event: ${statusEvent.type}, detail: ${statusEvent.detail}`);
+    
+    switch (statusEvent.type) {
+      case 'timeout':
+        // Handle different timeout situations
+        if (statusEvent.detail === 'with_transcript') {
+          console.log('[ASSISTANT] Timeout with transcript received - checking current state');
+          
+          // If we're already processing, stay in that state - WebSocket is already closed
+          if (this._state.status === ASSISTANT_STATUS.PROCESSING) {
+            console.log('[ASSISTANT] Component generation in progress, maintaining PROCESSING state');
+            // No state change needed - just log
+          } else if (this._state.status === ASSISTANT_STATUS.THINKING) {
+            console.log('[ASSISTANT] In THINKING state, maintaining for transcript processing');
+            // No state change needed - processing will continue
+          } else {
+            // In other states, go to IDLE since we have a transcript but aren't processing
+            console.log('[ASSISTANT] Timeout with transcript, but not processing - transitioning to IDLE');
+            this._setState({
+              status: ASSISTANT_STATUS.IDLE,
+              volume: 0
+            });
+          }
+        } else {
+          // No transcript received - actual timeout error case
+          console.log('[ASSISTANT] Timeout with no transcript - transitioning to IDLE state');
+          this._setState({
+            status: ASSISTANT_STATUS.IDLE,
+            error: null,
+            volume: 0
+          });
+        }
+        break;
+        
+      case 'activity':
+        // Just log activity events - they don't affect state
+        console.log(`[ASSISTANT] Audio session activity: ${statusEvent.detail}`);
+        break;
+        
+      case 'extended_timeout_reached':
+        // Handle reaching an extended timeout - depends on presence of transcript
+        if (statusEvent.detail === 'with_transcript') {
+          console.log('[ASSISTANT] Extended timeout with transcript - continuing normally');
+          // No state change needed if we have a transcript
+        } else {
+          console.log('[ASSISTANT] Extended timeout with no transcript - transitioning to IDLE');
+          this._setState({
+            status: ASSISTANT_STATUS.IDLE,
+            error: null,
+            volume: 0
+          });
+        }
+        break;
+        
+      default:
+        console.log(`[ASSISTANT] Unknown session status event type: ${statusEvent.type}`);
+    }
+  }
+  
+  /**
+   * Legacy error handler for backward compatibility
+   * New code should use session status events instead
+   */
   _handleAudioError = (err) => {
     console.error('[ASSISTANT] Audio session error:', err);
     
@@ -273,6 +341,7 @@ class AssistantServiceClass extends EventEmitter {
       onPartialTranscript: this._handlePartialTranscript,
       onFinalTranscript: this._handleFinalTranscript,
       onError: this._handleAudioError,
+      onSessionStatus: this._handleSessionStatus, // New event-based communication
       selectedLanguage: getSettings().selectedLanguage,
       apiKeys,
       analysisPrompt: messages
