@@ -102,48 +102,48 @@ export const VoiceAssistant = React.memo(() => {
     <View style={styles.container}>
       {/* Error Boundary */}
       <ErrorBoundary>
-        {/* Component Container or Empty State - full width/height */}
-        <View style={styles.componentContainer}>
-          {canRenderComponent ? (
-            <ScrollView style={styles.componentScroll}>
-              {(() => {
-                try {
-                  // Get params from the current component
-                  const params = assistant.currentComponent?.params || {};
-                  return renderComponent(currentComponent, params);
-                } catch (error) {
-                  console.error('Component render error:', error);
-                  return (
-                    <View style={styles.errorContainer}>
-                      <Text style={styles.errorText}>
-                        Error rendering component: {error.message}
-                      </Text>
-                    </View>
-                  );
-                }
-              })()}
-            </ScrollView>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <EmptyState />
-              {assistant.status === assistant.STATUS.PROCESSING && (
-                <Text style={styles.statusText}>Processing...</Text>
-              )}
-            </View>
-          )}
-        </View>
-        
-        {/* Response Stream (during generation or error if we have content) */}
+        {/* Main Content Area - Either Component Container or Response Stream */}
         {(assistant.status === assistant.STATUS.PROCESSING || 
           assistant.status === assistant.STATUS.THINKING || 
-          (assistant.status === assistant.STATUS.ERROR && assistant.responseStream)) && (
-          <ResponseStream
-            responseStream={assistant.responseStream}
-            status={assistant.status}
-            intent={assistant.currentComponent?.intent || 'new'}
-            onRetry={assistant.retry}
-            onCancel={assistant.abortGeneration}
-          />
+          (assistant.status === assistant.STATUS.ERROR && assistant.responseStream)) ? (
+          /* Response Stream (during generation or error if we have content) */
+          <View style={styles.componentContainer}>
+            <ResponseStream
+              responseStream={assistant.responseStream}
+              status={assistant.status}
+              intent={assistant.currentComponent?.intent || 'new'}
+              onRetry={assistant.retry}
+              onCancel={assistant.abortGeneration}
+            />
+          </View>
+        ) : (
+          /* Component Container or Empty State - full width/height */
+          <View style={styles.componentContainer}>
+            {canRenderComponent ? (
+              <ScrollView style={styles.componentScroll}>
+                {(() => {
+                  try {
+                    // Get params from the current component
+                    const params = assistant.currentComponent?.params || {};
+                    return renderComponent(currentComponent, params);
+                  } catch (error) {
+                    console.error('Component render error:', error);
+                    return (
+                      <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>
+                          Error rendering component: {error.message}
+                        </Text>
+                      </View>
+                    );
+                  }
+                })()}
+              </ScrollView>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <EmptyState />
+              </View>
+            )}
+          </View>
         )}
         
         {/* Transcription Box with Floating Voice Button */}
