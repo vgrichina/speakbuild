@@ -6,7 +6,6 @@ import { NavigationButtons } from '../../src/components/NavigationButtons';
 import { DebugMenuButton } from '../../src/components/DebugMenuButton';
 import { useAssistantState } from '../../src/hooks/useAssistantState';
 import { useRouter } from 'expo-router';
-import { Settings } from 'lucide-react-native';
 import { Feather } from '@expo/vector-icons';
 
 export default function Index() {
@@ -40,7 +39,8 @@ export default function Index() {
             ),
             headerRight: () => (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Settings 
+                    <Feather 
+                        name="settings" 
                         size={24} 
                         color="#666" 
                         style={{ marginRight: 16 }}
