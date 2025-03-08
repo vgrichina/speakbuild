@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   floatingButtonContainer: {
     position: 'absolute',
-    bottom: -30, // Position it to overlap with the bottom of the transcription box
+    bottom: -20, // Adjusted position since we removed the extra padding
     alignSelf: 'center',
     zIndex: 10, // Ensure it's above the transcription box
   },

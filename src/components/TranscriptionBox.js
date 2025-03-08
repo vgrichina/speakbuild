@@ -74,19 +74,21 @@ const styles = StyleSheet.create({
     maxHeight: 200
   },
   contentContainer: {
-    paddingBottom: 40, // Only keep padding for the floating button
+    padding: 16,
   },
   transcriptsContainer: {
     width: '100%'
   },
   historyText: {
     color: '#6B7280',
-    fontSize: 14
+    fontSize: 14,
+    marginBottom: 8
   },
   currentTranscript: {
     color: '#111827',
     fontSize: 18,
-    fontWeight: '500'
+    fontWeight: '500',
+    marginBottom: 12
   },
   ellipsis: {
     color: '#9CA3AF'
