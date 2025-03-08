@@ -67,40 +67,42 @@ export const KeyboardInput = ({
       ]}
     >
       <SafeAreaView style={styles.safeAreaContainer}>
-        <TextInput
-          ref={inputRef}
-          style={styles.input}
-          value={text}
-          onChangeText={setText}
-          placeholder={
-            callActive 
-              ? "Send message during call..." 
-              : "Type your message..."
-          }
-          placeholderTextColor="#9CA3AF"
-          multiline
-          autoFocus
-          onSubmitEditing={handleSubmit}
-        />
-        <View style={styles.controls}>
-          <Pressable 
-            onPress={onToggle} 
-            style={styles.toggleButton}
-            accessibilityLabel="Switch to voice input"
-          >
-            <Mic size={20} color="#6B7280" />
-          </Pressable>
-          <Pressable 
-            onPress={handleSubmit}
-            style={[
-              styles.sendButton,
-              !text.trim() && styles.sendButtonDisabled
-            ]}
-            disabled={!text.trim()}
-            accessibilityLabel="Send message"
-          >
-            <Send size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
-          </Pressable>
+        <View style={styles.inputRow}>
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            value={text}
+            onChangeText={setText}
+            placeholder={
+              callActive 
+                ? "Send message during call..." 
+                : "Type your message..."
+            }
+            placeholderTextColor="#9CA3AF"
+            multiline
+            autoFocus
+            onSubmitEditing={handleSubmit}
+          />
+          <View style={styles.controls}>
+            <Pressable 
+              onPress={onToggle} 
+              style={styles.toggleButton}
+              accessibilityLabel="Switch to voice input"
+            >
+              <Mic size={20} color="#6B7280" />
+            </Pressable>
+            <Pressable 
+              onPress={handleSubmit}
+              style={[
+                styles.sendButton,
+                !text.trim() && styles.sendButtonDisabled
+              ]}
+              disabled={!text.trim()}
+              accessibilityLabel="Send message"
+            >
+              <Send size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     </Animated.View>
@@ -132,20 +134,27 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#F3F4F6',
     borderRadius: 20,
-    marginHorizontal: 16,
+    marginLeft: 16,
+    marginRight: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     paddingRight: 80, // More space for controls
     fontSize: 16,
     maxHeight: 100,
-    color: '#1F2937'
+    color: '#1F2937',
+    flex: 1, // Take up all available space
   },
-  controls: {
-    position: 'absolute',
-    right: 20,
-    bottom: Platform.OS === 'ios' ? 24 : 20,
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 20,
+    bottom: Platform.OS === 'ios' ? 12 : 8,
   },
   toggleButton: {
     width: 36,
