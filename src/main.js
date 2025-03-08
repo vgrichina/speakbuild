@@ -224,7 +224,6 @@ export const VoiceAssistant = React.memo(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#f5f5f5',
   },
   componentContainer: {
@@ -236,6 +235,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    margin: 16,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
   },
   transcriptionContainer: {
     position: 'relative',
+    marginHorizontal: 16,
     marginBottom: 16,
   },
   floatingButtonContainer: {
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
   keyboardButtonContainer: {
     position: 'absolute',
     bottom: 20,
-    right: 20,
+    right: 36, // Adjusted to account for removed container padding
     zIndex: 20,
   },
   keyboardToggleButton: {
