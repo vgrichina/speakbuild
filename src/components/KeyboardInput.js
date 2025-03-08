@@ -66,7 +66,7 @@ export const KeyboardInput = ({
         { transform: [{ translateY: slideAnim }] }
       ]}
     >
-      <SafeAreaView style={styles.safeAreaContainer}>
+      <SafeAreaView style={styles.safeAreaContainer} edges={['bottom']}>
         <TextInput
           ref={inputRef}
           style={styles.input}
@@ -122,12 +122,13 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E7EB',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+    width: '100%', // Ensure full width
   },
   input: {
     backgroundColor: '#F3F4F6',
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
   controls: {
     position: 'absolute',
     right: 24,
-    bottom: Platform.OS === 'ios' ? 48 : 40,
+    bottom: Platform.OS === 'ios' ? 24 : 20,
     flexDirection: 'row',
     alignItems: 'center',
   },
