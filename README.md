@@ -216,7 +216,7 @@ Key packages:
 - `react-native-gesture-handler` ~2.20.2
 - `react-native-reanimated` ~3.16.1
 - `react-native-audio-record` ^0.2.2
-- `lucide-react-native` ^0.359.0
+- `@expo/vector-icons` ^14.0.4
 - `partial-json` ^0.1.7
 
 For full list of dependencies, see `package.json`.

@@ -82,7 +82,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Dependencies**:
 - React, React Native
-- lucide-react-native for icons
+- @expo/vector-icons for icons
 
 ### TranscriptionBox.js
 
