@@ -116,8 +116,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 8,
     padding: 16,
-    flex: 1,
-    maxHeight: 400
+    flex: 1
   },
   headerContainer: {
     flexDirection: 'row',
