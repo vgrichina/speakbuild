@@ -216,7 +216,6 @@ export const VoiceAssistant = React.memo(() => {
             callActive={assistant.callActive}
           />
         )}
-        </View>
       </ErrorBoundary>
     </View>
   );
