@@ -51,6 +51,8 @@ export const TranscriptionBox = React.memo(({
           )}
         </View>
       </ScrollView>
+      {/* Add extra padding at the bottom for the floating button */}
+      <View style={styles.buttonSpace} />
     </View>
   );
 });
@@ -85,5 +87,9 @@ const styles = StyleSheet.create({
   },
   ellipsis: {
     color: '#9CA3AF'
+  },
+  buttonSpace: {
+    height: 40, // Space for the floating button
+    width: '100%'
   }
 });

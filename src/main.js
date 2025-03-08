@@ -129,50 +129,54 @@ export const VoiceAssistant = React.memo(() => {
           />
         )}
         
-        {/* Transcription Display */}
-        <TranscriptionBox
-          isListening={assistant.status === assistant.STATUS.LISTENING}
-          transcripts={useMemo(() => {
-            // Get transcripts from history
-            const historyTranscripts = (assistant.history || [])
-              .map(item => item?.transcript || '')
-              .slice(0, 5);
-            
-            // Only include history items up to the current index
-            const filteredHistory = assistant.currentHistoryIndex > 0
-              ? historyTranscripts.slice(0, assistant.currentHistoryIndex)
-              : historyTranscripts;
-            
-            // Add current transcript to the list if it exists and isn't already in history
-            const allTranscripts = [...filteredHistory];
-            if (assistant.partialTranscript) {
-              allTranscripts.push(assistant.partialTranscript);
-            } else if (assistant.transcript && 
-                      (!filteredHistory.length || 
-                        filteredHistory[filteredHistory.length - 1] !== assistant.transcript)) {
-              allTranscripts.push(assistant.transcript);
-            }
-            
-            return allTranscripts;
-          }, [assistant.history, assistant.currentHistoryIndex, assistant.transcript, assistant.partialTranscript])}
-        />
-        
-        {/* Voice Button */}
-        <VoiceButton
-          status={assistant.status}
-          volume={assistant.volume}
-          callActive={assistant.callActive}
-          callStartTime={assistant.callStartTime}
-          onPressIn={assistant.startRecording}
-          onPressOut={{
-            setMode: (mode) => assistant.setMode(mode === 'call' ? assistant.MODE.CALL : assistant.MODE.PTT),
-            stopRecording: assistant.stopRecording,
-            endCall: assistant.endCall
-          }}
-          onToggleKeyboard={handleToggleKeyboard}
-          keyboardActive={keyboardActive}
-          disabled={!isApiKeysSet}
-        />
+        {/* Transcription Box with Floating Voice Button */}
+        <View style={styles.transcriptionContainer}>
+          <TranscriptionBox
+            isListening={assistant.status === assistant.STATUS.LISTENING}
+            transcripts={useMemo(() => {
+              // Get transcripts from history
+              const historyTranscripts = (assistant.history || [])
+                .map(item => item?.transcript || '')
+                .slice(0, 5);
+              
+              // Only include history items up to the current index
+              const filteredHistory = assistant.currentHistoryIndex > 0
+                ? historyTranscripts.slice(0, assistant.currentHistoryIndex)
+                : historyTranscripts;
+              
+              // Add current transcript to the list if it exists and isn't already in history
+              const allTranscripts = [...filteredHistory];
+              if (assistant.partialTranscript) {
+                allTranscripts.push(assistant.partialTranscript);
+              } else if (assistant.transcript && 
+                        (!filteredHistory.length || 
+                          filteredHistory[filteredHistory.length - 1] !== assistant.transcript)) {
+                allTranscripts.push(assistant.transcript);
+              }
+              
+              return allTranscripts;
+            }, [assistant.history, assistant.currentHistoryIndex, assistant.transcript, assistant.partialTranscript])}
+          />
+          
+          {/* Floating Voice Button */}
+          <View style={styles.floatingButtonContainer}>
+            <VoiceButton
+              status={assistant.status}
+              volume={assistant.volume}
+              callActive={assistant.callActive}
+              callStartTime={assistant.callStartTime}
+              onPressIn={assistant.startRecording}
+              onPressOut={{
+                setMode: (mode) => assistant.setMode(mode === 'call' ? assistant.MODE.CALL : assistant.MODE.PTT),
+                stopRecording: assistant.stopRecording,
+                endCall: assistant.endCall
+              }}
+              onToggleKeyboard={handleToggleKeyboard}
+              keyboardActive={keyboardActive}
+              disabled={!isApiKeysSet}
+            />
+          </View>
+        </View>
       </ErrorBoundary>
     </View>
   );
@@ -221,5 +225,15 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#DC2626',
     textAlign: 'center',
+  },
+  transcriptionContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  floatingButtonContainer: {
+    position: 'absolute',
+    bottom: -30, // Position it to overlap with the bottom of the transcription box
+    alignSelf: 'center',
+    zIndex: 10, // Ensure it's above the transcription box
   },
 });
