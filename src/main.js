@@ -175,22 +175,24 @@ export const VoiceAssistant = React.memo(() => {
             }, [assistant.history, assistant.currentHistoryIndex, assistant.transcript, assistant.partialTranscript])}
           />
           
-          {/* Floating Voice Button */}
-          <View style={styles.floatingButtonContainer}>
-            <VoiceButton
-              status={assistant.status}
-              volume={assistant.volume}
-              callActive={assistant.callActive}
-              callStartTime={assistant.callStartTime}
-              onPressIn={assistant.startRecording}
-              onPressOut={{
-                setMode: (mode) => assistant.setMode(mode === 'call' ? assistant.MODE.CALL : assistant.MODE.PTT),
-                stopRecording: assistant.stopRecording,
-                endCall: assistant.endCall
-              }}
-              disabled={!isApiKeysSet}
-            />
-          </View>
+          {/* Floating Voice Button - hide when keyboard is active */}
+          {!keyboardActive && (
+            <View style={styles.floatingButtonContainer}>
+              <VoiceButton
+                status={assistant.status}
+                volume={assistant.volume}
+                callActive={assistant.callActive}
+                callStartTime={assistant.callStartTime}
+                onPressIn={assistant.startRecording}
+                onPressOut={{
+                  setMode: (mode) => assistant.setMode(mode === 'call' ? assistant.MODE.CALL : assistant.MODE.PTT),
+                  stopRecording: assistant.stopRecording,
+                  endCall: assistant.endCall
+                }}
+                disabled={!isApiKeysSet}
+              />
+            </View>
+          )}
           
         </View>
         
