@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Modal, Animated } from 'react-native';
-import { MoreVertical } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 
 const styles = StyleSheet.create({
     menuTrigger: {
@@ -89,7 +89,7 @@ export const DebugMenuButton = ({
                 style={styles.menuTrigger}
                 onPress={openMenu}
             >
-                <MoreVertical size={24} color="#666" />
+                <Feather name="more-vertical" size={24} color="#666" />
             </Pressable>
 
             <Modal

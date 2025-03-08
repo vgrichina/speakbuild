@@ -1,6 +1,6 @@
 import React from 'react';
 import { Animated, Easing } from 'react-native';
-import { Loader2 } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 
 // Extract LoadingSpinner to a separate, memoized component
 export const LoadingSpinner = React.memo(() => {
@@ -36,7 +36,8 @@ export const LoadingSpinner = React.memo(() => {
                 }]
             }}
         >
-            <Loader2 
+            <Feather 
+                name="loader" 
                 size={16} 
                 color="#666"
             />

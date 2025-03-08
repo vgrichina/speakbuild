@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import { useAssistantState } from '../hooks/useAssistantState';
 import { AssistantService } from '../services/assistantService';
 
@@ -47,7 +47,7 @@ export const NavigationButtons = () => {
                     pressed && styles.buttonPressed
                 ]}
             >
-                <ArrowLeft size={20} color={currentHistoryIndex <= 0 ? '#999' : '#666'} />
+                <Feather name="arrow-left" size={20} color={currentHistoryIndex <= 0 ? '#999' : '#666'} />
             </Pressable>
             
             <Pressable
@@ -62,7 +62,7 @@ export const NavigationButtons = () => {
                     pressed && styles.buttonPressed
                 ]}
             >
-                <ArrowRight size={20} color={!history || currentHistoryIndex >= (history.length - 1) ? '#999' : '#666'} />
+                <Feather name="arrow-right" size={20} color={!history || currentHistoryIndex >= (history.length - 1) ? '#999' : '#666'} />
             </Pressable>
         </View>
     );

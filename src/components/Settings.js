@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, ScrollView, Pressable, Modal, Linking, ActivityIndicator, SafeAreaView, FlatList } from 'react-native';
-import { Key } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import { storage, SETTINGS_KEY } from '../services/storage';
 
 // Language name mapping for common locales
@@ -158,7 +158,7 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                                     onPress={() => Linking.openURL('https://app.ultravox.ai')}
                                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                 >
-                                    <Key size={12} color="#3B82F6" />
+                                    <Feather name="key" size={12} color="#3B82F6" />
                                     <Text style={{ color: '#3B82F6' }}>Get Ultravox API key</Text>
                                 </Pressable>
                             </View>
@@ -176,7 +176,7 @@ export const Settings = ({ onClose, ultravoxApiKey, openrouterApiKey, selectedLa
                                     onPress={() => Linking.openURL('https://openrouter.ai/keys')}
                                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                 >
-                                    <Key size={12} color="#3B82F6" />
+                                    <Feather name="key" size={12} color="#3B82F6" />
                                     <Text style={{ color: '#3B82F6' }}>Get OpenRouter API key</Text>
                                 </Pressable>
                             </View>
