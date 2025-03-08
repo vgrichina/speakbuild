@@ -102,7 +102,7 @@ export const VoiceAssistant = React.memo(() => {
     <View style={styles.container}>
       {/* Error Boundary */}
       <ErrorBoundary>
-        {/* Component Container or Empty State */}
+        {/* Component Container or Empty State - full width/height */}
         <View style={styles.componentContainer}>
           {canRenderComponent ? (
             <ScrollView style={styles.componentScroll}>
@@ -236,14 +236,11 @@ const styles = StyleSheet.create({
   componentContainer: {
     flex: 1,
     backgroundColor: '#ffffff',
-    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    margin: 16,
-    marginBottom: 16,
     overflow: 'hidden',
   },
   componentScroll: {
