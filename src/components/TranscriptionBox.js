@@ -20,12 +20,10 @@ export const TranscriptionBox = React.memo(({
     }
   }, [transcripts]);
   
-  // Determine whether to show the box
-  const shouldShow = useMemo(() => {
-    return transcripts.length > 0;
+  // Always show the box with minimum height, even when empty
+  const isEmpty = useMemo(() => {
+    return transcripts.length === 0;
   }, [transcripts]);
-  
-  if (!shouldShow) return null;
   
   // No need to reverse - we'll display newest at the top
   return (
@@ -33,19 +31,26 @@ export const TranscriptionBox = React.memo(({
       <ScrollView 
         ref={scrollViewRef}
         style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          isEmpty && styles.emptyContentContainer
+        ]}
       >
         <View style={styles.transcriptsContainer}>
           {/* Latest transcript at the top */}
-          {transcripts.length > 0 && (
+          {transcripts.length > 0 ? (
             <Text style={styles.currentTranscript}>
               {transcripts[transcripts.length - 1]}
               {isListening && <Text style={styles.ellipsis}>...</Text>}
             </Text>
+          ) : (
+            <Text style={styles.placeholderText}>
+              Speak or type to interact
+            </Text>
           )}
           
           {/* Older messages below (will fade out as they get older) */}
-          {transcripts.slice(0, -1).reverse().map((transcript, index) => (
+          {transcripts.length > 0 && transcripts.slice(0, -1).reverse().map((transcript, index) => (
             <Text 
               key={`history-${index}`} 
               style={[
@@ -66,14 +71,21 @@ export const TranscriptionBox = React.memo(({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F3F4F6',
+    minHeight: 80,
     maxHeight: 200,
     width: '100%'
   },
   scrollView: {
+    minHeight: 80,
     maxHeight: 200
   },
   contentContainer: {
     padding: 16,
+    minHeight: 80,
+  },
+  emptyContentContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   transcriptsContainer: {
     width: '100%'
@@ -91,5 +103,11 @@ const styles = StyleSheet.create({
   },
   ellipsis: {
     color: '#9CA3AF'
+  },
+  placeholderText: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    fontStyle: 'italic',
+    textAlign: 'center'
   }
 });
