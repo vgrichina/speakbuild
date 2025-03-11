@@ -220,9 +220,21 @@ const analyzeRequest = async (text, controller, history, historyIndex, currentPa
     }
 
     const requestHistory = getRequestHistory(history, historyIndex);
+    
+    // Create the prompt with the analysis system message
+    const messages = analysisPrompt({ requestHistory, currentParams });
+    
+    // Add the user's text as a separate user message
+    messages.push({
+        role: 'user',
+        content: text
+    });
+    
+    console.log(`Analysis request with text: "${text}"`);
+    
     const response = await api.completion(
         apiKey,
-        analysisPrompt({ text, requestHistory, currentParams }),
+        messages,
         { 
             max_tokens: 1000,  // Increased to handle larger JSON responses
             model: 'anthropic/claude-3.5-haiku',
