@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { View, TextInput, Pressable, StyleSheet, Animated, Keyboard, Platform, SafeAreaView } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, Animated, Keyboard, Platform, SafeAreaView, KeyboardAvoidingView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 /**
@@ -60,14 +60,19 @@ export const KeyboardInput = ({
   }
   
   return (
-    <Animated.View 
-      style={[
-        styles.container,
-        { transform: [{ translateY: slideAnim }] }
-      ]}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      style={styles.keyboardAvoidingView}
     >
-      <SafeAreaView style={styles.safeAreaContainer}>
-        <View style={styles.inputRow}>
+      <Animated.View 
+        style={[
+          styles.container,
+          { transform: [{ translateY: slideAnim }] }
+        ]}
+      >
+        <SafeAreaView style={styles.safeAreaContainer}>
+          <View style={styles.inputRow}>
           <TextInput
             ref={inputRef}
             style={styles.input}
@@ -110,11 +115,15 @@ export const KeyboardInput = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardAvoidingView: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    width: '100%',
+    zIndex: 1000,
+  },
+  container: {
     width: '100%',
     zIndex: 1000,
   },
