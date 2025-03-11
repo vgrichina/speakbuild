@@ -231,7 +231,7 @@ export const VoiceButton = React.memo(({
             status === ASSISTANT_STATUS.ERROR && styles.errorButton,
             disabled && styles.disabledButton
           ]}
-          disabled={disabled || status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING}
+          disabled={disabled || (!callActive && (status === ASSISTANT_STATUS.THINKING || status === ASSISTANT_STATUS.PROCESSING))}
         >
           {getButtonContent()}
         </Pressable>

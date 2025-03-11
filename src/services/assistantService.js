@@ -324,10 +324,11 @@ class AssistantServiceClass extends EventEmitter {
     }
     
     // Set state to thinking while we analyze
+    // Show the text as a partial transcript during analysis
     this._setState({
       status: ASSISTANT_STATUS.THINKING,
-      transcript: text,
-      partialTranscript: '',
+      transcript: '',
+      partialTranscript: text,
       responseStream: ''
     });
     
@@ -355,6 +356,12 @@ class AssistantServiceClass extends EventEmitter {
       analysis.confidence = 1.0;
       
       console.log('[ASSISTANT] Text analysis complete:', analysis);
+      
+      // Update transcript with the analyzed text
+      this._setState({
+        transcript: analysis.transcription || text,
+        partialTranscript: ''
+      });
       
       // Start component generation with the analysis
       this._startComponentGeneration(analysis);
@@ -500,6 +507,16 @@ class AssistantServiceClass extends EventEmitter {
           mode: ASSISTANT_MODE.PTT,
           volume: 0
           // Maintain PROCESSING status to keep the ResponseStream visible
+        });
+      } else if (this._state.status === ASSISTANT_STATUS.THINKING) {
+        // If we're in THINKING state, preserve it to allow the analysis to complete
+        console.log('[ASSISTANT] Call ended during THINKING state - preserving state for analysis completion');
+        
+        this._setState({
+          callStartTime: null,
+          mode: ASSISTANT_MODE.PTT,
+          volume: 0
+          // Maintain THINKING status to allow analysis to complete
         });
       } else if (this._state.partialTranscript || this._state.transcript) {
         // If we have transcript data but not yet processing, transition to THINKING
