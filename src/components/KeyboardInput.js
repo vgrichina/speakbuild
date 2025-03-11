@@ -116,7 +116,7 @@ export const KeyboardInput = ({
                 accessibilityLabel="Switch to voice input"
               >
                 <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                  <Feather name="mic" size={24} color="#4F46E5" /> {/* Indigo color for prominence */}
+                  <Feather name="mic" size={24} color="#4F46E5" />
                 </Animated.View>
               </Pressable>
               <Pressable 
