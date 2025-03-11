@@ -54,6 +54,25 @@ export const KeyboardInput = ({
     }
   }, [text, onSubmit]);
   
+  // Add scale animation for toggle button
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  
+  const handleTogglePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    onToggle();
+  };
+  
   // If keyboard is not active, still render but with transform
   if (!active) {
     return null;
@@ -83,18 +102,22 @@ export const KeyboardInput = ({
                   ? "Send message during call..." 
                   : "Type your message..."
               }
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#6B7280" // Darker gray for better contrast
               multiline
               autoFocus
               onSubmitEditing={handleSubmit}
+              accessibilityLabel="Message input"
+              accessibilityHint={callActive ? "Type a message to send during the call" : "Type your message to interact with the assistant"}
             />
             <View style={styles.controls}>
               <Pressable 
-                onPress={onToggle} 
+                onPress={handleTogglePress} 
                 style={styles.toggleButton}
                 accessibilityLabel="Switch to voice input"
               >
-                <Feather name="mic" size={20} color="#6B7280" />
+                <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                  <Feather name="mic" size={24} color="#4F46E5" /> {/* Indigo color for prominence */}
+                </Animated.View>
               </Pressable>
               <Pressable 
                 onPress={handleSubmit}
@@ -132,8 +155,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24, // More breathing room
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
@@ -143,13 +166,15 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#D1D5DB', // Light gray border for subtle emphasis
     borderRadius: 20,
     marginLeft: 16,
     marginRight: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16, // More vertical padding for breathing room
     paddingRight: 80, // More space for controls
-    fontSize: 16,
+    fontSize: 18, // Larger font for better readability
     maxHeight: 100,
     color: '#1F2937',
     flex: 1, // Take up all available space
@@ -167,9 +192,9 @@ const styles = StyleSheet.create({
     bottom: Platform.OS === 'ios' ? 12 : 8,
   },
   toggleButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20, // Larger button for better tap area
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
