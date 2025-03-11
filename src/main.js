@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   floatingButtonContainer: {
     position: 'absolute',
-    bottom: -10, // Moved up by 10px to be less close to screen bottom
+    bottom: 0, // Positioned at the bottom edge
     alignSelf: 'center',
     zIndex: 10, // Ensure it's above the transcription box
   },
