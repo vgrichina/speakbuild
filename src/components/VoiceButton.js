@@ -178,14 +178,14 @@ export const VoiceButton = React.memo(({
   
   // Handle separate call button press
   const handleCallButtonPress = useCallback(() => {
-    if (disabled || status === 'THINKING' || status === 'PROCESSING') return;
+    if (disabled) return;
     
-    // If in call mode, end the call
+    // If in call mode, end the call - allow ending call in any state
     if (callActive && onPressOut.endCall) {
       console.log('[VOICE_BUTTON] Ending active call');
       onPressOut.endCall();
     }
-  }, [callActive, disabled, onPressOut, status]);
+  }, [callActive, disabled, onPressOut]);
   
   // Determine if we're in an active listening state
   const isListening = status === ASSISTANT_STATUS.LISTENING || (pressed && !callActive);
