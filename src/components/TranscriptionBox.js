@@ -71,17 +71,17 @@ export const TranscriptionBox = React.memo(({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F3F4F6',
-    minHeight: 80,
+    minHeight: 160,
     maxHeight: 200,
     width: '100%'
   },
   scrollView: {
-    minHeight: 80,
+    minHeight: 160,
     maxHeight: 200
   },
   contentContainer: {
     padding: 16,
-    minHeight: 80,
+    minHeight: 160,
   },
   emptyContentContainer: {
     justifyContent: 'center',
