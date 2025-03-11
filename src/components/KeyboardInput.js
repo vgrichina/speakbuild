@@ -108,9 +108,9 @@ export const KeyboardInput = ({
               <Feather name="send" size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
             </Pressable>
           </View>
-        </View>
-      </SafeAreaView>
-    </Animated.View>
+        </SafeAreaView>
+      </Animated.View>
+    </KeyboardAvoidingView>
   );
 };
 
