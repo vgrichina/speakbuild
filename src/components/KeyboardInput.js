@@ -73,40 +73,41 @@ export const KeyboardInput = ({
       >
         <SafeAreaView style={styles.safeAreaContainer}>
           <View style={styles.inputRow}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            value={text}
-            onChangeText={setText}
-            placeholder={
-              callActive 
-                ? "Send message during call..." 
-                : "Type your message..."
-            }
-            placeholderTextColor="#9CA3AF"
-            multiline
-            autoFocus
-            onSubmitEditing={handleSubmit}
-          />
-          <View style={styles.controls}>
-            <Pressable 
-              onPress={onToggle} 
-              style={styles.toggleButton}
-              accessibilityLabel="Switch to voice input"
-            >
-              <Feather name="mic" size={20} color="#6B7280" />
-            </Pressable>
-            <Pressable 
-              onPress={handleSubmit}
-              style={[
-                styles.sendButton,
-                !text.trim() && styles.sendButtonDisabled
-              ]}
-              disabled={!text.trim()}
-              accessibilityLabel="Send message"
-            >
-              <Feather name="send" size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
-            </Pressable>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              value={text}
+              onChangeText={setText}
+              placeholder={
+                callActive 
+                  ? "Send message during call..." 
+                  : "Type your message..."
+              }
+              placeholderTextColor="#9CA3AF"
+              multiline
+              autoFocus
+              onSubmitEditing={handleSubmit}
+            />
+            <View style={styles.controls}>
+              <Pressable 
+                onPress={onToggle} 
+                style={styles.toggleButton}
+                accessibilityLabel="Switch to voice input"
+              >
+                <Feather name="mic" size={20} color="#6B7280" />
+              </Pressable>
+              <Pressable 
+                onPress={handleSubmit}
+                style={[
+                  styles.sendButton,
+                  !text.trim() && styles.sendButtonDisabled
+                ]}
+                disabled={!text.trim()}
+                accessibilityLabel="Send message"
+              >
+                <Feather name="send" size={20} color={text.trim() ? "#FFFFFF" : "#D1D5DB"} />
+              </Pressable>
+            </View>
           </View>
         </SafeAreaView>
       </Animated.View>
