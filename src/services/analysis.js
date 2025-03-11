@@ -213,7 +213,7 @@ ${currentParams ? JSON.stringify(currentParams, null, 2) : 'No current component
     return prompt;
 };
 
-export const analyzeRequest = async (text, controller, history, historyIndex, currentParams, apiKey) => {
+const analyzeRequest = async (text, controller, history, historyIndex, currentParams, apiKey) => {
     // Use the provided API key parameter
     if (!apiKey) {
         throw new Error('API key not provided. Please add your OpenRouter API key in the settings.');
