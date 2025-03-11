@@ -148,21 +148,17 @@ export const VoiceAssistant = React.memo(() => {
               const historyTranscripts = (assistant.history || [])
                 .map(item => item?.transcript || '');
     
-              // Only include history items BEFORE the current index
-              const filteredHistory = historyTranscripts.slice(0, assistant.currentHistoryIndex);
+              // Only include history items UP TO the current index (inclusive)
+              const filteredHistory = historyTranscripts.slice(0, assistant.currentHistoryIndex + 1);
               
-              // Add current transcript to the list if it exists and isn't already in history
-              const allTranscripts = [...filteredHistory];
-              if (assistant.partialTranscript) {
-                allTranscripts.push(assistant.partialTranscript);
-              } else if (assistant.transcript && 
-                        (!filteredHistory.length || 
-                          filteredHistory[filteredHistory.length - 1] !== assistant.transcript)) {
-                allTranscripts.push(assistant.transcript);
+              // Only add partial transcript if we're in LISTENING mode
+              // This prevents partial transcripts from showing when navigating history
+              if (assistant.status === assistant.STATUS.LISTENING && assistant.partialTranscript) {
+                return [...filteredHistory, assistant.partialTranscript];
               }
               
-              return allTranscripts;
-            }, [assistant.history, assistant.currentHistoryIndex, assistant.transcript, assistant.partialTranscript])}
+              return filteredHistory;
+            }, [assistant.history, assistant.currentHistoryIndex, assistant.status, assistant.partialTranscript])}
           />
           
           {/* Floating Voice Button - hide when keyboard is active */}
