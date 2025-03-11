@@ -84,8 +84,9 @@ const styles = StyleSheet.create({
     minHeight: 160,
   },
   emptyContentContainer: {
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 24,
   },
   transcriptsContainer: {
     width: '100%'
@@ -105,9 +106,10 @@ const styles = StyleSheet.create({
     color: '#9CA3AF'
   },
   placeholderText: {
-    color: '#9CA3AF',
-    fontSize: 16,
-    fontStyle: 'italic',
-    textAlign: 'center'
+    color: '#6B7280',
+    fontSize: 18,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 12
   }
 });
