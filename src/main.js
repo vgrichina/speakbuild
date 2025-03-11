@@ -11,6 +11,7 @@ import { hasApiKeys } from './services/settings';
 import { createComponent, renderComponent } from './utils/componentUtils';
 import { useAssistantState } from './hooks/useAssistantState';
 import { componentHistoryService } from './services/componentHistoryService';
+import { AssistantService } from './services/assistantService';
 
 /**
  * Main Voice Assistant component
@@ -50,21 +51,13 @@ export const VoiceAssistant = React.memo(() => {
   };
   
   // Handle keyboard input submit
-  const handleKeyboardSubmit = (text) => {
+  const handleKeyboardSubmit = async (text) => {
     if (!text.trim()) return;
     
     console.log('Processing keyboard input:', text);
     
-    // Create an analysis object similar to what speech would create
-    const analysis = {
-      transcript: text,
-      widgetUrl: 'keyboard-input', // Special identifier for keyboard inputs
-      confidence: 1.0, // Keyboard input has perfect confidence
-      source: 'keyboard'
-    };
-    
-    // Process the input using the assistant service
-    assistant.processAnalysis(analysis);
+    // Process the text input using the AssistantService
+    await AssistantService.processTextInput(text);
     
     // Close keyboard after submission
     setKeyboardActive(false);

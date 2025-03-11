@@ -7,7 +7,7 @@
  */
 import { audioSession } from './audioSession';
 import { createComponentGeneration } from './componentGeneration';
-import { analysisPrompt } from './analysis';
+import { analysisPrompt, analyzeRequest } from './analysis';
 import { getApiKeys, getSettings } from './settings';
 import { EventEmitter } from './eventEmitter';
 import { componentHistoryService } from './componentHistoryService';
@@ -302,6 +302,72 @@ class AssistantServiceClass extends EventEmitter {
     }
   }
   
+  
+  /**
+   * Process text input from keyboard
+   * @param {string} text - The text input from the user
+   * @returns {Promise<boolean>} - Whether the processing started successfully
+   */
+  async processTextInput(text) {
+    if (!text.trim()) return false;
+    
+    console.log('[ASSISTANT] Processing text input:', text);
+    
+    // Get API keys
+    const apiKeys = getApiKeys();
+    if (!apiKeys.openrouter) {
+      this._setState({
+        error: new Error('OpenRouter API key is required for text analysis'),
+        status: ASSISTANT_STATUS.ERROR
+      });
+      return false;
+    }
+    
+    // Set state to thinking while we analyze
+    this._setState({
+      status: ASSISTANT_STATUS.THINKING,
+      transcript: text,
+      partialTranscript: '',
+      responseStream: ''
+    });
+    
+    try {
+      // Get request history for context
+      const history = componentHistoryService.getState().history;
+      const currentIndex = componentHistoryService.getState().currentIndex;
+      const currentParams = componentHistoryService.getCurrent()?.component?.params;
+      
+      // Create abort controller for the request
+      const controller = new AbortController();
+      
+      // Analyze the text input using the existing analyzeRequest function
+      const analysis = await analyzeRequest(
+        text,
+        controller,
+        history,
+        currentIndex,
+        currentParams,
+        apiKeys.openrouter
+      );
+      
+      // Add source property to indicate this came from keyboard
+      analysis.source = 'keyboard';
+      analysis.confidence = 1.0;
+      
+      console.log('[ASSISTANT] Text analysis complete:', analysis);
+      
+      // Start component generation with the analysis
+      this._startComponentGeneration(analysis);
+      return true;
+    } catch (error) {
+      console.error('[ASSISTANT] Error processing text input:', error);
+      this._setState({
+        error,
+        status: ASSISTANT_STATUS.ERROR
+      });
+      return false;
+    }
+  }
   
   // Public API
   /**

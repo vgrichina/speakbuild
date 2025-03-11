@@ -131,6 +131,7 @@ export function useAssistantState() {
   const endCall = useCallback(() => AssistantService.endCall(), []);
   const abortGeneration = useCallback(() => AssistantService.abortGeneration(), []);
   const retry = useCallback(() => AssistantService.retry(), []);
+  const processTextInput = useCallback((text) => AssistantService.processTextInput(text), []);
   
   // History navigation methods
   const navigateBack = useCallback(() => AssistantService.navigateBack(), []);
@@ -204,7 +205,7 @@ export function useAssistantState() {
     endCall,
     abortGeneration,
     retry,
-    processAnalysis,
+    processTextInput,
     
     // History navigation 
     navigateBack,
