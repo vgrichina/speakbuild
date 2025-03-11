@@ -51,8 +51,12 @@ export const KeyboardInput = ({
     if (text.trim()) {
       onSubmit?.(text);
       setText('');
+      // Hide keyboard after submission
+      if (active) {
+        onToggle();
+      }
     }
-  }, [text, onSubmit]);
+  }, [text, onSubmit, onToggle, active]);
   
   // Add scale animation for toggle button
   const scaleAnim = useRef(new Animated.Value(1)).current;
