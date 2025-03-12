@@ -2,7 +2,7 @@
   "expo": {
     "name": "VoiceAssistant",
     "slug": "voice-assistant",
-    "version": "1.0.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "newArchEnabled": true,
     "scheme": "voiceassistant",
@@ -13,7 +13,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.voiceassistant.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone for voice commands",
         "UIBackgroundModes": ["audio"],
