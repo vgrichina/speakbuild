@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "VoiceAssistant",
-    "slug": "voice-assistant",
+    "name": "SpeakBuild",
+    "slug": "speakbuild",
     "version": "0.3.0",
     "orientation": "portrait",
     "newArchEnabled": true,
-    "scheme": "voiceassistant",
+    "scheme": "speakbuild",
     "userInterfaceStyle": "automatic",
     "developmentClient": {
       "silentLaunch": false
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.voiceassistant.app",
+      "bundleIdentifier": "ai.speakbuild",
       "buildNumber": "3",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow Voice Assistant to access the microphone for voice commands",
+        "NSMicrophoneUsageDescription": "Allow SpeakBuild to access the microphone for voice commands",
         "UIBackgroundModes": ["audio"],
         "bitcode": false
       }
@@ -26,7 +26,7 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.voiceassistant.app",
+      "package": "ai.speakbuild",
       "permissions": [
         "android.permission.ACCESS_NETWORK_STATE",
         "android.permission.BLUETOOTH",
