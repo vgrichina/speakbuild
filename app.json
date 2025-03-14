@@ -84,9 +84,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "142e36ca-f63e-4a1c-9288-f8a1d6acfb23",
-        "owner": "vgrichina"
+        "projectId": "142e36ca-f63e-4a1c-9288-f8a1d6acfb23"
       }
-    }
+    },
+    "owner": "vgrichina"
   }
 }
