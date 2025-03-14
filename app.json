@@ -22,13 +22,15 @@
       },
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow SpeakBuild to access the microphone for voice commands",
-        "UIBackgroundModes": ["audio"],
+        "UIBackgroundModes": [
+          "audio"
+        ],
         "bitcode": false
       }
     },
     "android": {
-	    "enableJetifier": true,
-	       "androidXVersion": "1.1.0",
+      "enableJetifier": true,
+      "androidXVersion": "1.1.0",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
@@ -76,6 +78,14 @@
     "experiments": {
       "tsconfigPaths": true,
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "142e36ca-f63e-4a1c-9288-f8a1d6acfb23"
+      }
     }
   }
 }
