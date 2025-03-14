@@ -1,48 +1,33 @@
 name: Release iOS to TestFlight
-
 on:
   push:
     tags:
       - "v*.*.*" # Triggers on tags like v1.0.0
-
 jobs:
   build-and-submit:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest # Can use ubuntu since build happens on EAS servers
     steps:
       # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
       # Set up Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+          
       # Install dependencies
       - name: Install dependencies
         run: yarn
         
-      # Install Fastlane
-      - name: Install Fastlane
-        run: gem install fastlane
-
       # Set up EAS CLI
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-
-      # Build iOS app locally
-      - name: Build iOS app
-        run: eas build --platform ios --profile production --non-interactive --local --output app.ipa
-
-      # Submit to TestFlight
-      - name: Upload to TestFlight
-        uses: apple-actions/upload-testflight-build@v1
-        with:
-          app-path: ./app.ipa
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          
+      # Build iOS app with EAS and submit to TestFlight
+      - name: Build and submit iOS app
+        run: eas build --platform ios --profile production --non-interactive --auto-submit
