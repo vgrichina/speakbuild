@@ -2,7 +2,7 @@
   "expo": {
     "name": "SpeakBuild",
     "slug": "speakbuild",
-    "version": "0.3.0",
+    "version": "0.1.0",
     "runtimeVersion": {
       "policy": "sdkVersion"
     },
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ai.speakbuild",
-      "buildNumber": "3",
+      "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
       },
