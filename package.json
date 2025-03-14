@@ -12,7 +12,9 @@
     "evaluate-generation": "bun scripts/evaluate-generation.js",
     "inject-keys": "node scripts/inject-test-keys.js",
     "build:ios": "eas build --platform ios --profile production",
-    "submit:ios": "eas submit --platform ios --latest"
+    "build:android": "eas build --platform android --profile production",
+    "submit:ios": "eas submit --platform ios --latest",
+    "submit:android": "eas submit --platform android --latest"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",

@@ -10,12 +10,18 @@
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "preview": {
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
@@ -23,6 +29,10 @@
       "distribution": "store",
       "ios": {
         "resourceClass": "m-medium",
+        "credentialsSource": "remote"
+      },
+      "android": {
+        "buildType": "app-bundle",
         "credentialsSource": "remote"
       }
     }
@@ -32,6 +42,10 @@
       "ios": {
         "ascAppId": "6743265036",
         "appleTeamId": "9532C74ZP2"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "completed"
       }
     }
   }

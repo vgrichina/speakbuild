@@ -1,10 +1,11 @@
-name: Release iOS to TestFlight
+name: Release to App Stores
 on:
   push:
     tags:
       - "v*.*.*" # Triggers on tags like v1.0.0
 jobs:
-  build-and-submit:
+  build-and-submit-ios:
+    name: Build and Submit iOS
     runs-on: ubuntu-latest # Can use ubuntu since build happens on EAS servers
     steps:
       # Checkout code
@@ -31,3 +32,32 @@ jobs:
       # Build iOS app with EAS and submit to TestFlight
       - name: Build and submit iOS app
         run: eas build --platform ios --profile production --non-interactive --auto-submit
+
+  build-and-submit-android:
+    name: Build and Submit Android
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      # Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      # Install dependencies
+      - name: Install dependencies
+        run: yarn
+        
+      # Set up EAS CLI
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          
+      # Build Android app with EAS and submit to Google Play
+      - name: Build and submit Android app
+        run: eas build --platform android --profile production --non-interactive --auto-submit
