@@ -10,6 +10,7 @@
     "clean": "rm -rf node_modules/.cache && yarn cache clean",
     "evaluate-analysis": "bun scripts/evaluate-analysis.js",
     "evaluate-generation": "bun scripts/evaluate-generation.js",
+    "test": "bun scripts/evaluate-analysis.js && bun scripts/evaluate-generation.js",
     "build:ios": "eas build --platform ios --profile production",
     "build:android": "eas build --platform android --profile production",
     "submit:ios": "eas submit --platform ios --latest",

@@ -60,7 +60,18 @@ Note: Web platform support is limited due to native module dependencies.
 
 ## How It Works
 
-### 1. Request Analysis
+### 1. User Interaction Flow
+
+The system follows this interaction flow:
+
+1. **Voice/Text Input**: User provides input via voice button or keyboard
+2. **Transcription**: Audio is converted to text (for voice input)
+3. **Analysis**: Input is analyzed to determine intent and widget specification
+4. **Component Generation**: A React Native component is generated based on the specification
+5. **Rendering**: The component is rendered and displayed to the user
+6. **History Management**: The interaction is saved in conversation history
+
+### 2. Widget Specification System
 
 The system uses a structured URL-based widget specification system:
 
@@ -74,6 +85,7 @@ Categories:
 - `interactive`: User actions (timer, player, calculator)
 - `feedback`: System responses (progress, loading, alerts)
 - `media`: Rich content (images, video, audio)
+- `content`: for educational/informational content (articles, explanations, facts)
 
 Features flags (with_*):
 - `with_controls`: Play/pause/reset controls
@@ -81,6 +93,9 @@ Features flags (with_*):
 - `with_progress`: Progress tracking
 - `with_checkboxes`: Checkbox toggles
 - `with_hourly`: Hourly breakdown
+- `with_daily`: Daily breakdown
+- `with_alarm`: Alarm functionality
+- `with_sections`: Content sections
 
 Example:
 ```
@@ -114,6 +129,19 @@ Arrays:
 
 ### Core Services
 
+`assistantService.js`:
+- Central service that manages the voice assistant state
+- Handles audio recording, transcription, and component generation
+- Maintains status (IDLE, LISTENING, THINKING, PROCESSING, ERROR)
+- Supports different interaction modes (PTT, CALL)
+- Emits events for UI updates
+
+`audioSession.js`:
+- Manages WebSocket connections for audio streaming
+- Handles microphone access and audio processing
+- Provides volume level monitoring
+- Supports push-to-talk and call modes
+
 `analysis.js`:
 - Analyzes user requests using Claude
 - Determines intent (new/modify)
@@ -126,16 +154,29 @@ Arrays:
 - Includes detailed request/response logging
 - Handles SSE for real-time responses
 
-`componentGenerator.js`:
-- Generates React Native components
-- Validates component structure
-- Tests component rendering
-- Handles component scope and dependencies
+`componentGeneration.js`:
+- Creates React Native components from widget specifications
+- Supports streaming generation with progress callbacks
+- Handles component validation and error handling
+- Provides abort capability for in-progress generations
+
+`componentUtils.js`:
+- Provides utilities for creating and rendering components
+- Handles component sandboxing and error boundaries
+- Manages React and React Native dependencies injection
+- Supports dynamic component rendering with props
 
 `widgetStorage.js`:
-- Manages AsyncStorage-based component cache
+- Manages persistent storage of generated components
 - Stores components by widget URL
 - Maintains version history with timestamps
+- Provides retrieval and update capabilities
+
+`componentHistoryService.js`:
+- Manages conversation and component history
+- Supports navigation through previous components
+- Maintains current component state
+- Provides event-based state updates
 
 ## Platform-Specific Configuration
 
@@ -237,6 +278,11 @@ For full list of dependencies, see `package.json`.
 - Supports TypeScript
 - Includes custom Expo plugins for speech recognition
 - Configured for both light and dark mode support
+- Uses EventEmitter pattern for state management
+- Implements custom hooks for component state (useAssistantState)
+- Uses MMKV for high-performance storage
+- Supports both voice and keyboard input methods
+- Implements WebSocket-based audio streaming
 
 ## License
 
