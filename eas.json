@@ -22,7 +22,16 @@
       "autoIncrement": true,
       "distribution": "store",
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "credentialsSource": "remote"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6743265036",
+        "appleTeamId": "9532C74ZP2"
       }
     }
   }
