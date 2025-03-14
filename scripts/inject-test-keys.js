@@ -16,15 +16,23 @@ require('dotenv').config();
 const ultravoxKey = process.env.TEST_ULTRAVOX_KEY || '';
 const openrouterKey = process.env.TEST_OPENROUTER_KEY || '';
 
-console.log(`Injecting test keys...`);
+console.log(`SpeakBuild: Injecting test keys...`);
 
 // Path to the secrets file (which is gitignored)
 const secretsPath = path.join(__dirname, '../src/config/buildTimeSecrets.js');
+
+// Create the directory if it doesn't exist
+const dirPath = path.dirname(secretsPath);
+if (!fs.existsSync(dirPath)) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
 
 // Create the secrets file content
 const secretsContent = `/**
  * IMPORTANT: This file is generated during the build process and should not be committed.
  * It contains API keys that are only for testing purposes.
+ * 
+ * SpeakBuild.ai - Configuration
  */
 
 export const SECRETS = {
@@ -36,4 +44,4 @@ export const SECRETS = {
 // Write the file
 fs.writeFileSync(secretsPath, secretsContent, 'utf8');
 
-console.log('Test keys injected successfully to', secretsPath);
+console.log('SpeakBuild: Test keys injected successfully to', secretsPath);

@@ -3,6 +3,9 @@
     "name": "SpeakBuild",
     "slug": "speakbuild",
     "version": "0.3.0",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
     "orientation": "portrait",
     "newArchEnabled": true,
     "scheme": "speakbuild",
@@ -14,6 +17,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "ai.speakbuild",
       "buildNumber": "3",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow SpeakBuild to access the microphone for voice commands",
         "UIBackgroundModes": ["audio"],

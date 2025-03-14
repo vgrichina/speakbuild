@@ -1,0 +1,52 @@
+name: Release iOS to TestFlight
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Triggers on tags like v1.0.0
+
+jobs:
+  build-and-submit:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for proper versioning
+
+      # Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # Set up EAS CLI
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Extract version from tag
+      - name: Extract version from tag
+        id: extract_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      # Update app.json version to match tag
+      - name: Update app.json version
+        run: |
+          npx json -I -f app.json -e "this.expo.version='${{ steps.extract_version.outputs.VERSION }}'"
+
+      # Build iOS app
+      - name: Build iOS app
+        run: eas build --platform ios --profile production --non-interactive --auto-submit
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
