@@ -33,8 +33,8 @@ jobs:
       - name: Build and submit iOS app
         run: eas build --platform ios --profile production --non-interactive --auto-submit
         env:
-          TEST_ULTRAVOX_KEY: ${{ secrets.TEST_ULTRAVOX_KEY }}
-          TEST_OPENROUTER_KEY: ${{ secrets.TEST_OPENROUTER_KEY }}
+          EXPO_PUBLIC_TEST_ULTRAVOX_KEY: ${{ secrets.EXPO_PUBLIC_TEST_ULTRAVOX_KEY }}
+          EXPO_PUBLIC_TEST_OPENROUTER_KEY: ${{ secrets.EXPO_PUBLIC_TEST_OPENROUTER_KEY }}
 
   build-and-submit-android:
     name: Build and Submit Android
@@ -65,5 +65,5 @@ jobs:
       - name: Build and submit Android app
         run: eas build --platform android --profile production --non-interactive --auto-submit
         env:
-          TEST_ULTRAVOX_KEY: ${{ secrets.TEST_ULTRAVOX_KEY }}
-          TEST_OPENROUTER_KEY: ${{ secrets.TEST_OPENROUTER_KEY }}
+          EXPO_PUBLIC_TEST_ULTRAVOX_KEY: ${{ secrets.EXPO_PUBLIC_TEST_ULTRAVOX_KEY }}
+          EXPO_PUBLIC_TEST_OPENROUTER_KEY: ${{ secrets.EXPO_PUBLIC_TEST_OPENROUTER_KEY }}

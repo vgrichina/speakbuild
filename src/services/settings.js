@@ -1,5 +1,4 @@
 import { storage, SETTINGS_KEY } from './storage';
-import { BUILD_TIME_CONSTANTS } from '../config/buildTimeConstants';
 
 // Default settings
 const DEFAULT_SETTINGS = {
@@ -26,8 +25,8 @@ export function getApiKeys() {
   const settings = getSettings();
   
   // Use test keys if user hasn't provided their own
-  const ultravoxKey = settings.ultravoxApiKey || BUILD_TIME_CONSTANTS.TEST_ULTRAVOX_KEY || null;
-  const openrouterKey = settings.openrouterApiKey || BUILD_TIME_CONSTANTS.TEST_OPENROUTER_KEY || null;
+  const ultravoxKey = settings.ultravoxApiKey || process.env.EXPO_PUBLIC_TEST_ULTRAVOX_KEY || null;
+  const openrouterKey = settings.openrouterApiKey || process.env.EXPO_PUBLIC_TEST_OPENROUTER_KEY || null;
   
   return { 
     ultravox: ultravoxKey, 
