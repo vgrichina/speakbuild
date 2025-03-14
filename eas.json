@@ -27,6 +27,11 @@
     "production": {
       "autoIncrement": true,
       "distribution": "store",
+      "prebuildCommand": "yarn inject-keys",
+      "env": {
+        "TEST_ULTRAVOX_KEY": "WILL_BE_PROVIDED_BY_CI",
+        "TEST_OPENROUTER_KEY": "WILL_BE_PROVIDED_BY_CI"
+      },
       "ios": {
         "resourceClass": "m-medium",
         "credentialsSource": "remote"
