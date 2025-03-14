@@ -22,6 +22,10 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: yarn
+        
+      # Install Fastlane
+      - name: Install Fastlane
+        run: gem install fastlane
 
       # Set up EAS CLI
       - name: Setup EAS
