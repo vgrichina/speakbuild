@@ -4,7 +4,6 @@
     "requireCommit": true,
     "appVersionSource": "remote"
   },
-  "owner": "vgrichina",
   "build": {
     "development": {
       "developmentClient": true,
