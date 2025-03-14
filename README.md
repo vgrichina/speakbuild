@@ -163,6 +163,8 @@ The app includes two evaluation scripts for testing the AI components:
 
 ### Analysis Evaluation
 
+Tests the system's ability to understand user requests and convert them to structured widget specifications:
+
 ```bash
 bun scripts/evaluate-analysis.js [model]
 # Default: anthropic/claude-3.5-sonnet
@@ -185,14 +187,22 @@ Example test case:
 
 ### Component Generation Evaluation
 
+Tests the system's ability to generate functional React Native components from widget specifications:
+
 ```bash
 bun scripts/evaluate-generation.js [model]
 # Default: anthropic/claude-3.5-sonnet
 ```
 
+Each evaluation generates a detailed report with:
+- Success rate percentage
+- Average response time
+- Detailed per-test results
+- Error analysis
+
 Reports are saved in the `evaluations/` directory with filenames:
 - `analysis-[date]-[model].md`
-- `evaluation-[date]-[model].md`
+- `generation-[date]-[model].md`
 
 ## Dependencies
 
@@ -232,10 +242,11 @@ For full list of dependencies, see `package.json`.
 
 MIT License
 
-## TestFlight Builds with Test API Keys
+## Test API Keys for Builds
 
-For TestFlight builds, you may want to include test API keys so testers don't need to enter their own keys.
-This app supports injecting test API keys at build time using the following process:
+### Local Development with Test Keys
+
+For local development, you can include test API keys so you don't need to enter them in the app:
 
 1. Create a `.env` file with your test API keys:
 
@@ -244,38 +255,40 @@ This app supports injecting test API keys at build time using the following proc
 cp .env.example .env
 
 # Edit the .env file with your test keys
-# TEST_ULTRAVOX_KEY=your-ultravox-test-key
-# TEST_OPENROUTER_KEY=your-openrouter-test-key
+# EXPO_PUBLIC_TEST_ULTRAVOX_KEY=your-ultravox-test-key
+# EXPO_PUBLIC_TEST_OPENROUTER_KEY=your-openrouter-test-key
 ```
 
-2. Inject the test API keys from the .env file:
+2. Run the app with the environment variables loaded:
 
 ```bash
-# This reads from .env and creates a gitignored secrets file
-yarn inject-keys
+# For iOS
+yarn ios
+
+# For Android
+yarn android
 ```
 
-3. Prebuild the iOS project:
+### CI/CD Builds with Test Keys
 
-```bash
-yarn expo prebuild --platform ios --clean
+For automated builds via GitHub Actions, test API keys are injected at build time:
+
+1. Store your API keys as GitHub repository secrets:
+   - `EXPO_PUBLIC_TEST_ULTRAVOX_KEY`
+   - `EXPO_PUBLIC_TEST_OPENROUTER_KEY`
+
+2. The CI workflow automatically passes these secrets to EAS Build:
+
+```yaml
+# From .github/workflows/release.yml
+- name: Build and submit iOS app
+  run: eas build --platform ios --profile production --non-interactive --auto-submit
+  env:
+    EXPO_PUBLIC_TEST_ULTRAVOX_KEY: ${{ secrets.EXPO_PUBLIC_TEST_ULTRAVOX_KEY }}
+    EXPO_PUBLIC_TEST_OPENROUTER_KEY: ${{ secrets.EXPO_PUBLIC_TEST_OPENROUTER_KEY }}
 ```
 
-4. Open the project in Xcode:
-
-```bash
-open ios/VoiceAssistant.xcworkspace
-```
-
-5. Build and archive in Xcode, then submit to TestFlight.
-
-6. After your build is complete, you may want to remove the secrets file (optional):
-
-```bash
-rm src/config/buildTimeSecrets.js
-```
-
-The secrets file is already in .gitignore, so it won't be committed to the repository.
+This allows TestFlight and Play Store testers to use the app without needing to enter API keys.
 
 ## Contributing
 
@@ -284,3 +297,22 @@ The secrets file is already in .gitignore, so it won't be committed to the repos
 3. Commit your changes
 4. Push to the branch
 5. Create a new Pull Request
+
+### Development Workflow
+
+1. **Setup Environment**:
+   - Install dependencies: `yarn install`
+   - Configure API keys in `.env` file
+
+2. **Run Tests**:
+   - Evaluate analysis: `yarn evaluate-analysis`
+   - Evaluate generation: `yarn evaluate-generation`
+
+3. **Build and Test**:
+   - Development build: `yarn ios` or `yarn android`
+   - Production build: `yarn build:ios` or `yarn build:android`
+
+4. **Submit Changes**:
+   - Ensure all tests pass
+   - Follow the existing code style
+   - Include documentation updates
