@@ -33,15 +33,12 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      # Extract version from tag
-      - name: Extract version from tag
-        id: extract_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      # Update app.json version to match tag
-      - name: Update app.json version
+      # Extract version from tag and update app.json
+      - name: Extract version from tag and update app.json
         run: |
-          npx json -I -f app.json -e "this.expo.version='${{ steps.extract_version.outputs.VERSION }}'"
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Building version: $VERSION"
+          npx json -I -f app.json -e "this.expo.version='$VERSION'"
 
       # Build iOS app
       - name: Build iOS app
