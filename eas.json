@@ -27,10 +27,6 @@
     "production": {
       "autoIncrement": true,
       "distribution": "store",
-      "env": {
-        "EXPO_PUBLIC_TEST_ULTRAVOX_KEY": "WILL_BE_PROVIDED_BY_CI",
-        "EXPO_PUBLIC_TEST_OPENROUTER_KEY": "WILL_BE_PROVIDED_BY_CI"
-      },
       "ios": {
         "resourceClass": "m-medium",
         "credentialsSource": "remote"
