@@ -8,6 +8,7 @@ const MODELS = [
     { code: 'anthropic/claude-3-opus', name: 'Claude 3 Opus' },
     { code: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet' },
     { code: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
+    { code: 'inception/mercury-coder-small-beta', name: 'Mercury Coder Small' },
     { code: 'deepseek/deepseek-r1', name: 'DeepSeek R1' }
 ];
 
