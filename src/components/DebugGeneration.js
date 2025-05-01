@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import * as RN from 'react-native';
 import { widgetStorage } from '../services/widgetStorage';
 import { createComponentGeneration } from '../services/componentGeneration';
+import { formatExamples } from '../services/componentExamples';
 import testCases from '../evaluation/generationTestCases.json';
 import { ExpoModules } from '../expo-modules';
 import { ViewCode } from './ViewCode';

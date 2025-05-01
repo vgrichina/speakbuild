@@ -1,6 +1,7 @@
 import { createComponent } from '../utils/componentUtils';
 import { widgetStorage } from './widgetStorage';
 import { createComponentGeneration } from './componentGeneration';
+import { formatExamples } from './componentExamples';
 
 export async function processWithClaudeStream({
     analysis,

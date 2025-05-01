@@ -7,6 +7,7 @@
  */
 import { audioSession } from './audioSession';
 import { createComponentGeneration } from './componentGeneration';
+import { formatExamples } from './componentExamples';
 import { analysisPrompt, analyzeRequest } from './analysis';
 import { getApiKeys, getSettings } from './settings';
 import { EventEmitter } from './eventEmitter';
