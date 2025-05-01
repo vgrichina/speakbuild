@@ -6,6 +6,9 @@ import { conversationStorage } from '../services/conversationStorage';
 import { componentHistoryService } from '../services/componentHistoryService';
 import { useAssistantState } from '../hooks/useAssistantState';
 
+// Import the constant directly since it's not exported
+const HISTORY_CHANGE = 'historyChange';
+
 export function ConversationList(props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState([]);
@@ -15,7 +18,7 @@ export function ConversationList(props) {
     loadConversations();
     
     // Subscribe to history changes to refresh the conversation list
-    const unsubscribe = componentHistoryService.on('HISTORY_CHANGE', () => {
+    const unsubscribe = componentHistoryService.on(HISTORY_CHANGE, () => {
       loadConversations();
     });
     
