@@ -366,6 +366,12 @@ class AssistantServiceClass extends EventEmitter {
       analysis.source = 'keyboard';
       analysis.confidence = 1.0;
       
+      // Always ensure transcription is set for text input
+      // This ensures proper history and conversation list updates
+      if (!analysis.transcription) {
+        analysis.transcription = text;
+      }
+      
       console.log('[ASSISTANT] Text analysis complete:', analysis);
       
       // Update transcript with the analyzed text
