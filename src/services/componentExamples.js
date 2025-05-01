@@ -1,5 +1,6 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
+import { formatExamplesFromContent } from '../utils/exampleFormatter';
 
 import listComponent from '../../assets/examples/listComponent.txt';
 
@@ -32,17 +33,19 @@ const readExampleFile = async (module) => {
 
 // Helper function to format examples for the prompt
 const formatExamples = async () => {
-  let result = '';
+  // Inline loading of example files
+  const exampleContents = {};
   
-  // Process each example
   for (const [url, module] of Object.entries(URL_TO_EXAMPLE_MAP)) {
-    const name = url.split('/').pop().replace('light', '').trim();
-    const source = await readExampleFile(module);
-    
-    result += `\n${Object.keys(URL_TO_EXAMPLE_MAP).indexOf(url) + 1}. ${name.charAt(0).toUpperCase() + name.slice(1)} Component (${url}):\n\`\`\`\n${source}\n\`\`\`\n`;
+    try {
+      exampleContents[url] = await readExampleFile(module);
+    } catch (error) {
+      console.error(`Error loading example for ${url}:`, error);
+    }
   }
   
-  return result;
+  // Use the shared formatter
+  return formatExamplesFromContent(exampleContents);
 };
 
 export { URL_TO_EXAMPLE_MAP, formatExamples };

@@ -1,18 +1,29 @@
-import { createComponentGeneration } from '../src/services/componentGeneration';
-import testCases from '../src/evaluation/generationTestCases.json' assert { type: "json" };
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { api } from '../src/services/api.js';
+import { formatExamples } from './nodeFormatExamples.js';
+import { createComponentGeneration } from '../src/services/componentGeneration.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Load test cases using fs instead of import assertion
+async function loadTestCases() {
+  const testCasesPath = path.join(__dirname, '../src/evaluation/generationTestCases.json');
+  const data = await fs.readFile(testCasesPath, 'utf8');
+  return JSON.parse(data);
+}
 
 async function runEvaluation({ 
     model = 'anthropic/claude-3.5-sonnet',
 }) {
     const results = [];
     const startTime = Date.now();
+    
+    // Load test cases
+    const testCases = await loadTestCases();
     
     for (const testCase of testCases.testCases) {
         console.log(`Running test: ${testCase.widgetUrl}`);
@@ -27,12 +38,16 @@ async function runEvaluation({
                 throw new Error('OPENROUTER_API_KEY environment variable must be set for evaluation');
             }
             
+            // Get formatted examples
+            const examplesText = await formatExamples();
+            
             // Use promise for more straightforward handling
             await new Promise((resolve, reject) => {
                 let responseText = '';
                 
                 // Create component generation with callbacks
                 const generation = createComponentGeneration(testCase, {
+                    examplesText,
                     onProgress: (content) => {
                         responseText += content;
                         process.stdout.write(content); // Show progress

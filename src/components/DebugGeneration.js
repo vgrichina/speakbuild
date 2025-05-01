@@ -41,8 +41,12 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
     try {
       const abortController = new AbortController();
       
+      // Get formatted examples
+      const examplesText = await formatExamples();
+      
       // Create component generation with callbacks
       const generation = createComponentGeneration(testCase, {
+        examplesText,
         onComplete: async (result) => {
           if (result?.code) {
             await widgetStorage.store(testCase.widgetUrl, result.code);

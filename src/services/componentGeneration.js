@@ -3,10 +3,9 @@
  * 
  * Factory for creating component generation processes.
  * Uses direct callback pattern instead of event subscription.
+ * Works in both React Native and Node.js environments.
  */
 import { api } from './api';
-import { widgetStorage } from './widgetStorage';
-import { formatExamples } from './componentExamples';
 
 // Helper for generating unique IDs
 const generateUniqueId = () => {
@@ -17,6 +16,7 @@ const generateUniqueId = () => {
  * Creates a component generation process with direct callbacks
  * @param {Object} analysis - The analysis object with transcription and params
  * @param {Object} options - Configuration options
+ * @param {string} options.examplesText - Pre-formatted examples text
  * @param {Function} options.onProgress - Callback for streaming updates
  * @param {Function} options.onComplete - Callback when generation is complete
  * @param {Function} options.onError - Callback when an error occurs
@@ -26,6 +26,7 @@ const generateUniqueId = () => {
  * @returns {Object} - Controller object for the generation process
  */
 export function createComponentGeneration(analysis, {
+  examplesText = '',
   onProgress = null,
   onComplete = null,
   onError = null,
@@ -64,10 +65,7 @@ export function createComponentGeneration(analysis, {
   /**
    * Create component prompt
    */
-  const buildComponentPrompt = async () => {
-    // Get examples dynamically
-    const examplesText = await formatExamples();
-    
+  const buildComponentPrompt = () => {
     const systemPrompt = {
       role: 'system',
       content: `You are an AI assistant for a React Native voice assistant app.
@@ -183,7 +181,7 @@ ${examplesText}`
         // Build prompt for model
         console.log(`[COMPONENT_GEN] Building component prompt...`);
         const promptBuildStart = Date.now();
-        const messages = await buildComponentPrompt();
+        const messages = buildComponentPrompt();
         console.log(`[COMPONENT_GEN] Prompt built in ${Date.now() - promptBuildStart}ms`, {
           messageCount: messages.length,
           systemPromptLength: messages[0]?.content?.length || 0,

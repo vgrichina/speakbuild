@@ -19,12 +19,16 @@ export async function processWithClaudeStream({
     }
 
     try {
+        // Get formatted examples
+        const examplesText = await formatExamples();
+        
         // Create a promise to handle the generation completion
         return new Promise((resolve, reject) => {
             let responseText = '';
             
             // Create component generation with callbacks
             const generation = createComponentGeneration(analysis, {
+                examplesText,
                 onProgress: (content) => {
                     responseText += content;
                     console.log(`[PROCESS_STREAM] Progress update: content length=${content.length}, total=${responseText.length}`);

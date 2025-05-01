@@ -141,8 +141,11 @@ class AssistantServiceClass extends EventEmitter {
       console.log(`[ASSISTANT] Generating new component while at history index ${historyState.currentIndex} of ${historyState.history.length - 1}`);
     }
     
-    // Start component generation
-    const generation = createComponentGeneration(analysis, {
+    // Get formatted examples
+    formatExamples().then(examplesText => {
+      // Start component generation
+      const generation = createComponentGeneration(analysis, {
+        examplesText,
       onStart: () => {
         // Transition from THINKING to PROCESSING when generation actually starts
         this._setState({ status: ASSISTANT_STATUS.PROCESSING });
@@ -182,12 +185,19 @@ class AssistantServiceClass extends EventEmitter {
       apiKey: apiKeys.openrouter
     });
     
-    // Store current generation
-    this._currentGeneration = generation;
-    
-    // Start generation
-    generation.start().catch(err => {
-      console.error('Error starting generation:', err);
+      // Store current generation
+      this._currentGeneration = generation;
+      
+      // Start generation
+      generation.start().catch(err => {
+        console.error('Error starting generation:', err);
+      });
+    }).catch(error => {
+      console.error('Error loading examples:', error);
+      this._setState({
+        error,
+        status: ASSISTANT_STATUS.ERROR
+      });
     });
   }
   
