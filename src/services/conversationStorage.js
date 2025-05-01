@@ -62,6 +62,14 @@ export const conversationStorage = {
 
   // Save conversation history
   saveHistory(conversationId, history) {
+    console.log('Saving history for conversation:', conversationId, {
+      historyLength: history.length,
+      lastEntry: history.length > 0 ? {
+        hasTranscript: !!history[history.length - 1]?.transcript,
+        transcriptLength: history[history.length - 1]?.transcript?.length || 0
+      } : 'No entries'
+    });
+    
     storage.set(CONVERSATION_PREFIX + conversationId, JSON.stringify(history));
     
     // Update metadata

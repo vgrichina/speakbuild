@@ -99,6 +99,13 @@ export const componentHistoryService = {
   addToHistory(component, analysis) {
     if (!component) return null;
     
+    console.log('Adding to history:', { 
+      component: component ? 'Present' : 'Missing',
+      analysis: analysis ? 'Present' : 'Missing',
+      transcription: analysis?.transcription || 'Missing',
+      request: analysis?.request || 'Missing'
+    });
+    
     // Create a unified history item with ID
     const historyItem = {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
@@ -109,11 +116,13 @@ export const componentHistoryService = {
         params: analysis?.params || component.params || {}
       },
       // Analysis data
-      transcript: analysis?.transcription || '',
+      transcript: analysis?.transcription || analysis?.request || '',
       intent: analysis?.intent || 'new',
       // Metadata
       timestamp: Date.now()
     };
+    
+    console.log('Created history item with transcript:', historyItem.transcript);
     
     // Store in widgetStorage if we have a widgetUrl
     if (historyItem.component.widgetUrl) {

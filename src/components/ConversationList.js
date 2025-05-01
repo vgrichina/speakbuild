@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'r
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { Feather } from '@expo/vector-icons';
 import { conversationStorage } from '../services/conversationStorage';
+import { componentHistoryService } from '../services/componentHistoryService';
 import { useAssistantState } from '../hooks/useAssistantState';
 
 export function ConversationList(props) {
@@ -12,7 +13,17 @@ export function ConversationList(props) {
 
   useEffect(() => {
     loadConversations();
-  }, []);
+    
+    // Subscribe to history changes to refresh the conversation list
+    const unsubscribe = componentHistoryService.on('HISTORY_CHANGE', () => {
+      loadConversations();
+    });
+    
+    return () => {
+      // Clean up subscription when component unmounts
+      unsubscribe();
+    };
+  }, [activeConversationId]);
 
   const loadConversations = () => {
     const allConversations = conversationStorage.getAll();
