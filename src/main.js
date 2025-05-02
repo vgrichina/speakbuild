@@ -151,14 +151,14 @@ export const VoiceAssistant = React.memo(() => {
               // Only include history items UP TO the current index (inclusive)
               const filteredHistory = historyTranscripts.slice(0, assistant.currentHistoryIndex + 1);
               
-              // Only add partial transcript if we're in LISTENING mode
-              // This prevents partial transcripts from showing when navigating history
-              if (assistant.status === assistant.STATUS.LISTENING && assistant.partialTranscript) {
+              // Add partial transcript if present (regardless of state)
+              // This ensures text input shows up immediately
+              if (assistant.partialTranscript) {
                 return [...filteredHistory, assistant.partialTranscript];
               }
               
               return filteredHistory;
-            }, [assistant.history, assistant.currentHistoryIndex, assistant.status, assistant.partialTranscript])}
+            }, [assistant.history, assistant.currentHistoryIndex, assistant.partialTranscript])}
           />
           
           {/* Floating Voice Button - hide when keyboard is active */}
