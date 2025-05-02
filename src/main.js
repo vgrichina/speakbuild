@@ -157,16 +157,14 @@ export const VoiceAssistant = React.memo(() => {
           </View>
         )}
         
-        {/* Transcription Box with Floating Voice Button */}
-        <View style={styles.transcriptionContainer}>
-          <TranscriptionBox
-            isListening={assistant.status === assistant.STATUS.LISTENING}
-            transcripts={transcripts}
-            style={keyboardActive ? { display: 'none' } : undefined}
-          />
-          
-          {/* Floating Voice Button - hide when keyboard is active */}
-          {!keyboardActive && (
+        {/* Transcription Box with Floating Voice Button - hide both when keyboard is active */}
+        {!keyboardActive && (
+          <View style={styles.transcriptionContainer}>
+            <TranscriptionBox
+              isListening={assistant.status === assistant.STATUS.LISTENING}
+              transcripts={transcripts}
+            />
+            
             <View style={styles.floatingButtonContainer}>
               <VoiceButton
                 status={assistant.status}
@@ -182,7 +180,8 @@ export const VoiceAssistant = React.memo(() => {
                 disabled={!isApiKeysSet}
               />
             </View>
-          )}
+          </View>
+        )}
           
         </View>
         
