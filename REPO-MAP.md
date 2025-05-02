@@ -10,6 +10,7 @@ This document provides a comprehensive overview of the codebase structure, modul
 - [Controllers](#controllers)
 - [Hooks](#hooks)
 - [Utilities](#utilities)
+- [UI Structure](#ui-structure)
 - [Application Flow](#application-flow)
 
 ## Application Entry Points
@@ -648,6 +649,110 @@ This document provides a comprehensive overview of the codebase structure, modul
 
 **Dependencies**:
 - None (pure functions)
+
+## UI Structure
+
+### Component Hierarchy
+
+```
+VoiceAssistant (main.js)
+├── ErrorBoundary
+│   │
+│   ├── Component Container (when component is ready)
+│   │   └── ScrollView
+│   │       └── Rendered Component
+│   │
+│   ├── Response Stream (during generation)
+│   │   ├── Header with Status
+│   │   ├── Streaming Response Text
+│   │   └── Cancel/Retry Buttons
+│   │
+│   ├── TranscriptionBox
+│   │   ├── Current Transcript (newest)
+│   │   └── History Transcripts (older, faded)
+│   │
+│   ├── VoiceButton (floating over TranscriptionBox)
+│   │   └── Push-to-Talk or Call Mode Controls
+│   │
+│   ├── Keyboard Toggle Button (bottom right)
+│   │
+│   └── KeyboardInput (when keyboard mode active)
+│       ├── Text Input Field
+│       └── Submit Button
+```
+
+### Data Flow
+
+```
+User Input
+│
+├─────► Voice Input ─────────────────┐
+│      (VoiceButton)                 │
+│                                    ▼
+│                             AudioSession Service
+│                                    │
+│                                    ▼
+├─────► Text Input ──────────► AssistantService
+│      (KeyboardInput)               │
+│                                    │
+│                                    ▼
+│                          Analysis & Processing
+│                                    │
+│                                    ▼
+│                        ComponentHistoryService
+│                                    │
+│                                    ▼
+└───────────────────────────► UI Components
+                                    │
+                                    ▼
+                              User Interface
+```
+
+### State Management
+
+```
+AssistantService (Singleton)
+├── Internal State
+│   ├── status (IDLE, LISTENING, THINKING, PROCESSING, ERROR)
+│   ├── mode (PTT, CALL)
+│   ├── transcript
+│   ├── partialTranscript
+│   ├── responseStream
+│   └── error
+│
+├── Event Emitters
+│   └── Notifies UI of state changes
+│
+└── Methods
+    ├── processTextInput()
+    ├── startRecording()
+    ├── stopRecording()
+    ├── abortGeneration()
+    └── navigateHistory()
+```
+
+### Component History Flow
+
+```
+ComponentHistoryService
+├── State
+│   ├── history[] (array of history items)
+│   ├── currentIndex (position in history)
+│   └── activeConversationId
+│
+├── History Item Structure
+│   ├── id
+│   ├── component { code, widgetUrl, params }
+│   ├── transcript
+│   ├── intent
+│   └── timestamp
+│
+└── Methods
+    ├── addToHistory()
+    ├── goBack()
+    ├── goForward()
+    └── switchConversation()
+```
 
 ## Application Flow
 
