@@ -40,6 +40,24 @@ export const VoiceAssistant = React.memo(() => {
   // Check if API keys are set
   const isApiKeysSet = hasApiKeys();
   
+  // Calculate transcripts at the top level of the component
+  const transcripts = useMemo(() => {
+    // Get all transcripts from history (no arbitrary limit)
+    const historyTranscripts = (assistant.history || [])
+      .map(item => item?.transcript || '');
+
+    // Only include history items UP TO the current index (inclusive)
+    const filteredHistory = historyTranscripts.slice(0, assistant.currentHistoryIndex + 1);
+    
+    // Add partial transcript if present (regardless of state)
+    // This ensures text input shows up immediately
+    if (assistant.partialTranscript) {
+      return [...filteredHistory, assistant.partialTranscript];
+    }
+    
+    return filteredHistory;
+  }, [assistant.history, assistant.currentHistoryIndex, assistant.partialTranscript]);
+  
   // Handle keyboard mode toggle
   const handleToggleKeyboard = () => {
     setKeyboardActive(prev => !prev);
@@ -143,22 +161,8 @@ export const VoiceAssistant = React.memo(() => {
         <View style={styles.transcriptionContainer}>
           <TranscriptionBox
             isListening={assistant.status === assistant.STATUS.LISTENING}
-            transcripts={useMemo(() => {
-              // Get all transcripts from history (no arbitrary limit)
-              const historyTranscripts = (assistant.history || [])
-                .map(item => item?.transcript || '');
-    
-              // Only include history items UP TO the current index (inclusive)
-              const filteredHistory = historyTranscripts.slice(0, assistant.currentHistoryIndex + 1);
-              
-              // Add partial transcript if present (regardless of state)
-              // This ensures text input shows up immediately
-              if (assistant.partialTranscript) {
-                return [...filteredHistory, assistant.partialTranscript];
-              }
-              
-              return filteredHistory;
-            }, [assistant.history, assistant.currentHistoryIndex, assistant.partialTranscript])}
+            transcripts={transcripts}
+            style={keyboardActive ? { display: 'none' } : undefined}
           />
           
           {/* Floating Voice Button - hide when keyboard is active */}
