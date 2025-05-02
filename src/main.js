@@ -182,8 +182,6 @@ export const VoiceAssistant = React.memo(() => {
             </View>
           </View>
         )}
-          
-        </View>
         
         {/* Keyboard toggle button positioned absolutely */}
         <View style={styles.keyboardButtonContainer}>
