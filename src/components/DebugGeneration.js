@@ -14,10 +14,10 @@ import { createComponent, renderComponent } from '../utils/componentUtils';
 const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => {
   const router = useRouter();
   const [widgets, setWidgets] = useState([]);
-  const [generating, setGenerating] = useState(null);
+  const [generating, setGenerating] = useState([]);
   const [selectedWidget, setSelectedWidget] = useState(null);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
-  const generationRef = useRef(null);
+  const activeGenerationsRef = useRef(new Map());
 
   useEffect(() => {
     loadWidgets();
@@ -39,8 +39,9 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
     setWidgets(widgetStates);
   };
 
-  const generateWidget = async (testCase) => {
-    setGenerating(testCase.widgetUrl);
+  const generateWidget = (testCase) => {
+    // Add this URL to the generating array
+    setGenerating(prev => [...prev, testCase.widgetUrl]);
     try {
       const abortController = new AbortController();
       
@@ -52,33 +53,53 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
         examplesText,
         onComplete: async (result) => {
           if (result?.code) {
+            // Store the result
             await widgetStorage.store(testCase.widgetUrl, result.code);
+            // Update UI when this specific generation completes
+            setGenerating(prev => prev.filter(url => url !== testCase.widgetUrl));
+            loadWidgets();
           }
         },
         onError: (error) => {
           console.error('Error generating component:', error);
+          setGenerating(prev => prev.filter(url => url !== testCase.widgetUrl));
         },
         selectedModel,
         apiKey
       });
+
       
       // Start generation
-      generationRef.current = generation;
-      await generation.start();
-      await loadWidgets();
-    } finally {
-      setGenerating(null);
+      // Store in our map of active generations
+      activeGenerationsRef.current.set(testCase.widgetUrl, generation);
+
+      // Start generation without awaiting
+      generation.start();
+
+      // Return the generation for those who want to await
+      return generation;
+    } catch (error) {
+      console.error('Error setting up generation:', error);
+      setGenerating(prev => prev.filter(url => url !== testCase.widgetUrl));
+      return Promise.reject(error);
     }
   };
 
   const stopGeneration = () => {
-    console.log('Stopping generation');
-    if (generationRef.current) {
-      generationRef.current.abort();
-      generationRef.current = null;
+    console.log('Stopping all generations');
+
+    // Abort all active generations
+    for (const [url, generation] of activeGenerationsRef.current.entries()) {
+      console.log('Aborting generation for:', url);
+      generation.abort();
     }
+
+    // Clear the map
+    activeGenerationsRef.current.clear();
+
+    // Reset states
     setIsGeneratingAll(false);
-    setGenerating(null);
+    setGenerating([]);
   };
 
   const styles = {
@@ -159,14 +180,29 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
 
     console.log('Starting generation of all widgets');
     setIsGeneratingAll(true);
-    for (const widget of widgets) {
-      if (!widget.stored) {
-        console.log('Generating widget:', widget.widgetUrl);
-        await generateWidget(widget);
-      }
+
+    // Get widgets that need generation
+    const widgetsToGenerate = widgets.filter(widget => !widget.stored);
+
+    if (widgetsToGenerate.length === 0) {
+      setIsGeneratingAll(false);
+      return true;
     }
-    console.log('Finished generating all widgets');
-    setIsGeneratingAll(false);
+
+    // Start all generations in parallel
+    const generationPromises = widgetsToGenerate.map(widget => {
+      console.log('Starting generation for:', widget.widgetUrl);
+      return generateWidget(widget);
+    });
+
+    // Wait for all to complete
+    try {
+      await Promise.all(generationPromises);
+      console.log('All widget generations completed');
+    } finally {
+      setIsGeneratingAll(false);
+    }
+
     return true; // Return success to caller
   };
 
@@ -243,22 +279,20 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
                   alignItems: 'center',
                   gap: 8
                 },
-                generating === widget.widgetUrl && { opacity: 0.5 }
+                generating.includes(widget.widgetUrl) && { opacity: 0.5 }
               ],
               onPress: async () => {
-                if (generating === widget.widgetUrl) return;
-                await generateWidget(widget);
-                // Refresh widgets list after generation
-                await loadWidgets();
+                if (generating.includes(widget.widgetUrl)) return;
+                generateWidget(widget);
               }
             },
-              generating === widget.widgetUrl && 
+              generating.includes(widget.widgetUrl) && 
                 React.createElement(RN.ActivityIndicator, { 
                   size: "small",
                   color: "#fff"
                 }),
               React.createElement(RN.Text, { style: styles.buttonText },
-                generating === widget.widgetUrl ? 
+                generating.includes(widget.widgetUrl) ? 
                   "Generating..." : 
                   "Generate Now"
               )
