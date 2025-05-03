@@ -1,31 +1,43 @@
-import { SafeAreaView, Pressable, Text } from 'react-native';
+import { SafeAreaView, Pressable, Text, ActivityIndicator } from 'react-native';
 import DebugGeneration from '../src/components/DebugGeneration';
 import { useRouter, useNavigation } from 'expo-router';
 import { useSettings } from '../src/hooks/useSettings';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function DebugScreen() {
     const router = useRouter();
     const navigation = useNavigation();
     const { selectedModel, openrouterApiKey } = useSettings();
     const debugGenerationRef = useRef();
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
         navigation.setOptions({
             headerRight: () => (
                 <Pressable
-                    style={styles.generateButton}
+                    style={[
+                        styles.generateButton,
+                        isGenerating && { opacity: 0.7 }
+                    ]}
+                    disabled={isGenerating}
                     onPress={async () => {
+                        if (isGenerating) return;
+                        setIsGenerating(true);
                         if (debugGenerationRef.current?.generateAllWidgets) {
-                            await debugGenerationRef.current.generateAllWidgets();
+                            try {
+                                await debugGenerationRef.current.generateAllWidgets();
+                            } finally {
+                                setIsGenerating(false);
+                            }
                         }
                     }}
                 >
-                    <Text style={styles.buttonText}>Generate All</Text>
+                    {isGenerating && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 5 }} />}
+                    <Text style={styles.buttonText}>{isGenerating ? "Generating..." : "Generate All"}</Text>
                 </Pressable>
             ),
         });
-    }, []);
+    }, [isGenerating]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#1a1a1a' }}>

@@ -16,6 +16,7 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
   const [widgets, setWidgets] = useState([]);
   const [generating, setGenerating] = useState(null);
   const [selectedWidget, setSelectedWidget] = useState(null);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
   useEffect(() => {
     loadWidgets();
@@ -138,15 +139,28 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
   };
 
   const generateAllWidgets = async () => {
+    // If already generating, don't start again
+    if (isGeneratingAll) {
+      console.log('Already generating all widgets, ignoring request');
+      return false;
+    }
+
+    console.log('Starting generation of all widgets');
+    setIsGeneratingAll(true);
     for (const widget of widgets) {
       if (!widget.stored) {
+        console.log('Generating widget:', widget.widgetUrl);
         await generateWidget(widget);
       }
     }
+    console.log('Finished generating all widgets');
+    setIsGeneratingAll(false);
+    return true; // Return success to caller
   };
 
   useImperativeHandle(ref, () => ({
-    generateAllWidgets
+    generateAllWidgets,
+    isGeneratingAll: () => isGeneratingAll
   }));
 
   return React.createElement(RN.View, { style: styles.container },
