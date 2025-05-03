@@ -1,4 +1,4 @@
-import { SafeAreaView, Pressable, Text, ActivityIndicator } from 'react-native';
+import { SafeAreaView, Pressable, Text, ActivityIndicator, View } from 'react-native';
 import DebugGeneration from '../src/components/DebugGeneration';
 import { useRouter, useNavigation } from 'expo-router';
 import { useSettings } from '../src/hooks/useSettings';
@@ -10,6 +10,7 @@ export default function DebugScreen() {
     const { selectedModel, openrouterApiKey } = useSettings();
     const debugGenerationRef = useRef();
     const [isGenerating, setIsGenerating] = useState(false);
+    const [canStop, setCanStop] = useState(false);
 
     useEffect(() => {
         navigation.setOptions({
@@ -19,25 +20,42 @@ export default function DebugScreen() {
                         styles.generateButton,
                         isGenerating && { opacity: 0.7 }
                     ]}
-                    disabled={isGenerating}
                     onPress={async () => {
-                        if (isGenerating) return;
-                        setIsGenerating(true);
-                        if (debugGenerationRef.current?.generateAllWidgets) {
-                            try {
-                                await debugGenerationRef.current.generateAllWidgets();
-                            } finally {
-                                setIsGenerating(false);
+                        if (isGenerating) {
+                            // Stop generation
+                            if (debugGenerationRef.current?.stopGeneration) {
+                                debugGenerationRef.current.stopGeneration();
+                                setCanStop(false);
+                            }
+                        } else {
+                            // Start generation
+                            setIsGenerating(true);
+                            setCanStop(true);
+                            if (debugGenerationRef.current?.generateAllWidgets) {
+                                try {
+                                    await debugGenerationRef.current.generateAllWidgets();
+                                } finally {
+                                    setIsGenerating(false);
+                                    setCanStop(false);
+                                }
                             }
                         }
                     }}
                 >
-                    {isGenerating && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 5 }} />}
-                    <Text style={styles.buttonText}>{isGenerating ? "Generating..." : "Generate All"}</Text>
+                    <View style={styles.buttonContent}>
+                        {isGenerating && (
+                            <ActivityIndicator 
+                                size="small" 
+                                color="#fff" 
+                                style={{ marginRight: 5 }} 
+                            />
+                        )}
+                        <Text style={styles.buttonText}>{isGenerating ? "Stop" : "Generate All"}</Text>
+                    </View>
                 </Pressable>
             ),
         });
-    }, [isGenerating]);
+    }, [isGenerating, canStop]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#1a1a1a' }}>
@@ -54,9 +72,16 @@ export default function DebugScreen() {
 const styles = {
     generateButton: {
         backgroundColor: '#007AFF',
-        padding: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
         borderRadius: 6,
-        alignSelf: 'flex-start'
+        alignSelf: 'flex-start',
+        minWidth: 110,
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     buttonText: {
         color: '#fff',

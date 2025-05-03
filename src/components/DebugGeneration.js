@@ -17,6 +17,7 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
   const [generating, setGenerating] = useState(null);
   const [selectedWidget, setSelectedWidget] = useState(null);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const generationRef = useRef(null);
 
   useEffect(() => {
     loadWidgets();
@@ -62,11 +63,22 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
       });
       
       // Start generation
+      generationRef.current = generation;
       await generation.start();
       await loadWidgets();
     } finally {
       setGenerating(null);
     }
+  };
+
+  const stopGeneration = () => {
+    console.log('Stopping generation');
+    if (generationRef.current) {
+      generationRef.current.abort();
+      generationRef.current = null;
+    }
+    setIsGeneratingAll(false);
+    setGenerating(null);
   };
 
   const styles = {
@@ -160,7 +172,8 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
 
   useImperativeHandle(ref, () => ({
     generateAllWidgets,
-    isGeneratingAll: () => isGeneratingAll
+    isGeneratingAll: () => isGeneratingAll,
+    stopGeneration
   }));
 
   return React.createElement(RN.View, { style: styles.container },
