@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
 const styles = StyleSheet.create({
@@ -38,17 +38,7 @@ export default function RootLayout() {
                     headerShown: true,
                     presentation: 'modal',
                     animation: 'slide_from_bottom',
-                    title: 'Debug Generation',
-                    headerRight: () => (
-                        <Pressable
-                            style={styles.generateButton}
-                            onPress={() => {
-                                console.log('Generate All pressed');
-                            }}
-                        >
-                            <Text style={styles.buttonText}>Generate All</Text>
-                        </Pressable>
-                    )
+                    title: 'Debug Generation'
                 }}
             />
             <Stack.Screen 
