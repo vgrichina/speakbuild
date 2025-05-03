@@ -39,7 +39,7 @@ const DebugGeneration = forwardRef(({ onClose, selectedModel, apiKey }, ref) => 
     setWidgets(widgetStates);
   };
 
-  const generateWidget = (testCase) => {
+  const generateWidget = async (testCase) => {
     // Add this URL to the generating array
     setGenerating(prev => [...prev, testCase.widgetUrl]);
     try {
