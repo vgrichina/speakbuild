@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import * as RN from 'react-native';
 import { widgetStorage } from '../services/widgetStorage';
