@@ -18,6 +18,7 @@ export default function DebugScreen() {
                 <Pressable
                     style={[
                         styles.generateButton,
+                        isGenerating && { backgroundColor: '#E53E3E' },
                         isGenerating && { opacity: 0.7 }
                     ]}
                     onPress={async () => {
@@ -25,6 +26,7 @@ export default function DebugScreen() {
                             // Stop generation
                             if (debugGenerationRef.current?.stopGeneration) {
                                 debugGenerationRef.current.stopGeneration();
+                                setIsGenerating(false);
                                 setCanStop(false);
                             }
                         } else {
